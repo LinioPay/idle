@@ -1,0 +1,32 @@
+{
+    "name": "liniopay/queue",
+    "type": "project",
+    "license": "proprietary",
+    "description": "Queue and job management",
+    "autoload": {
+        "psr-4": {
+            "LinioPay\\Queue\\": "src"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require": {
+        "php": ">= 7.2",
+        "linio/input": "^2.5",
+        "psr/log": "~1.0",
+        "robrichards/xmlseclibs": ">=2.0"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^2.14",
+        "michaelmoussa/php-coverage-checker": "^1.1",
+        "mockery/mockery": "^1.2",
+        "nelmio/alice": "^2.3",
+        "phpunit/phpunit": "^7.5",
+        "roave/security-advisories": "dev-master",
+        "sensiolabs/security-checker": "^5",
+        "zendframework/zend-hydrator": "^2.4"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

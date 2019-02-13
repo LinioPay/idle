@@ -1,0 +1,20 @@
+<?php
+
+$finder = PhpCsFixer\Finder::create()
+    ->exclude(__DIR__ . '/tests/Fixtures/config')
+    ->in(__DIR__ . '/src')
+    ->in(__DIR__ . '/tests');
+
+return PhpCsFixer\Config::create()
+    ->setRules([
+        '@Symfony' => true,
+        'array_syntax' => ['syntax' => 'short'],
+        'combine_consecutive_unsets' => true,
+        'concat_space' => ['spacing' => 'one'],
+        'return_type_declaration' => ['space_before' => 'one'],
+        'no_unreachable_default_argument_value' => false,
+        'yoda_style' => false,
+        'ordered_imports' => ['sortAlgorithm' => 'alpha'],
+        'pre_increment' => false,
+    ])
+    ->setFinder($finder);
