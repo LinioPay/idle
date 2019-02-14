@@ -25,7 +25,7 @@ class ServiceTest extends TestCase
 
     protected $sqsClient;
 
-    protected function setUp()
+    protected function setUp() : void
     {
         $this->apiTestHandler = new TestHandler();
 
@@ -86,7 +86,7 @@ class ServiceTest extends TestCase
         ];
     }
 
-    public function testQueueingSuccessfully()
+    public function testQueueingSuccessfully() : void
     {
         $message = new Message($this->queueIdentifier, 'mbody');
 

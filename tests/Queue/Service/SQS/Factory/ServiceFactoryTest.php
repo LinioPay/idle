@@ -15,7 +15,7 @@ class ServiceFactoryTest extends TestCase
 {
     protected $apiTestHandler;
 
-    protected function setUp()
+    protected function setUp() : void
     {
         $this->apiTestHandler = new TestHandler();
     }

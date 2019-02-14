@@ -25,7 +25,7 @@ class TestCase extends TestCaseBase
     /**
      * {@inheritdoc}
      */
-    protected function tearDown()
+    protected function tearDown() : void
     {
         Mockery::close();
         parent::tearDown();

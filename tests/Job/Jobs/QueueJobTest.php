@@ -20,7 +20,7 @@ class QueueJobTest extends TestCase
     /** @var Mock|WorkerFactory */
     protected $workerFactory;
 
-    public function setUp()
+    public function setUp() : void
     {
         parent::setUp();
 
@@ -30,7 +30,7 @@ class QueueJobTest extends TestCase
         $this->workerFactory = m::mock(WorkerFactory::class);
     }
 
-    public function tearDown()
+    public function tearDown() : void
     {
         parent::tearDown();
 
