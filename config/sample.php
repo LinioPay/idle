@@ -29,12 +29,6 @@ return [
                         'parameters' => [ // Configure behavior for when adding a new message
                             'DelaySeconds' => 0, // The number of seconds (0 to 900 - 15 minutes) to delay a specific message. Messages with a positive DelaySeconds value become available for processing after the delay time is finished. If you don't specify a value, the default value for the queue applies.
                         ],
-                        'attributes' => [ // Configure attributes for newly created queues
-                            'DelaySeconds' => 0, // The time in seconds that the delivery of all messages in the queue will be delayed. An integer from 0 to 900 (15 minutes).
-                            'MessageRetentionPeriod' => 1209600, // The number of seconds Amazon SQS retains a message. Integer representing seconds, from 60 (1 minute) to 1209600 (14 days).
-                            'ReceiveMessageWaitTimeSeconds' => 0, // The time for which a ReceiveMessage call will wait for a message to arrive. An integer from 0 to 20 (seconds).
-                            'VisibilityTimeout' => 30, // The visibility timeout for the queue. An integer from 0 to 43200 (12 hours). The default for this attribute is 30.
-                        ],
                         'error' => [
                             'suppression' => true,
                         ],

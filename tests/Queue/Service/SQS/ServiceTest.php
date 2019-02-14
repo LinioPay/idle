@@ -59,9 +59,6 @@ class ServiceTest extends TestCase
                         'parameters' => [
                             'DelaySeconds' => 1,
                         ],
-                        'attributes' => [
-                            'DelaySeconds' => 0,
-                        ],
                         'error' => [
                             'suppression' => true,
                         ],
