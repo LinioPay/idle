@@ -11,4 +11,6 @@ interface Worker
     public function setParameters(array $parameters) : void;
 
     public function getErrors() : array;
+
+    public function getParameters() : array;
 }
