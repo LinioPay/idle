@@ -42,4 +42,5 @@ script:
   - # Disable xdebug to speed up Mutation and Integration Tests
   - mv ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/xdebug.ini ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/xdebug.ini.bak
   - vendor/bin/php-coverage-checker build/coverage-clover.xml 100
+  - vendor/bin/infection --only-covered --min-msi=100 --min-covered-msi=100 --coverage=build
   - vendor/bin/phpstan analyse
