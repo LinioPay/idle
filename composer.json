@@ -61,7 +61,7 @@
             "vendor/bin/php-coverage-checker build/coverage-clover.xml 100"
         ],
         "test-mutation": [
-            "vendor/bin/infection --only-covered --min-msi=94 --min-covered-msi=94 --coverage=build --ansi"
+            "vendor/bin/infection --only-covered --min-msi=100 --min-covered-msi=100 --coverage=build --ansi"
         ],
         "static-analysis": [
             "vendor/bin/phpstan analyse --ansi"
