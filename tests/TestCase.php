@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LinioPay\Queue;
+namespace LinioPay\Idle;
 
 use Mockery;
 use Mockery\Instantiator;

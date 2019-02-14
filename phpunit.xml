@@ -7,7 +7,7 @@
          convertErrorsToExceptions="true"
          convertNoticesToExceptions="true"
          convertWarningsToExceptions="true"
-         defaultTestSuite="LinioPay Queue Unit Tests"
+         defaultTestSuite="LinioPay Idle Unit Tests"
          stopOnFailure="false"
          bootstrap="./tests/bootstrap.php">
 
@@ -33,7 +33,7 @@
     </logging>
 
     <testsuites>
-        <testsuite name="LinioPay Queue Unit Tests">
+        <testsuite name="LinioPay Idle Unit Tests">
             <directory>./tests</directory>
         </testsuite>
     </testsuites>

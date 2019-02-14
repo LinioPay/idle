@@ -1,30 +1,74 @@
 {
-    "name": "liniopay/queue",
+    "name": "liniopay/idle",
     "type": "project",
     "license": "proprietary",
-    "description": "Queue and job management",
+    "description": "Job and Queue management",
     "autoload": {
         "psr-4": {
-            "LinioPay\\Queue\\": "src"
+            "LinioPay\\Idle\\": [
+                "src/"
+            ]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "LinioPay\\Idle\\": [
+                "tests/"
+            ]
         }
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
         "php": ">= 7.2",
+        "aws/aws-sdk-php": "^3.87",
         "linio/input": "^2.5",
         "psr/log": "~1.0",
-        "robrichards/xmlseclibs": ">=2.0"
+        "psr/container": "~1.0",
+        "zendframework/zend-stdlib": "^3.2"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^2.14",
+        "friendsofphp/php-cs-fixer": "^2.13",
+        "infection/infection": "^0.10.6",
         "michaelmoussa/php-coverage-checker": "^1.1",
         "mockery/mockery": "^1.2",
-        "nelmio/alice": "^2.3",
-        "phpunit/phpunit": "^7.5",
+        "monolog/monolog": "^1.24",
+        "phpstan/phpstan": "^0.10.5",
+        "phpunit/phpunit": "^7.4",
         "roave/security-advisories": "dev-master",
-        "sensiolabs/security-checker": "^5",
+        "sensiolabs/security-checker": "^5.0",
         "zendframework/zend-hydrator": "^2.4"
+    },
+    "scripts": {
+        "check": [
+            "@cs",
+            "@security-check",
+            "@test-coverage",
+            "@test-mutation",
+            "@static-analysis"
+        ],
+        "cs": [
+            "vendor/bin/php-cs-fixer fix --dry-run --ansi -v"
+        ],
+        "cs-fix": [
+            "vendor/bin/php-cs-fixer fix --ansi -v"
+        ],
+        "test": [
+            "vendor/bin/phpunit --colors=always --no-coverage"
+        ],
+        "test-coverage": [
+            "vendor/bin/phpunit --colors=always",
+            "vendor/bin/php-coverage-checker build/coverage-clover.xml 100"
+        ],
+        "test-mutation": [
+            "vendor/bin/infection --only-covered --min-msi=94 --min-covered-msi=94 --coverage=build --ansi"
+        ],
+        "static-analysis": [
+            "vendor/bin/phpstan analyse --ansi"
+        ],
+        "security-check" : [
+            "vendor/bin/security-checker security:check composer.json"
+        ]
     },
     "config": {
         "sort-packages": true
