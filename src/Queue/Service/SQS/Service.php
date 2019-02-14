@@ -10,6 +10,7 @@ use LinioPay\Idle\Queue\Exception\InvalidMessageParameterException;
 use LinioPay\Idle\Queue\Message;
 use LinioPay\Idle\Queue\Service\DefaultService;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 class Service extends DefaultService
 {
@@ -49,13 +50,13 @@ class Service extends DefaultService
                 'MessageAttributes' => $message->getAttributes(),
             ]);
 
-            /** @var Result $response */
-            $response = $this->client->sendMessage($outParameters);
+            /** @var Result $result */
+            $result = $this->client->sendMessage($outParameters);
 
-            $message->setMessageIdentifier((string) $response->get('MessageId'));
+            $message->setMessageIdentifier((string) $result->get('MessageId'));
 
             return true;
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             $this->logger->critical('Queueing encountered error', [
                 'service' => Service::IDENTIFIER,
                 'message' => $message->toArray(),
@@ -81,11 +82,11 @@ class Service extends DefaultService
                 'QueueUrl' => $this->getQueueUrl($queueIdentifier),
             ]);
 
-            /** @var Result $response */
-            $response = $this->client->receiveMessage($outParameters);
+            /** @var Result $result */
+            $result = $this->client->receiveMessage($outParameters);
 
-            return $this->buildMessagesFromResult($queueIdentifier, $response);
-        } catch (\Throwable $throwable) {
+            return $this->buildMessagesFromResult($queueIdentifier, $result);
+        } catch (Throwable $throwable) {
             $this->logger->critical('Dequeueing encountered error', [
                 'service' => Service::IDENTIFIER,
                 'queue' => $queueIdentifier,
@@ -117,7 +118,7 @@ class Service extends DefaultService
             ]);
 
             return true;
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             $this->logger->critical('Deleting encountered error', [
                 'service' => Service::IDENTIFIER,
                 'message' => $message->toArray(),

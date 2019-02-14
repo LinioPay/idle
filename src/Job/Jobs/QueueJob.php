@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LinioPay\Idle\Job\Jobs;
 
 use LinioPay\Idle\Job\Workers\Factory\WorkerFactory;
+use LinioPay\Idle\Queue\Exception\ConfigurationException;
 use LinioPay\Idle\Queue\Message;
 use LinioPay\Idle\Queue\Service;
 
@@ -30,7 +31,7 @@ class QueueJob extends DefaultJob
         $workerConfig = $this->service->getQueueWorkerConfig($this->message->getQueueIdentifier());
 
         if (empty($workerConfig['type'])) {
-            throw new \Exception(sprintf('Queue %s is missing a proper worker configuration.', $this->message->getQueueIdentifier()));
+            throw new ConfigurationException($this->message->getQueueIdentifier(), ConfigurationException::TYPE_WORKER);
         }
 
         $this->buildWorker($workerConfig['type'], $workerConfig['parameters'] ?? []);
@@ -51,7 +52,7 @@ class QueueJob extends DefaultJob
     {
         $queueConfig = $this->service->getQueueConfig($this->message->getQueueIdentifier());
 
-        if ($this->successful && isset($queueConfig['delete']['enabled']) && $queueConfig['delete']['enabled']) {
+        if ($this->successful && $queueConfig['delete']['enabled'] ?? false) {
             $this->service->delete($this->message);
         }
     }

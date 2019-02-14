@@ -57,7 +57,7 @@ class TestCase extends TestCaseBase
      * @see http://martinfowler.com/articles/mocksArentStubs.html
      *
      * @param string $className
-     * @param array $data
+     * @param array  $data
      *
      * @return object
      */
@@ -97,7 +97,7 @@ class TestCase extends TestCaseBase
     /**
      * Allows obtaining a method from the given class.
      *
-     * @param string $className Name of the class being tested
+     * @param string $className  Name of the class being tested
      * @param string $methodName Name of the method being tested
      *
      * @return ReflectionMethod

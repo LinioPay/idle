@@ -6,6 +6,7 @@ namespace LinioPay\Idle\Job\Jobs;
 
 use LinioPay\Idle\Job\Workers\DefaultWorker;
 use LinioPay\Idle\Job\Workers\Factory\WorkerFactory;
+use LinioPay\Idle\Queue\Exception\ConfigurationException;
 use LinioPay\Idle\Queue\Message;
 use LinioPay\Idle\Queue\Service;
 use LinioPay\Idle\TestCase;
@@ -73,7 +74,7 @@ class QueueJobTest extends TestCase
         $this->service->shouldReceive('getQueueWorkerConfig')
             ->andReturn(['type' => '']);
 
-        $this->expectException(\Exception::class);
+        $this->expectException(ConfigurationException::class);
         (new QueueJob($this->service, new Message('foo', 'bar'), $this->workerFactory));
     }
 }

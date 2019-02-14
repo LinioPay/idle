@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Queue\Service;
 
+use LinioPay\Idle\Queue\Exception\ConfigurationException;
 use LinioPay\Idle\Queue\Service;
+use Throwable;
 use Zend\Stdlib\ArrayUtils;
 
 abstract class DefaultService implements Service
@@ -30,19 +32,15 @@ abstract class DefaultService implements Service
         return $queueConfig['worker'] ?? [];
     }
 
-    protected function isQueueConfigured(string $queueIdentifier)
+    protected function isQueueConfigured(string $queueIdentifier) : bool
     {
-        if (!isset($this->config['queues'][$queueIdentifier])) {
-            return false;
-        }
-
-        return true;
+        return isset($this->config['queues'][$queueIdentifier]);
     }
 
-    protected function validateQueue(string $queueIdentifier)
+    protected function validateQueue(string $queueIdentifier) : void
     {
         if ($queueIdentifier === 'default' || !$this->isQueueConfigured($queueIdentifier)) {
-            throw new \Exception('Invalid queue specified.');
+            throw new ConfigurationException($queueIdentifier, ConfigurationException::TYPE_QUEUE);
         }
     }
 
@@ -57,7 +55,7 @@ abstract class DefaultService implements Service
     {
         $errorConfig = $this->getQueueQueueingErrorConfig($queueIdentifier);
 
-        return isset($errorConfig['suppression']) && $errorConfig['suppression'];
+        return $errorConfig['suppression'] ?? false;
     }
 
     protected function getQueueQueueingParameters(string $queueIdentifier) : array
@@ -78,7 +76,7 @@ abstract class DefaultService implements Service
     {
         $errorConfig = $this->getQueueDequeueingErrorConfig($queueIdentifier);
 
-        return isset($errorConfig['suppression']) && $errorConfig['suppression'];
+        return $errorConfig['suppression'] ?? false;
     }
 
     protected function getQueueDequeueingParameters(string $queueIdentifier, array $parameters = []) : array
@@ -101,10 +99,10 @@ abstract class DefaultService implements Service
     {
         $errorConfig = $this->getQueueDeletingErrorConfig($queueIdentifier);
 
-        return isset($errorConfig['suppression']) && $errorConfig['suppression'];
+        return $errorConfig['suppression'] ?? false;
     }
 
-    protected function throwableToArray(\Throwable $throwable)
+    protected function throwableToArray(Throwable $throwable)
     {
         return [
             'message' => $throwable->getMessage(),
