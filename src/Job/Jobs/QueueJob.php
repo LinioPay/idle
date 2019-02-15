@@ -39,11 +39,7 @@ class QueueJob extends DefaultJob
 
     public function process() : void
     {
-        $start = microtime(true);
-
-        $this->successful = $this->worker->work();
-
-        $this->duration = microtime(true) - $start;
+        parent::process();
 
         $this->removeFromQueue();
     }

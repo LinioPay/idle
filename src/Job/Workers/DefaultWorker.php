@@ -21,6 +21,8 @@ abstract class DefaultWorker implements Worker
 
     public function setParameters(array $parameters) : void
     {
+        $this->validateParameters($parameters);
+
         $this->parameters = $parameters;
     }
 
@@ -33,4 +35,6 @@ abstract class DefaultWorker implements Worker
     {
         $this->errors = $errors;
     }
+
+    abstract protected function validateParameters(array $parameters) : void;
 }

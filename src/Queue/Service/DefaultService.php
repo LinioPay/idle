@@ -11,6 +11,8 @@ use Zend\Stdlib\ArrayUtils;
 
 abstract class DefaultService implements Service
 {
+    const IDENTIFIER = '';
+
     /** @var array */
     protected $config;
 
@@ -39,7 +41,7 @@ abstract class DefaultService implements Service
 
     protected function validateQueue(string $queueIdentifier) : void
     {
-        if ($queueIdentifier === 'default' || !$this->isQueueConfigured($queueIdentifier)) {
+        if (empty(static::IDENTIFIER) || $queueIdentifier === 'default' || !$this->isQueueConfigured($queueIdentifier)) {
             throw new ConfigurationException($queueIdentifier, ConfigurationException::TYPE_QUEUE);
         }
     }
