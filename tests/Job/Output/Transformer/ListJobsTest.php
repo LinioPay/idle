@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Job\Output\Transformer;
 
+use LinioPay\Idle\Job\Exception\InvalidJobsException;
 use LinioPay\Idle\Job\Jobs\FailedJob;
 use LinioPay\Idle\TestCase;
 
@@ -25,7 +26,7 @@ class ListJobsTest extends TestCase
     {
         $job = new FailedJob(['error']);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidJobsException::class);
         (new ListJobs())->transform(['jobs' => $job]);
     }
 }
