@@ -15,11 +15,19 @@ class SimpleJob extends DefaultJob
     /** @var string */
     protected $workerIdentifier;
 
-    public function __construct(array $config, string $workerIdentifier, WorkerFactory $workerFactory, array $parameters = [])
+    public function __construct(array $config, WorkerFactory $workerFactory)
     {
         $this->config = $config;
         $this->workerFactory = $workerFactory;
-        $this->workerIdentifier = $workerIdentifier;
+    }
+
+    public function setParameters(array $parameters = []) : void
+    {
+        if (!isset($parameters['workerIdentifier'])) {
+            throw new ConfigurationException(self::IDENTIFIER);
+        }
+
+        $this->workerIdentifier = $parameters['workerIdentifier'];
 
         $this->prepareJob($parameters);
         $this->prepareWorker($parameters);
@@ -27,8 +35,7 @@ class SimpleJob extends DefaultJob
 
     protected function prepareJob(array $parameters) : void
     {
-        $this->validate();
-        $this->setParameters(ArrayUtils::merge(
+        parent::setParameters(ArrayUtils::merge(
             $this->getConfigParameters(),
             $parameters
         ));

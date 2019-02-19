@@ -11,30 +11,19 @@ use LinioPay\Idle\Queue\Service;
 
 class QueueJob extends DefaultJob
 {
+    const IDENTIFIER = 'queue';
+
     /** @var Service */
     protected $service;
 
     /** @var Message */
     protected $message;
 
-    public function __construct(Service $service, Message $message, WorkerFactory $workerFactory)
+    public function __construct(array $config, Service $service, WorkerFactory $workerFactory)
     {
+        $this->config = $config;
         $this->service = $service;
-        $this->message = $message;
         $this->workerFactory = $workerFactory;
-
-        $this->buildQueueJobWorker();
-    }
-
-    protected function buildQueueJobWorker() : void
-    {
-        $workerConfig = $this->service->getQueueWorkerConfig($this->message->getQueueIdentifier());
-
-        if (empty($workerConfig['type'])) {
-            throw new ConfigurationException($this->message->getQueueIdentifier(), ConfigurationException::TYPE_WORKER);
-        }
-
-        $this->buildWorker($workerConfig['type'], $workerConfig['parameters'] ?? []);
     }
 
     public function process() : void
@@ -51,5 +40,27 @@ class QueueJob extends DefaultJob
         if ($this->successful && $queueConfig['delete']['enabled'] ?? false) {
             $this->service->delete($this->message);
         }
+    }
+
+    public function setParameters(array $parameters = []) : void
+    {
+        $this->message = $parameters['message'] = is_a($parameters['message'], Message::class)
+            ? $parameters['message']
+            : Message::fromArray($parameters['message'] ?? []);
+
+        parent::setParameters($parameters);
+
+        $this->buildQueueJobWorker();
+    }
+
+    protected function buildQueueJobWorker() : void
+    {
+        $workerConfig = $this->service->getQueueWorkerConfig($this->message->getQueueIdentifier());
+
+        if (empty($workerConfig['type'])) {
+            throw new ConfigurationException($this->message->getQueueIdentifier(), ConfigurationException::TYPE_WORKER);
+        }
+
+        $this->buildWorker($workerConfig['type'], $workerConfig['parameters'] ?? []);
     }
 }

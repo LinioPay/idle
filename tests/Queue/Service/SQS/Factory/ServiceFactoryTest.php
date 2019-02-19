@@ -24,7 +24,7 @@ class ServiceFactoryTest extends TestCase
     {
         $container = m::mock(ContainerInterface::class);
         $container->shouldReceive('get')
-            ->with('idle-config')
+            ->with('queue-config')
             ->andReturn([
                 'active_service' => SQSService::IDENTIFIER,
                 'services' => [

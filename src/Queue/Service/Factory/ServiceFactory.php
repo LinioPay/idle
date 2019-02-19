@@ -11,7 +11,7 @@ class ServiceFactory
 {
     public function __invoke(ContainerInterface $container) : Service
     {
-        $idleConfig = $container->get('idle-config');
+        $idleConfig = $container->get('queue-config');
 
         $activeService = $idleConfig['active_service'] ?? '';
 

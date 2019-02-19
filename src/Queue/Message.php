@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Queue;
 
+use LinioPay\Idle\Queue\Exception\InvalidMessageParameterException;
+
 class Message
 {
     /** @var string */
@@ -69,5 +71,25 @@ class Message
             'attributes' => $this->getAttributes(),
             'metadata' => $this->getTemporaryMetadata(),
         ];
+    }
+
+    public static function fromArray(array $parameters)
+    {
+        $required = isset(
+            $parameters['queueIdentifier'],
+            $parameters['body']
+        );
+
+        if (!$required || !is_string($parameters['queueIdentifier']) || !is_string($parameters['body'])) {
+            throw new InvalidMessageParameterException('[queueIdentifier, body]');
+        }
+
+        return new Message(
+            $parameters['queueIdentifier'],
+            $parameters['body'],
+            $parameters['attributes'] ?? [],
+            $parameters['messageIdentifier'] ?? '',
+            $parameters['metadata'] ?? []
+        );
     }
 }

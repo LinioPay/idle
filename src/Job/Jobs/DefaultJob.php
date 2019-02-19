@@ -31,6 +31,9 @@ abstract class DefaultJob implements Job
     /** @var WorkerFactory */
     protected $workerFactory;
 
+    /** @var bool */
+    protected $finished = false;
+
     public function isSuccessful() : bool
     {
         return $this->successful;
@@ -48,11 +51,15 @@ abstract class DefaultJob implements Job
 
     public function process() : void
     {
+        $this->validate();
+
         $start = microtime(true);
 
         $this->successful = $this->worker->work();
 
         $this->duration = microtime(true) - $start;
+
+        $this->finished = true;
     }
 
     public function getParameters() : array
@@ -60,7 +67,7 @@ abstract class DefaultJob implements Job
         return $this->parameters;
     }
 
-    public function setParameters(array $parameters) : void
+    public function setParameters(array $parameters = []) : void
     {
         $this->parameters = $parameters;
     }
@@ -90,5 +97,10 @@ abstract class DefaultJob implements Job
         if (empty(static::IDENTIFIER) || empty($this->config[static::IDENTIFIER]['type'])) {
             throw new ConfigurationException(static::IDENTIFIER);
         }
+    }
+
+    public function isFinished() : bool
+    {
+        return $this->finished;
     }
 }

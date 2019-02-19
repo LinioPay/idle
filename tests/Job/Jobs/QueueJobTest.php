@@ -21,6 +21,9 @@ class QueueJobTest extends TestCase
     /** @var Mock|WorkerFactory */
     protected $workerFactory;
 
+    /** @var array */
+    protected $jobConfig;
+
     public function setUp() : void
     {
         parent::setUp();
@@ -29,6 +32,13 @@ class QueueJobTest extends TestCase
         $this->service = m::mock(Service::class);
 
         $this->workerFactory = m::mock(WorkerFactory::class);
+
+        $this->jobConfig = [
+            QueueJob::IDENTIFIER => [
+                'type' => QueueJob::class,
+                'parameters' => [],
+            ],
+        ];
     }
 
     public function tearDown() : void
@@ -39,7 +49,21 @@ class QueueJobTest extends TestCase
         $this->workerFactory = null;
     }
 
-    public function testItCanProcessJobSuccessfully()
+    public function messageProvider()
+    {
+        return [
+            [new Message('foo', 'bar')],
+            [[
+                'queueIdentifier' => 'foo',
+                'body' => 'bar',
+            ]],
+        ];
+    }
+
+    /**
+     * @dataProvider messageProvider
+     */
+    public function testItCanProcessJobSuccessfully($message)
     {
         $this->service->shouldReceive('getQueueWorkerConfig')
             ->andReturn(['type' => DefaultWorker::class]);
@@ -61,7 +85,8 @@ class QueueJobTest extends TestCase
         $this->workerFactory->shouldReceive('createWorker')
             ->andReturn($worker);
 
-        $job = new QueueJob($this->service, new Message('foo', 'bar'), $this->workerFactory);
+        $job = new QueueJob($this->jobConfig, $this->service, $this->workerFactory);
+        $job->setParameters(['message' => $message]);
         $job->process();
 
         $this->assertTrue($job->isSuccessful());
@@ -75,6 +100,7 @@ class QueueJobTest extends TestCase
             ->andReturn(['type' => '']);
 
         $this->expectException(ConfigurationException::class);
-        (new QueueJob($this->service, new Message('foo', 'bar'), $this->workerFactory));
+        $job = new QueueJob($this->jobConfig, $this->service, $this->workerFactory);
+        $job->setParameters(['message' => new Message('foo', 'bar')]);
     }
 }

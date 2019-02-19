@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Queue;
 
+use LinioPay\Idle\Queue\Exception\InvalidMessageParameterException;
 use LinioPay\Idle\TestCase;
 
 class MessageTest extends TestCase
@@ -22,5 +23,19 @@ class MessageTest extends TestCase
         $this->assertSame($attributes, $message->getAttributes());
         $this->assertSame($messageIdentifier, $message->getMessageIdentifier());
         $this->assertSame($temporaryMetadata, $message->getTemporaryMetadata());
+    }
+
+    public function testCanGetFromArraySuccessfully()
+    {
+        $message = Message::fromArray(['body' => 'mbody', 'queueIdentifier' => 'foo_queue']);
+
+        $this->assertSame('mbody', $message->getBody());
+        $this->assertSame('foo_queue', $message->getQueueIdentifier());
+    }
+
+    public function testFromArrayThrowsExceptionWhenMessageInvalid()
+    {
+        $this->expectException(InvalidMessageParameterException::class);
+        Message::fromArray(['body' => 'mbody']);
     }
 }

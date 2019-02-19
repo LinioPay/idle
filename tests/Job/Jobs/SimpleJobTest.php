@@ -56,15 +56,14 @@ class SimpleJobTest extends TestCase
         $this->workerFactory->shouldReceive('createWorker')
             ->andReturn($worker);
 
-        $job = new SimpleJob($this->config, FooWorker::IDENTIFIER, $this->workerFactory, ['color' => 'red']);
-
+        $job = new SimpleJob($this->config, $this->workerFactory);
+        $job->setParameters(['workerIdentifier' => FooWorker::IDENTIFIER, 'color' => 'red']);
         $job->process();
 
         $this->assertTrue($job->isSuccessful());
-        $this->assertSame(['size' => 'large', 'color' => 'red'], $worker->getParameters());
-        $this->assertSame(array_merge($this->config[SimpleJob::IDENTIFIER]['parameters'], ['color' => 'red']), $job->getParameters());
-        $job->setParameters(['foo' => 'bar']);
-        $this->assertSame(['foo' => 'bar'], $job->getParameters());
+        $this->assertTrue($job->isFinished());
+        $this->assertSame(['size' => 'large', 'workerIdentifier' => 'foo', 'color' => 'red'], $worker->getParameters());
+        $this->assertSame(array_merge($this->config[SimpleJob::IDENTIFIER]['parameters'], ['workerIdentifier' => 'foo', 'color' => 'red']), $job->getParameters());
     }
 
     public function testItThrowsConfigurationExceptionWhenWorkerConfigurationIsInvalid()
@@ -81,8 +80,8 @@ class SimpleJobTest extends TestCase
         ];
 
         $this->expectException(ConfigurationException::class);
-
-        new SimpleJob($failConfig, FooWorker::IDENTIFIER, $this->workerFactory, ['color' => 'red']);
+        $job = new SimpleJob($failConfig, $this->workerFactory);
+        $job->setParameters(['workerIdentifier' => FooWorker::IDENTIFIER, 'color' => 'red']);
     }
 
     public function testItThrowsConfigurationExceptionWhenJobConfigurationIsInvalid()
@@ -93,6 +92,19 @@ class SimpleJobTest extends TestCase
 
         $this->expectException(ConfigurationException::class);
 
-        new SimpleJob($failConfig, FooWorker::IDENTIFIER, $this->workerFactory, ['color' => 'red']);
+        $job = new SimpleJob($failConfig, $this->workerFactory);
+        $job->setParameters(['workerIdentifier' => FooWorker::IDENTIFIER, 'color' => 'red']);
+    }
+
+    public function testItThrowsConfigurationExceptionWhenMissingWorkerIdentifier()
+    {
+        $failConfig = [
+            SimpleJob::IDENTIFIER => [],
+        ];
+
+        $this->expectException(ConfigurationException::class);
+
+        $job = new SimpleJob($failConfig, $this->workerFactory);
+        $job->setParameters(['color' => 'red']);
     }
 }

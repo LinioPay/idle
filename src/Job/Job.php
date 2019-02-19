@@ -13,4 +13,10 @@ interface Job
     public function isSuccessful() : bool;
 
     public function getDuration() : float;
+
+    public function getParameters() : array;
+
+    public function setParameters(array $parameters = []) : void;
+
+    public function isFinished() : bool;
 }
