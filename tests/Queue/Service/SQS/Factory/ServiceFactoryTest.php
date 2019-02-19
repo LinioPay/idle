@@ -24,15 +24,17 @@ class ServiceFactoryTest extends TestCase
     {
         $container = m::mock(ContainerInterface::class);
         $container->shouldReceive('get')
-            ->with('queue-config')
+            ->with('config')
             ->andReturn([
-                'active_service' => SQSService::IDENTIFIER,
-                'services' => [
-                    SQSService::IDENTIFIER => [
-                        'type' => 'Bar',
-                        'client' => [
-                            'version' => 'latest',
-                            'region' => 'us-east-1',
+                'queue' => [
+                    'active_service' => SQSService::IDENTIFIER,
+                    'services' => [
+                        SQSService::IDENTIFIER => [
+                            'type' => 'Bar',
+                            'client' => [
+                                'version' => 'latest',
+                                'region' => 'us-east-1',
+                            ],
                         ],
                     ],
                 ],

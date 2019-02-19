@@ -17,7 +17,7 @@ class SimpleJobFactoryTest extends TestCase
         $container = m::mock(ContainerInterface::class);
         $container->shouldReceive('get')
             ->once()
-            ->with('job-config')
+            ->with('config')
             ->andReturn([]);
         $container->shouldReceive('get')
             ->once()

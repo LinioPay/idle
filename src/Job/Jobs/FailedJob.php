@@ -12,6 +12,8 @@ class FailedJob extends DefaultJob
     public function __construct(array $errors)
     {
         $this->errors = $errors;
+        $this->finished = true;
+        $this->successful = false;
     }
 
     public function process() : void

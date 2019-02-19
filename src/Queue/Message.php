@@ -65,8 +65,8 @@ class Message
     public function toArray()
     {
         return [
-            'messageIdentifier' => $this->getMessageIdentifier(),
-            'queueIdentifier' => $this->getQueueIdentifier(),
+            'message_identifier' => $this->getMessageIdentifier(),
+            'queue_identifier' => $this->getQueueIdentifier(),
             'body' => $this->getBody(),
             'attributes' => $this->getAttributes(),
             'metadata' => $this->getTemporaryMetadata(),
@@ -76,19 +76,19 @@ class Message
     public static function fromArray(array $parameters)
     {
         $required = isset(
-            $parameters['queueIdentifier'],
+            $parameters['queue_identifier'],
             $parameters['body']
         );
 
-        if (!$required || !is_string($parameters['queueIdentifier']) || !is_string($parameters['body'])) {
-            throw new InvalidMessageParameterException('[queueIdentifier, body]');
+        if (!$required || !is_string($parameters['queue_identifier']) || !is_string($parameters['body'])) {
+            throw new InvalidMessageParameterException('[queue_identifier, body]');
         }
 
         return new Message(
-            $parameters['queueIdentifier'],
+            $parameters['queue_identifier'],
             $parameters['body'],
             $parameters['attributes'] ?? [],
-            $parameters['messageIdentifier'] ?? '',
+            $parameters['message_identifier'] ?? '',
             $parameters['metadata'] ?? []
         );
     }

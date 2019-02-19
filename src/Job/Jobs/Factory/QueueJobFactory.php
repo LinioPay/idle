@@ -13,7 +13,7 @@ class QueueJobFactory
 {
     public function __invoke(ContainerInterface $container) : QueueJob
     {
-        $jobConfig = $container->get('job-config');
+        $jobConfig = $container->get('config')['job'] ?? [];
 
         $service = $container->get(Service::class);
 

@@ -21,14 +21,16 @@ class JobFactoryTest extends TestCase
         parent::setUp();
 
         $this->config = [
-            SimpleJob::IDENTIFIER => [
-                'type' => SimpleJob::class,
-                'parameters' => [
-                    'supported' => [
-                        FooWorker::IDENTIFIER => [
-                            'type' => FooWorker::class,
-                            'parameters' => [
-                                'size' => 'large',
+            'job' => [
+                SimpleJob::IDENTIFIER => [
+                    'type' => SimpleJob::class,
+                    'parameters' => [
+                        'supported' => [
+                            FooWorker::IDENTIFIER => [
+                                'type' => FooWorker::class,
+                                'parameters' => [
+                                    'size' => 'large',
+                                ],
                             ],
                         ],
                     ],
@@ -49,7 +51,7 @@ class JobFactoryTest extends TestCase
         $container = m::mock(ContainerInterface::class);
         $container->shouldReceive('get')
             ->once()
-            ->with('job-config')
+            ->with('config')
             ->andReturn($this->config);
         $container->shouldReceive('get')
             ->once()
@@ -60,7 +62,7 @@ class JobFactoryTest extends TestCase
 
         $factory($container);
 
-        $job = $factory->createJob(SimpleJob::class, $parameters);
+        $job = $factory->createJob(SimpleJob::IDENTIFIER, $parameters);
         $this->assertInstanceOf(SimpleJob::class, $job);
     }
 
@@ -74,7 +76,7 @@ class JobFactoryTest extends TestCase
         $container = m::mock(ContainerInterface::class);
         $container->shouldReceive('get')
             ->once()
-            ->with('job-config')
+            ->with('config')
             ->andReturn($this->config);
         $container->shouldReceive('get')
             ->once()
@@ -85,7 +87,23 @@ class JobFactoryTest extends TestCase
 
         $factory($container);
 
-        $job = $factory->createJob(SimpleJob::class, []);
+        $job = $factory->createJob(SimpleJob::IDENTIFIER, []);
+        $this->assertInstanceOf(FailedJob::class, $job);
+    }
+
+    public function testFailsToFindJob()
+    {
+        $container = m::mock(ContainerInterface::class);
+        $container->shouldReceive('get')
+            ->once()
+            ->with('config')
+            ->andReturn($this->config);
+
+        $factory = new JobFactory();
+
+        $factory($container);
+
+        $job = $factory->createJob('fakeIdentifier', []);
         $this->assertInstanceOf(FailedJob::class, $job);
     }
 }

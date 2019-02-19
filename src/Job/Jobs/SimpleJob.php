@@ -23,11 +23,11 @@ class SimpleJob extends DefaultJob
 
     public function setParameters(array $parameters = []) : void
     {
-        if (!isset($parameters['workerIdentifier'])) {
+        if (!isset($parameters['worker_identifier'])) {
             throw new ConfigurationException(self::IDENTIFIER);
         }
 
-        $this->workerIdentifier = $parameters['workerIdentifier'];
+        $this->workerIdentifier = $parameters['worker_identifier'];
 
         $this->prepareJob($parameters);
         $this->prepareWorker($parameters);

@@ -54,7 +54,7 @@ class QueueJobTest extends TestCase
         return [
             [new Message('foo', 'bar')],
             [[
-                'queueIdentifier' => 'foo',
+                'queue_identifier' => 'foo',
                 'body' => 'bar',
             ]],
         ];
