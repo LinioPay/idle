@@ -30,6 +30,7 @@
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^2.13",
         "infection/infection": "^0.10.6",
+        "league/fractal": "^0.17.0",
         "michaelmoussa/php-coverage-checker": "^1.1",
         "mockery/mockery": "^1.2",
         "monolog/monolog": "^1.24",
