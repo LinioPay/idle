@@ -41,6 +41,9 @@
         "sensiolabs/security-checker": "^5.0",
         "zendframework/zend-hydrator": "^2.4"
     },
+    "suggest": {
+        "league/fractal": "Adds support for transformers."
+    },
     "scripts": {
         "check": [
             "@cs",
