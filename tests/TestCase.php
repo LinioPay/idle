@@ -2,30 +2,31 @@
 
 declare(strict_types=1);
 
-namespace LinioPay\Queue;
+namespace LinioPay\Idle;
 
 use Mockery;
 use Mockery\Instantiator;
 use PHPUnit\Framework\TestCase as TestCaseBase;
 use ReflectionClass;
+use ReflectionMethod;
 use Zend\Hydrator\Reflection;
 
 class TestCase extends TestCaseBase
 {
     /**
-     * @var Reflection
+     * @var Reflection|null
      */
     protected static $hydrator;
 
     /**
-     * @var Instantiator
+     * @var Instantiator|null
      */
     protected static $instantiator;
 
     /**
      * {@inheritdoc}
      */
-    protected function tearDown()
+    protected function tearDown() : void
     {
         Mockery::close();
         parent::tearDown();
@@ -55,8 +56,8 @@ class TestCase extends TestCaseBase
      *
      * @see http://martinfowler.com/articles/mocksArentStubs.html
      *
-     * @param $className
-     * @param array $data
+     * @param string $className
+     * @param array  $data
      *
      * @return object
      */
@@ -72,7 +73,7 @@ class TestCase extends TestCaseBase
      */
     protected function getHydrator()
     {
-        if (!self::$hydrator) {
+        if (is_null(self::$hydrator)) {
             self::$hydrator = new Reflection();
         }
 
@@ -86,7 +87,7 @@ class TestCase extends TestCaseBase
      */
     protected function getInstantiator()
     {
-        if (!self::$instantiator) {
+        if (is_null(self::$instantiator)) {
             self::$instantiator = new Instantiator();
         }
 
@@ -96,10 +97,10 @@ class TestCase extends TestCaseBase
     /**
      * Allows obtaining a method from the given class.
      *
-     * @param $className Name of the class being tested
-     * @param $methodName Name of the method being tested
+     * @param string $className  Name of the class being tested
+     * @param string $methodName Name of the method being tested
      *
-     * @return callable
+     * @return ReflectionMethod
      */
     protected static function getMethod($className, $methodName)
     {

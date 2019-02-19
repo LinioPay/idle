@@ -1,1 +1,1 @@
-Package for managing queues and jobs.
+Package for managing jobs and queues.

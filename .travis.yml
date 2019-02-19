@@ -1,0 +1,46 @@
+sudo: false
+
+language: php
+
+php:
+  - 7.2
+
+git:
+  submodules: false
+
+branches:
+  only:
+    - master
+
+env:
+  - COMPOSER_DISABLE_XDEBUG_WARN=1
+
+cache:
+  directories:
+    - $HOME/php-cs-fixer-cache
+    - $TRAVIS_BUILD_DIR/vendor
+
+install:
+  # Disable xdebug to speed up Composer install
+  - mv ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/xdebug.ini ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/xdebug.ini.bak
+  - composer install --prefer-dist --no-interaction
+
+script:
+  # Install cached php-cs-fixer cache file
+  - |
+    if [ -e $HOME/php-cs-fixer-cache/.php_cs.cache ]; then
+      cp $HOME/php-cs-fixer-cache/.php_cs.cache $TRAVIS_BUILD_DIR/
+    fi
+  - vendor/bin/php-cs-fixer fix --dry-run
+  # Cache the php-cs-fixer cache file for next time because running it with cold cache is dreadfully slow
+  - mkdir -p $HOME/php-cs-fixer-cache/ && cp $TRAVIS_BUILD_DIR/.php_cs.cache $HOME/php-cs-fixer-cache/
+  # Runs a security check on packages
+  - vendor/bin/security-checker security:check $TRAVIS_BUILD_DIR/composer.json
+    # Restore xdebug to gather code coverage
+  - mv ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/xdebug.ini.bak ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/xdebug.ini
+  - vendor/bin/phpunit
+  - # Disable xdebug to speed up Mutation and Integration Tests
+  - mv ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/xdebug.ini ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/xdebug.ini.bak
+  - vendor/bin/php-coverage-checker build/coverage-clover.xml 100
+  - vendor/bin/infection --only-covered --min-msi=100 --min-covered-msi=100 --coverage=build
+  - vendor/bin/phpstan analyse
