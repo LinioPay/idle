@@ -15,12 +15,14 @@ class ServiceFactoryTest extends TestCase
     {
         $container = m::mock(ContainerInterface::class);
         $container->shouldReceive('get')
-            ->with('queue-config')
+            ->with('config')
             ->andReturn([
-                'active_service' => 'foo',
-                'services' => [
-                    'foo' => [
-                        'type' => 'Bar',
+                'queue' => [
+                    'active_service' => 'foo',
+                    'services' => [
+                        'foo' => [
+                            'type' => 'Bar',
+                        ],
                     ],
                 ],
             ]);

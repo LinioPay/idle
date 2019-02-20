@@ -27,7 +27,7 @@ class MessageTest extends TestCase
 
     public function testCanGetFromArraySuccessfully()
     {
-        $message = Message::fromArray(['body' => 'mbody', 'queueIdentifier' => 'foo_queue']);
+        $message = Message::fromArray(['body' => 'mbody', 'queue_identifier' => 'foo_queue']);
 
         $this->assertSame('mbody', $message->getBody());
         $this->assertSame('foo_queue', $message->getQueueIdentifier());

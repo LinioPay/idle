@@ -44,7 +44,7 @@ class QueueJob extends DefaultJob
 
     public function setParameters(array $parameters = []) : void
     {
-        $this->message = $parameters['message'] = is_a($parameters['message'], Message::class)
+        $this->message = $parameters['message'] = is_a($parameters['message'] ?? [], Message::class)
             ? $parameters['message']
             : Message::fromArray($parameters['message'] ?? []);
 

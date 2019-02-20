@@ -13,7 +13,7 @@ class ServiceFactory
 {
     public function __invoke(ContainerInterface $container) : Service
     {
-        $idleConfig = $container->get('queue-config');
+        $idleConfig = $container->get('config')['queue'] ?? [];
 
         $serviceConfig = $idleConfig['services'][Service::IDENTIFIER] ?? [];
 

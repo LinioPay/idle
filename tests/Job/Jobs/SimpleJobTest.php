@@ -57,13 +57,13 @@ class SimpleJobTest extends TestCase
             ->andReturn($worker);
 
         $job = new SimpleJob($this->config, $this->workerFactory);
-        $job->setParameters(['workerIdentifier' => FooWorker::IDENTIFIER, 'color' => 'red']);
+        $job->setParameters(['worker_identifier' => FooWorker::IDENTIFIER, 'color' => 'red']);
         $job->process();
 
         $this->assertTrue($job->isSuccessful());
         $this->assertTrue($job->isFinished());
-        $this->assertSame(['size' => 'large', 'workerIdentifier' => 'foo', 'color' => 'red'], $worker->getParameters());
-        $this->assertSame(array_merge($this->config[SimpleJob::IDENTIFIER]['parameters'], ['workerIdentifier' => 'foo', 'color' => 'red']), $job->getParameters());
+        $this->assertSame(['size' => 'large', 'worker_identifier' => 'foo', 'color' => 'red'], $worker->getParameters());
+        $this->assertSame(array_merge($this->config[SimpleJob::IDENTIFIER]['parameters'], ['worker_identifier' => 'foo', 'color' => 'red']), $job->getParameters());
     }
 
     public function testItThrowsConfigurationExceptionWhenWorkerConfigurationIsInvalid()
@@ -81,7 +81,7 @@ class SimpleJobTest extends TestCase
 
         $this->expectException(ConfigurationException::class);
         $job = new SimpleJob($failConfig, $this->workerFactory);
-        $job->setParameters(['workerIdentifier' => FooWorker::IDENTIFIER, 'color' => 'red']);
+        $job->setParameters(['worker_identifier' => FooWorker::IDENTIFIER, 'color' => 'red']);
     }
 
     public function testItThrowsConfigurationExceptionWhenJobConfigurationIsInvalid()
@@ -93,7 +93,7 @@ class SimpleJobTest extends TestCase
         $this->expectException(ConfigurationException::class);
 
         $job = new SimpleJob($failConfig, $this->workerFactory);
-        $job->setParameters(['workerIdentifier' => FooWorker::IDENTIFIER, 'color' => 'red']);
+        $job->setParameters(['worker_identifier' => FooWorker::IDENTIFIER, 'color' => 'red']);
     }
 
     public function testItThrowsConfigurationExceptionWhenMissingWorkerIdentifier()

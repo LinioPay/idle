@@ -12,7 +12,7 @@ class SimpleJobFactory
 {
     public function __invoke(ContainerInterface $container) : SimpleJob
     {
-        $jobConfig = $container->get('job-config');
+        $jobConfig = $container->get('config')['job'] ?? [];
 
         $workerFactory = $container->get(WorkerFactory::class);
 
