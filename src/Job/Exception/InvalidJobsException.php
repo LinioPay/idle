@@ -8,7 +8,7 @@ use Exception;
 
 class InvalidJobsException extends Exception
 {
-    const MESSAGE = 'Transformer requires a jobs array in order to transform.';
+    const MESSAGE = 'An invalid jobs array was provided.';
 
     public function __construct()
     {
