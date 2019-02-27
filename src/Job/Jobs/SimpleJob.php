@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace LinioPay\Idle\Job\Jobs;
 
 use LinioPay\Idle\Job\Exception\ConfigurationException;
-use LinioPay\Idle\Job\Workers\Factory\WorkerFactory;
+use LinioPay\Idle\Job\Workers\Factory\Worker as WorkerFactoryInterface;
 use Zend\Stdlib\ArrayUtils;
 
 class SimpleJob extends DefaultJob
@@ -15,7 +15,7 @@ class SimpleJob extends DefaultJob
     /** @var string */
     protected $workerIdentifier;
 
-    public function __construct(array $config, WorkerFactory $workerFactory)
+    public function __construct(array $config, WorkerFactoryInterface $workerFactory)
     {
         $this->config = $config;
         $this->workerFactory = $workerFactory;

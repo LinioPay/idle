@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LinioPay\Idle\Job\Jobs\Factory;
 
 use LinioPay\Idle\Job\Jobs\QueueJob;
+use LinioPay\Idle\Job\Workers\Factory\Worker as WorkerFactoryInterface;
 use LinioPay\Idle\Job\Workers\Factory\WorkerFactory;
 use LinioPay\Idle\Queue\Service;
 use LinioPay\Idle\TestCase;
@@ -26,7 +27,7 @@ class QueueJobFactoryTest extends TestCase
             ->andReturn(m::mock(Service::class));
         $container->shouldReceive('get')
             ->once()
-            ->with(WorkerFactory::class)
+            ->with(WorkerFactoryInterface::class)
             ->andReturn(m::mock(WorkerFactory::class));
 
         $factory = new QueueJobFactory();
