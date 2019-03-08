@@ -36,7 +36,7 @@ abstract class DefaultWorker implements Worker
         $this->errors = $errors;
     }
 
-    public function validateParameters(array $parameters): void
+    public function validateParameters(array $parameters) : void
     {
         // Override with custom validation of worker parameters
     }
