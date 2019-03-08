@@ -61,6 +61,6 @@ class QueueJob extends DefaultJob
             throw new ConfigurationException($this->message->getQueueIdentifier(), ConfigurationException::TYPE_WORKER);
         }
 
-        $this->buildWorker($workerConfig['type'], $workerConfig['parameters'] ?? []);
+        $this->buildWorker($workerConfig['type'], array_replace($workerConfig['parameters'] ?? [], $this->getParameters()));
     }
 }
