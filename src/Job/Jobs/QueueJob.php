@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Job\Jobs;
 
-use LinioPay\Idle\Job\Workers\Factory\WorkerFactory;
+use LinioPay\Idle\Job\Workers\Factory\Worker as WorkerFactoryInterface;
 use LinioPay\Idle\Queue\Exception\ConfigurationException;
 use LinioPay\Idle\Queue\Message;
 use LinioPay\Idle\Queue\Service;
@@ -19,7 +19,7 @@ class QueueJob extends DefaultJob
     /** @var Message */
     protected $message;
 
-    public function __construct(array $config, Service $service, WorkerFactory $workerFactory)
+    public function __construct(array $config, Service $service, WorkerFactoryInterface $workerFactory)
     {
         $this->config = $config;
         $this->service = $service;
@@ -61,6 +61,6 @@ class QueueJob extends DefaultJob
             throw new ConfigurationException($this->message->getQueueIdentifier(), ConfigurationException::TYPE_WORKER);
         }
 
-        $this->buildWorker($workerConfig['type'], $workerConfig['parameters'] ?? []);
+        $this->buildWorker($workerConfig['type'], array_replace($workerConfig['parameters'] ?? [], $this->getParameters()));
     }
 }

@@ -6,8 +6,8 @@ namespace LinioPay\Idle\Job\Jobs;
 
 use LinioPay\Idle\Job\Exception\ConfigurationException;
 use LinioPay\Idle\Job\Job;
-use LinioPay\Idle\Job\Worker;
-use LinioPay\Idle\Job\Workers\Factory\WorkerFactory;
+use LinioPay\Idle\Job\Worker as WorkerInterface;
+use LinioPay\Idle\Job\Workers\Factory\Worker as WorkerFactoryInterface;
 
 abstract class DefaultJob implements Job
 {
@@ -25,10 +25,10 @@ abstract class DefaultJob implements Job
     /** @var array */
     protected $parameters;
 
-    /** @var Worker */
+    /** @var WorkerInterface */
     protected $worker;
 
-    /** @var WorkerFactory */
+    /** @var WorkerFactoryInterface */
     protected $workerFactory;
 
     /** @var bool */

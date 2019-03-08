@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace LinioPay\Idle\Job\Jobs\Factory;
 
 use LinioPay\Idle\Job\Jobs\QueueJob;
-use LinioPay\Idle\Job\Workers\Factory\WorkerFactory;
+use LinioPay\Idle\Job\Workers\Factory\Worker as WorkerFactoryInterface;
 use LinioPay\Idle\Queue\Service;
 use Psr\Container\ContainerInterface;
 
@@ -17,7 +17,7 @@ class QueueJobFactory
 
         $service = $container->get(Service::class);
 
-        $workerFactory = $container->get(WorkerFactory::class);
+        $workerFactory = $container->get(WorkerFactoryInterface::class);
 
         return new QueueJob($jobConfig, $service, $workerFactory);
     }

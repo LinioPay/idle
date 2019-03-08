@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace LinioPay\Idle\Job\Workers\Factory;
 
 use LinioPay\Idle\Job\Worker;
+use LinioPay\Idle\Job\Workers\Factory\Worker as WorkerFactoryInterface;
 use Psr\Container\ContainerInterface;
 
-class WorkerFactory
+class WorkerFactory implements WorkerFactoryInterface
 {
     /**
      * @var ContainerInterface

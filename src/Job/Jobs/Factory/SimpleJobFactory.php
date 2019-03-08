@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace LinioPay\Idle\Job\Jobs\Factory;
 
 use LinioPay\Idle\Job\Jobs\SimpleJob;
-use LinioPay\Idle\Job\Workers\Factory\WorkerFactory;
+use LinioPay\Idle\Job\Workers\Factory\Worker as WorkerFactoryInterface;
 use Psr\Container\ContainerInterface;
 
 class SimpleJobFactory
@@ -14,7 +14,7 @@ class SimpleJobFactory
     {
         $jobConfig = $container->get('config')['job'] ?? [];
 
-        $workerFactory = $container->get(WorkerFactory::class);
+        $workerFactory = $container->get(WorkerFactoryInterface::class);
 
         return new SimpleJob($jobConfig, $workerFactory);
     }
