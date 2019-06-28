@@ -4,22 +4,27 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Job\Jobs;
 
+use LinioPay\Idle\Job\Tracker\Service as TrackerService;
+use LinioPay\Idle\Job\Tracker\Service\Factory\ServiceFactory as TrackerServiceFactory;
 use LinioPay\Idle\Job\Workers\DefaultWorker;
 use LinioPay\Idle\Job\Workers\Factory\WorkerFactory;
 use LinioPay\Idle\Queue\Exception\ConfigurationException;
 use LinioPay\Idle\Queue\Message;
-use LinioPay\Idle\Queue\Service;
+use LinioPay\Idle\Queue\Service as QueueService;
 use LinioPay\Idle\TestCase;
 use Mockery as m;
 use Mockery\Mock;
 
 class QueueJobTest extends TestCase
 {
-    /** @var Mock|Service */
+    /** @var Mock|QueueService */
     protected $service;
 
     /** @var Mock|WorkerFactory */
     protected $workerFactory;
+
+    /** @var Mock|TrackerServiceFactory */
+    protected $trackerServiceFactory;
 
     /** @var array */
     protected $jobConfig;
@@ -28,10 +33,11 @@ class QueueJobTest extends TestCase
     {
         parent::setUp();
 
-        /* @var Mock|Service $service */
-        $this->service = m::mock(Service::class);
+        /* @var Mock|QueueService $service */
+        $this->service = m::mock(QueueService::class);
 
         $this->workerFactory = m::mock(WorkerFactory::class);
+        $this->trackerServiceFactory = m::mock(TrackerServiceFactory::class);
 
         $this->jobConfig = [
             QueueJob::IDENTIFIER => [
@@ -47,6 +53,7 @@ class QueueJobTest extends TestCase
 
         $this->service = null;
         $this->workerFactory = null;
+        $this->trackerServiceFactory = null;
     }
 
     public function messageProvider()
@@ -68,8 +75,17 @@ class QueueJobTest extends TestCase
         $this->service->shouldReceive('getQueueWorkerConfig')
             ->andReturn(['type' => DefaultWorker::class]);
         $this->service->shouldReceive('getQueueConfig')
-            ->once()
-            ->andReturn(['delete' => ['enabled' => true]]);
+            ->twice()
+            ->andReturn([
+                'delete' => ['enabled' => true],
+                'parameters' => [
+                    'tracker' => [
+                        'service' => [
+                            'type' => 'foo',
+                        ],
+                    ],
+                ],
+            ]);
         $this->service->shouldReceive('delete')
             ->once();
 
@@ -85,7 +101,15 @@ class QueueJobTest extends TestCase
         $this->workerFactory->shouldReceive('createWorker')
             ->andReturn($worker);
 
-        $job = new QueueJob($this->jobConfig, $this->service, $this->workerFactory);
+        $trackerService = m::mock(TrackerService::class);
+        $trackerService->shouldReceive('trackJob')
+            ->twice();
+
+        $this->trackerServiceFactory->shouldReceive('createTrackerService')
+            ->once()
+            ->andReturn($trackerService);
+
+        $job = new QueueJob($this->jobConfig, $this->service, $this->workerFactory, $this->trackerServiceFactory);
         $job->setParameters(['message' => $message]);
         $job->process();
 
@@ -98,9 +122,12 @@ class QueueJobTest extends TestCase
     {
         $this->service->shouldReceive('getQueueWorkerConfig')
             ->andReturn(['type' => '']);
+        $this->service->shouldReceive('getQueueConfig')
+            ->once()
+            ->andReturn([]);
 
         $this->expectException(ConfigurationException::class);
-        $job = new QueueJob($this->jobConfig, $this->service, $this->workerFactory);
+        $job = new QueueJob($this->jobConfig, $this->service, $this->workerFactory, $this->trackerServiceFactory);
         $job->setParameters(['message' => new Message('foo', 'bar')]);
     }
 }

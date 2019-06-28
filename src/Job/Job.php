@@ -19,4 +19,8 @@ interface Job
     public function setParameters(array $parameters = []) : void;
 
     public function isFinished() : bool;
+
+    public function getTrackerData() : array;
+
+    public function getTypeIdentifier() : string;
 }

@@ -24,5 +24,6 @@ class DefaultWorkerTest extends TestCase
         $method->invokeArgs($worker, [$errors]);
 
         $this->assertSame($errors, $worker->getErrors());
+        $this->assertSame([], $worker->getTrackerData());
     }
 }

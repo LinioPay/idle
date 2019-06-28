@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Job\Jobs;
 
+use LinioPay\Idle\Job\Tracker\Service\Factory\Service as TrackerServiceFactoryInterface;
 use LinioPay\Idle\Job\Workers\Factory\Worker as WorkerFactoryInterface;
 use LinioPay\Idle\Queue\Exception\ConfigurationException;
 use LinioPay\Idle\Queue\Message;
@@ -19,11 +20,12 @@ class QueueJob extends DefaultJob
     /** @var Message */
     protected $message;
 
-    public function __construct(array $config, Service $service, WorkerFactoryInterface $workerFactory)
+    public function __construct(array $config, Service $service, WorkerFactoryInterface $workerFactory, TrackerServiceFactoryInterface $trackerServiceFactory)
     {
         $this->config = $config;
         $this->service = $service;
         $this->workerFactory = $workerFactory;
+        $this->trackerServiceFactory = $trackerServiceFactory;
     }
 
     public function process() : void
@@ -48,7 +50,9 @@ class QueueJob extends DefaultJob
             ? $parameters['message']
             : Message::fromArray($parameters['message'] ?? []);
 
-        parent::setParameters($parameters);
+        $queueConfig = $this->service->getQueueConfig($this->message->getQueueIdentifier());
+
+        parent::setParameters(array_merge_recursive($queueConfig['parameters'] ?? [], $parameters));
 
         $this->buildQueueJobWorker();
     }

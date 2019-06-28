@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Queue;
 
+use JsonSerializable;
 use LinioPay\Idle\Queue\Exception\InvalidMessageParameterException;
 
-class Message
+class Message implements JsonSerializable
 {
     /** @var string */
     protected $messageIdentifier;
@@ -91,5 +92,14 @@ class Message
             $parameters['message_identifier'] ?? '',
             $parameters['metadata'] ?? []
         );
+    }
+
+    public function jsonSerialize()
+    {
+        $data = $this->toArray();
+
+        unset($data['metadata']);
+
+        return $data;
     }
 }
