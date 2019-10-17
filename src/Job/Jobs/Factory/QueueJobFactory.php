@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LinioPay\Idle\Job\Jobs\Factory;
 
 use LinioPay\Idle\Job\Jobs\QueueJob;
+use LinioPay\Idle\Job\Tracker\Service\Factory\Service as TrackerServiceFactoryInterface;
 use LinioPay\Idle\Job\Workers\Factory\Worker as WorkerFactoryInterface;
 use LinioPay\Idle\Queue\Service;
 use Psr\Container\ContainerInterface;
@@ -19,6 +20,8 @@ class QueueJobFactory
 
         $workerFactory = $container->get(WorkerFactoryInterface::class);
 
-        return new QueueJob($jobConfig, $service, $workerFactory);
+        $trackerServiceFactory = $container->get(TrackerServiceFactoryInterface::class);
+
+        return new QueueJob($jobConfig, $service, $workerFactory, $trackerServiceFactory);
     }
 }

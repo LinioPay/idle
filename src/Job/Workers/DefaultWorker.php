@@ -40,4 +40,9 @@ abstract class DefaultWorker implements Worker
     {
         // Override with custom validation of worker parameters
     }
+
+    public function getTrackerData() : array
+    {
+        return [];
+    }
 }

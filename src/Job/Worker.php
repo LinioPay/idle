@@ -13,4 +13,6 @@ interface Worker
     public function getErrors() : array;
 
     public function getParameters() : array;
+
+    public function getTrackerData() : array;
 }

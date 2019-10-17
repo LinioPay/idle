@@ -33,6 +33,18 @@ class MessageTest extends TestCase
         $this->assertSame('foo_queue', $message->getQueueIdentifier());
     }
 
+    public function testCanJsonSerialize()
+    {
+        $message = Message::fromArray(['body' => 'mbody', 'queue_identifier' => 'foo_queue']);
+
+        $this->assertSame([
+            'message_identifier' => '',
+            'queue_identifier' => 'foo_queue',
+            'body' => 'mbody',
+            'attributes' => [],
+        ], $message->jsonSerialize());
+    }
+
     public function testFromArrayThrowsExceptionWhenMessageInvalid()
     {
         $this->expectException(InvalidMessageParameterException::class);

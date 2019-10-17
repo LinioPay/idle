@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LinioPay\Idle\Job\Jobs;
 
 use LinioPay\Idle\Job\Exception\ConfigurationException;
+use LinioPay\Idle\Job\Tracker\Service\Factory\Service as TrackerServiceFactoryInterface;
 use LinioPay\Idle\Job\Workers\Factory\Worker as WorkerFactoryInterface;
 use Zend\Stdlib\ArrayUtils;
 
@@ -15,10 +16,11 @@ class SimpleJob extends DefaultJob
     /** @var string */
     protected $workerIdentifier;
 
-    public function __construct(array $config, WorkerFactoryInterface $workerFactory)
+    public function __construct(array $config, WorkerFactoryInterface $workerFactory, TrackerServiceFactoryInterface $trackerServiceFactory)
     {
         $this->config = $config;
         $this->workerFactory = $workerFactory;
+        $this->trackerServiceFactory = $trackerServiceFactory;
     }
 
     public function setParameters(array $parameters = []) : void

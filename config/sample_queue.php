@@ -1,5 +1,6 @@
 <?php
 
+use LinioPay\Idle\Job\Tracker\Service\DynamoDB\Service as DynamoDB;
 use LinioPay\Idle\Queue\Service;
 use LinioPay\Idle\Queue\Service\SQS\Service as SQS;
 use LinioPay\Idle\Job\Workers\FooWorker;
@@ -44,11 +45,20 @@ return [
                     'worker' => [
                         //'type' => '', Must be overriden
                         'parameters' => [],
-                    ]
+                    ],
+                    'parameters' => [],
                 ],
                 Service::FOO_QUEUE => [
                     'worker' => [
                         'type' => FooWorker::class,
+                    ],
+                    'parameters' => [
+                        'tracker' => [ // Will track all foo queue jobs with the specified tracker
+                            'service' => [
+                                'type' => DynamoDB::class,
+                                'table' => 'my_foo_queue_table',
+                            ]
+                        ]
                     ]
                 ]
             ]
