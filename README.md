@@ -14,7 +14,7 @@ A job as far as Idle is concerned, is a task which needs to be performed, as wel
 
 ###### SimpleJob
 
-A SimpleJob is essentially a transparent taskmaster which forwards all task details to the worker doing the actual work.  It is useful when the task being performed does not require any pre-processing or orchestration.  Since its a dummy taskmaster, it needs to be told exactly which worker will complete the task, and what the parameters the worker will need in order to complete the task.  SimpleJobs have only one required parameter: `worker_identifier`.
+A SimpleJob is essentially a transparent taskmaster which forwards all task details to the worker doing the actual work.  It is useful when the task being performed does not require any pre-processing or orchestration.  Since its a dummy taskmaster, it needs to be told exactly which worker will complete the task, and what the parameters the worker will need in order to complete the task.  SimpleJobs have only one required parameter: `simple_identifier`.
 
 ###### QueueJob
 
@@ -64,8 +64,8 @@ Additionally, the container must be made aware of the following factories and in
 \LinioPay\Idle\Job\Jobs\QueueJob::class => \LinioPay\Idle\Job\Jobs\Factory\QueueJobFactory::class,
 \LinioPay\Idle\Job\Jobs\SimpleJob::class => \LinioPay\Idle\Job\Jobs\Factory\SimpleJobFactory::class,
 \LinioPay\Idle\Job\Workers\Factory\Worker::class => \LinioPay\Idle\Job\Workers\Factory\WorkerFactory::class,
-\LinioPay\Idle\Queue\Service::class => \LinioPay\Idle\Queue\Service\Factory\ServiceFactory::class,
-(optional - only if using SQS) \LinioPay\Idle\Queue\Service\SQS\Service::class => \LinioPay\Idle\Queue\Service\SQS\Factory\ServiceFactory::class,
+\LinioPay\Idle\Message\Messages\Queue\Service::class => \LinioPay\Idle\Message\Messages\Queue\Service\Factory\ServiceFactory::class,
+(optional - only if using SQS) \LinioPay\Idle\Message\Messages\Queue\Service\SQS\Service::class => \LinioPay\Idle\Message\Messages\Queue\Service\SQS\Factory\ServiceFactory::class,
 (optional - sample worker) \LinioPay\Idle\Job\Workers\FooWorker::class => \LinioPay\Idle\Job\Workers\FooWorker::class,
 ```
 
@@ -104,7 +104,7 @@ In some cases applications need to run random one off, straight forward jobs, in
 {
     "identifier": "simple", // This is the job type identifier for SimpleJob
     "parameters": {
-      "worker_identifier": "foo", // Same as FooWorker::IDENTIFIER, which is configured as a `supported` worker under SimpleJob
+      "simple_identifier": "foo", // Same as FooWorker::IDENTIFIER, which is configured as a `supported` worker under SimpleJob
       "color": "red" // A random parameter the worker may need to do its work
     }
 }
@@ -118,7 +118,7 @@ $jobFactory = $container->get(JobFactory::class);
 $job = $jobFactory->createJob($jobData['identifier'] ?? '', $jobData['parameters'] ?? []);
 ```
 
-In this case the payload contains an `identifier` of 'simple', this will result in the factory creating a `SimpleJob`.  The `SimpleJob` validation expects a `worker_identifier` as its only required parameter.  If one is not provided -or an unsupported worker identifier- it will return a FailedJob containing the details.  Since our payload contains a valid `worker_identifier`, a `SimpleJob` will be created in this example.
+In this case the payload contains an `identifier` of 'simple', this will result in the factory creating a `SimpleJob`.  The `SimpleJob` validation expects a `simple_identifier` as its only required parameter.  If one is not provided -or an unsupported worker identifier- it will return a FailedJob containing the details.  Since our payload contains a valid `simple_identifier`, a `SimpleJob` will be created in this example.
 
 Processing and retrieving job details is the same as for any other job type.  At this point all that is left is to process the job.  When a `SimpleJob` is initiated through a call to `process`, it calls the appropriate worker's `work` method.
 
@@ -295,17 +295,17 @@ Each queue entry in the `queues` section has four main action areas: dequeue, qu
 The process for adding a message to the queue simply involves creating the message and passing it to the `queue` (`public function queue(Message $message, array $parameters = []) : bool`) method in the queue service. It will return a boolean indicating success.
 
 ```php
-$queueService = $container->get(LinioPay\Idle\Queue\Service::class);
+$queueService = $container->get(LinioPay\Idle\Message\Messages\Queue\Service::class);
 ...
-$queueService->queue(new LinioPay\Idle\Queue\Message(Service::FOO_QUEUE, 'foo body'));
+$queueService->queue(new LinioPay\Idle\Message\Messages\Queue\Message(Service::FOO_QUEUE, 'foo body'));
 ```
 
 #### Reading a message from the queue
 
-The process for reading a message from the queue simply involves figuring out which queue to read from and passing it to the `dequeue` (`public function dequeue(string $queueIdentifier, array $parameters = []) : array`) method in the queue service. It will return an array of `LinioPay\Idle\Queue\Message` since its possible to read more than one Message at a time for some services.
+The process for reading a message from the queue simply involves figuring out which queue to read from and passing it to the `dequeue` (`public function dequeue(string $queueIdentifier, array $parameters = []) : array`) method in the queue service. It will return an array of `LinioPay\Idle\Message\Messages\Queue\Message` since its possible to read more than one Message at a time for some services.
 
 ```php
-$queueService = $container->get(LinioPay\Idle\Queue\Service::class);
+$queueService = $container->get(LinioPay\Idle\Message\Messages\Queue\Service::class);
 ...
 $messages = $queueService->dequeue(Service::FOO_QUEUE);
 ```
@@ -315,7 +315,7 @@ $messages = $queueService->dequeue(Service::FOO_QUEUE);
 The process for deleting a message from the queue requires passing the Message which is being deleted to the `delete` (`public function delete(Message $message, array $parameters = []) : bool`) method in the queue service. It will return a boolean indicating success.
 
 ```php
-$queueService = $container->get(LinioPay\Idle\Queue\Service::class);
+$queueService = $container->get(LinioPay\Idle\Message\Messages\Queue\Service::class);
 ...
 $messages = $queueService->dequeue(Service::FOO_QUEUE);
 
@@ -415,7 +415,7 @@ $jobFactory = $container->get(JobFactory::class);
 $job = $jobFactory->createJob($jobData['identifier'] ?? '', $jobData['parameters'] ?? []);
 ```
 
-In this case the payload contains an `identifier` of 'queue', this will result in the factory creating a `QueueJob`.  The QueueJob validation expects a message as its only parameter (corresponding to a `LinioPay\Idle\Queue\Message`).  If one is not provided -or an invalid Message is provided- it will return a FailedJob containing the details.  Since our payload contains a valid message, a `QueueJob` will be created in this example.
+In this case the payload contains an `identifier` of 'queue', this will result in the factory creating a `QueueJob`.  The QueueJob validation expects a message as its only parameter (corresponding to a `LinioPay\Idle\Message\Messages\Queue\Message`).  If one is not provided -or an invalid Message is provided- it will return a FailedJob containing the details.  Since our payload contains a valid message, a `QueueJob` will be created in this example.
 
 Processing and retrieving job details is quite simple.  At this point all that is left is to initiate the job.  When a QueueJob is initiated through a call to `process`, it calls the appropriate worker's `work` method.
 

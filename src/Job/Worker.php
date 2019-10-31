@@ -14,5 +14,5 @@ interface Worker
 
     public function getParameters() : array;
 
-    public function getTrackerData() : array;
+    public function validateParameters() : void;
 }

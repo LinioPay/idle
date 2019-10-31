@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace LinioPay\Idle\Job\Jobs;
 
 use LinioPay\Idle\Job\Exception\ConfigurationException;
-use LinioPay\Idle\Job\Tracker\Service\Factory\ServiceFactory as TrackerServiceFactory;
+use LinioPay\Idle\Job\Exception\InvalidJobParameterException;
+use LinioPay\Idle\Job\Job;
 use LinioPay\Idle\Job\Worker;
 use LinioPay\Idle\Job\Workers\Factory\WorkerFactory;
 use LinioPay\Idle\Job\Workers\FooWorker;
@@ -18,34 +19,43 @@ class SimpleJobTest extends TestCase
     /** @var array */
     protected $config;
 
-    /** @var Mock|WorkerFactory workerFactory */
+    /** @var Mock|WorkerFactory */
     protected $workerFactory;
-
-    /** @var Mock|TrackerServiceFactory */
-    protected $trackerServiceFactory;
 
     public function setUp() : void
     {
         parent::setUp();
 
+        $this->workerFactory = m::mock(WorkerFactory::class);
+
         $this->config = [
-            SimpleJob::IDENTIFIER => [
-                'type' => SimpleJob::class,
-                'parameters' => [
-                    'supported' => [
-                        FooWorker::IDENTIFIER => [
-                            'type' => FooWorker::class,
-                            'parameters' => [
-                                'size' => 'large',
+            'types' => [
+                SimpleJob::IDENTIFIER => [
+                    'class' => SimpleJob::class,
+                    'parameters' => [
+                        'supported' => [
+                            'foo_job' => [
+                                'parameters' => [
+                                    'workers' => [
+                                        [
+                                            'type' => FooWorker::IDENTIFIER,
+                                            'parameters' => [],
+                                        ],
+                                    ],
+                                ],
                             ],
                         ],
                     ],
                 ],
             ],
+            'worker' => [
+                'types' => [
+                    FooWorker::IDENTIFIER => [
+                        'class' => FooWorker::class,
+                    ],
+                ],
+            ],
         ];
-
-        $this->workerFactory = m::mock(WorkerFactory::class);
-        $this->trackerServiceFactory = m::mock(TrackerServiceFactory::class);
     }
 
     public function tearDown() : void
@@ -62,43 +72,45 @@ class SimpleJobTest extends TestCase
         $this->workerFactory->shouldReceive('createWorker')
             ->andReturn($worker);
 
-        $job = new SimpleJob($this->config, $this->workerFactory, $this->trackerServiceFactory);
-        $job->setParameters(['worker_identifier' => FooWorker::IDENTIFIER, 'color' => 'red']);
+        $job = new SimpleJob($this->config, $this->workerFactory);
+        $job->setParameters(['simple_identifier' => 'foo_job']);
+        $job->validateConfig();
         $job->process();
+        $job->validateParameters();
 
         $this->assertTrue($job->isSuccessful());
         $this->assertTrue($job->isFinished());
-        $this->assertSame(['size' => 'large', 'worker_identifier' => 'foo', 'color' => 'red'], $worker->getParameters());
-        $this->assertSame(array_merge($this->config[SimpleJob::IDENTIFIER]['parameters'], ['worker_identifier' => 'foo', 'color' => 'red']), $job->getParameters());
+
+        $parameters = $job->getParameters();
+        $this->assertArrayHasKey('simple_identifier', $parameters);
     }
 
-    public function testRetrievesTrackerData()
+    public function testGetsTrackerData()
     {
         $worker = new FooWorker();
+        $worker = m::mock($worker);
+        $worker->shouldReceive('getTrackerData')
+            ->once()
+            ->andReturn(['foo_worker' => 'bar_worker']);
 
         $this->workerFactory->shouldReceive('createWorker')
             ->andReturn($worker);
 
-        $job = new SimpleJob($this->config, $this->workerFactory, $this->trackerServiceFactory);
-        $job->setParameters(['worker_identifier' => FooWorker::IDENTIFIER, 'color' => 'red']);
+        $job = new SimpleJob($this->config, $this->workerFactory);
+        $job->setParameters(['simple_identifier' => 'foo_job']);
         $job->process();
 
-        $trackerData = $job->getTrackerData();
-        $this->assertArrayHasKey('id', $trackerData);
-        $this->assertArrayHasKey('start', $trackerData);
-        $this->assertArrayHasKey('duration', $trackerData);
-        $this->assertArrayHasKey('successful', $trackerData);
-        $this->assertArrayHasKey('finished', $trackerData);
-        $this->assertArrayHasKey('errors', $trackerData);
-        $this->assertArrayHasKey('parameters', $trackerData);
+        $data = $job->getTrackerData();
+        $this->assertArrayHasKey('id', $data);
+        $this->assertArrayHasKey('start', $data);
+        $this->assertArrayHasKey('duration', $data);
+        $this->assertArrayHasKey('successful', $data);
+        $this->assertArrayHasKey('finished', $data);
+        $this->assertArrayHasKey('errors', $data);
+        $this->assertArrayHasKey('parameters', $data);
+        $this->assertArrayHasKey('foo_worker', $data);
 
-        $this->assertIsString($trackerData['id']);
-        $this->assertIsString($trackerData['start']);
-        $this->assertIsFloat($trackerData['duration']);
-        $this->assertTrue($trackerData['successful']);
-        $this->assertTrue($trackerData['finished']);
-        $this->assertIsString($trackerData['errors']);
-        $this->assertIsString($trackerData['parameters']);
+        $this->assertSame('bar_worker', $data['foo_worker']);
     }
 
     public function testProcessAddsExceptionsToJobErrors()
@@ -106,8 +118,6 @@ class SimpleJobTest extends TestCase
         $worker = m::mock(Worker::class);
         $worker->shouldReceive('work')
             ->andThrow(new ConfigurationException('foo'));
-        $worker->shouldReceive('setParameters')
-            ->once();
         $worker->shouldReceive('getErrors')
             ->once()
             ->andReturn([]);
@@ -115,8 +125,8 @@ class SimpleJobTest extends TestCase
         $this->workerFactory->shouldReceive('createWorker')
             ->andReturn($worker);
 
-        $job = new SimpleJob($this->config, $this->workerFactory, $this->trackerServiceFactory);
-        $job->setParameters(['worker_identifier' => FooWorker::IDENTIFIER, 'color' => 'red']);
+        $job = new SimpleJob($this->config, $this->workerFactory);
+        $job->setParameters(['simple_identifier' => 'foo_job']);
 
         try {
             $job->process();
@@ -129,50 +139,31 @@ class SimpleJobTest extends TestCase
 
     public function testCanGetIdentifier()
     {
-        $job = new SimpleJob($this->config, $this->workerFactory, $this->trackerServiceFactory);
+        $job = new SimpleJob($this->config, $this->workerFactory);
 
         $this->assertSame('simple', $job->getTypeIdentifier());
-    }
-
-    public function testItThrowsConfigurationExceptionWhenWorkerConfigurationIsInvalid()
-    {
-        $failConfig = [
-            SimpleJob::IDENTIFIER => [
-                'type' => SimpleJob::class,
-                'parameters' => [
-                    'supported' => [
-                        FooWorker::IDENTIFIER => [],
-                    ],
-                ],
-            ],
-        ];
-
-        $this->expectException(ConfigurationException::class);
-        $job = new SimpleJob($failConfig, $this->workerFactory, $this->trackerServiceFactory);
-        $job->setParameters(['worker_identifier' => FooWorker::IDENTIFIER, 'color' => 'red']);
     }
 
     public function testItThrowsConfigurationExceptionWhenJobConfigurationIsInvalid()
     {
         $failConfig = [
-            SimpleJob::IDENTIFIER => [],
+            'types' => [
+                SimpleJob::IDENTIFIER => [
+                ],
+            ],
         ];
 
         $this->expectException(ConfigurationException::class);
 
-        $job = new SimpleJob($failConfig, $this->workerFactory, $this->trackerServiceFactory);
-        $job->setParameters(['worker_identifier' => FooWorker::IDENTIFIER, 'color' => 'red']);
+        $job = new SimpleJob($failConfig, $this->workerFactory);
+        $job->validateConfig();
     }
 
-    public function testItThrowsConfigurationExceptionWhenMissingWorkerIdentifier()
+    public function testThrowsInvalidParameterExceptionWhenNoSimpleIdentifierProvided()
     {
-        $failConfig = [
-            SimpleJob::IDENTIFIER => [],
-        ];
-
-        $this->expectException(ConfigurationException::class);
-
-        $job = new SimpleJob($failConfig, $this->workerFactory, $this->trackerServiceFactory);
-        $job->setParameters(['color' => 'red']);
+        /** @var Job $job */
+        $job = $this->fake(SimpleJob::class);
+        $this->expectException(InvalidJobParameterException::class);
+        $job->validateParameters();
     }
 }

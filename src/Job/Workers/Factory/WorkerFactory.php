@@ -4,26 +4,31 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Job\Workers\Factory;
 
-use LinioPay\Idle\Job\Worker;
-use LinioPay\Idle\Job\Workers\Factory\Worker as WorkerFactoryInterface;
-use Psr\Container\ContainerInterface;
+use LinioPay\Idle\Job\Worker as WorkerInterface;
+use LinioPay\Idle\Job\WorkerFactory as WorkerFactoryInterface;
 
-class WorkerFactory implements WorkerFactoryInterface
+class WorkerFactory extends DefaultWorkerFactory
 {
-    /**
-     * @var ContainerInterface
-     */
-    protected $container;
-
-    public function __invoke(ContainerInterface $container)
+    public function createWorker(string $workerIdentifier, array $parameters = []) : WorkerInterface
     {
-        $this->container = $container;
+        $mergedConfig = $this->getMergedWorkerConfig($workerIdentifier, $parameters);
 
-        return $this;
-    }
+        $class = $mergedConfig['class'];
+        $mergedParameters = $mergedConfig['parameters'];
 
-    public function createWorker(string $class) : Worker
-    {
-        return $this->container->get($class);
+        if (property_exists($class, 'skipFactory') && $class::$skipFactory) {
+            /** @var WorkerInterface $worker */
+            $worker = new $class();
+        } else {
+            /** @var WorkerFactoryInterface $factory */
+            $factory = $this->container->get($class);
+
+            $worker = $factory->createWorker($class, $mergedParameters);
+        }
+
+        $worker->setParameters($mergedParameters);
+        $worker->validateParameters();
+
+        return $worker;
     }
 }

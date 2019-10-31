@@ -21,7 +21,6 @@
     "prefer-stable": true,
     "require": {
         "php": ">= 7.2",
-        "aws/aws-sdk-php": "^3.87",
         "linio/input": "^2.5",
         "psr/log": "~1.0",
         "psr/container": "~1.0",
@@ -29,7 +28,9 @@
         "ramsey/uuid": "^3.8"
     },
     "require-dev": {
+        "aws/aws-sdk-php": "^3.87",
         "friendsofphp/php-cs-fixer": "^2.13",
+        "google/cloud-pubsub": "^1.18",
         "infection/infection": "^0.10.6",
         "league/fractal": "^0.17.0",
         "michaelmoussa/php-coverage-checker": "^1.1",
@@ -43,7 +44,9 @@
         "zendframework/zend-hydrator": "^2.4"
     },
     "suggest": {
-        "league/fractal": "Adds support for transformers."
+        "league/fractal": "Adds support for transformers.",
+        "aws/aws-sdk-php": "Adds support for AWS SQS",
+        "google/cloud-pubsub": "Adds support for Google Pub/Sub"
     },
     "scripts": {
         "check": [
