@@ -7,8 +7,8 @@ namespace LinioPay\Idle\Message\Messages\PublishSubscribe\Service\Google\PubSub;
 use Exception;
 use Google\Cloud\PubSub\Message as GoogleCloudMessage;
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
-use LinioPay\Idle\Message\Messages\PublishSubscribe\Message\PublishableMessage;
-use LinioPay\Idle\Message\Messages\PublishSubscribe\Message\PulledMessage;
+use LinioPay\Idle\Message\Messages\PublishSubscribe\Message\TopicMessage;
+use LinioPay\Idle\Message\Messages\PublishSubscribe\Message\SubscriptionMessage;
 use LinioPay\Idle\TestCase;
 use Mockery as m;
 use Monolog\Handler\TestHandler;
@@ -62,7 +62,7 @@ class ServiceTest extends TestCase
     public function testCanPublishSuccessfully() : void
     {
         $topicIdentifier = 'foo-topic';
-        $message = new PublishableMessage($topicIdentifier, 'mbody', ['green' => true]);
+        $message = new TopicMessage($topicIdentifier, 'mbody', ['green' => true]);
 
         $topic = m::mock(TestTopic::class);
         $topic->shouldReceive('publish')
@@ -104,7 +104,7 @@ class ServiceTest extends TestCase
     public function testPublishBubblesUpExceptions() : void
     {
         $topicIdentifier = 'foo-topic';
-        $message = new PublishableMessage($topicIdentifier, 'mbody', ['green' => true]);
+        $message = new TopicMessage($topicIdentifier, 'mbody', ['green' => true]);
 
         $this->client->shouldReceive('topic')
             ->once()
@@ -125,7 +125,7 @@ class ServiceTest extends TestCase
     public function testPublishDoesNotBubbleUpExceptions() : void
     {
         $topicIdentifier = 'foo-topic';
-        $message = new PublishableMessage($topicIdentifier, 'mbody', ['green' => true]);
+        $message = new TopicMessage($topicIdentifier, 'mbody', ['green' => true]);
 
         $this->client->shouldReceive('topic')
             ->once()
@@ -180,7 +180,7 @@ class ServiceTest extends TestCase
         $messages = $service->pull($subscriptionIdentifier, ['blue' => true]);
 
         $this->assertCount(1, $messages);
-        /** @var PulledMessage $message */
+        /** @var SubscriptionMessage $message */
         $message = $messages[0];
 
         $this->assertSame('mbody', $message->getBody());
@@ -250,7 +250,7 @@ class ServiceTest extends TestCase
                 'messageId' => 'fooId',
             ],
         ]);
-        $message = new PulledMessage($subscriptionIdentifier, 'mbody', ['green' => true], 'fooId', [
+        $message = new SubscriptionMessage($subscriptionIdentifier, 'mbody', ['green' => true], 'fooId', [
             'gcMessage' => $gcMessage,
         ]);
 
@@ -282,7 +282,7 @@ class ServiceTest extends TestCase
     public function testThrowsInvalidMessageParameterExceptionWhenMissingGCMessage() : void
     {
         $subscriptionIdentifier = 'foo-subscription';
-        $message = new PulledMessage($subscriptionIdentifier, 'mbody', ['green' => true], 'fooId', []);
+        $message = new SubscriptionMessage($subscriptionIdentifier, 'mbody', ['green' => true], 'fooId', []);
 
         $this->config['acknowledge']['error']['suppression'] = false;
         $service = new Service($this->client, $this->config, $this->logger);
@@ -293,7 +293,7 @@ class ServiceTest extends TestCase
     public function testAcknowledgeBubblesUpExceptions() : void
     {
         $subscriptionIdentifier = 'foo-subscription';
-        $message = new PulledMessage($subscriptionIdentifier, 'mbody', ['green' => true], 'fooId', [
+        $message = new SubscriptionMessage($subscriptionIdentifier, 'mbody', ['green' => true], 'fooId', [
             'gcMessage' => $this->fake(GoogleCloudMessage::class),
         ]);
 
@@ -316,7 +316,7 @@ class ServiceTest extends TestCase
     public function testAcknowledgeDoesNotBubbleUpExceptions() : void
     {
         $subscriptionIdentifier = 'foo-subscription';
-        $message = new PulledMessage($subscriptionIdentifier, 'mbody', ['green' => true], 'fooId', [
+        $message = new SubscriptionMessage($subscriptionIdentifier, 'mbody', ['green' => true], 'fooId', [
             'gcMessage' => $this->fake(GoogleCloudMessage::class),
         ]);
 

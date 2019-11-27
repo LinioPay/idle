@@ -7,29 +7,29 @@ namespace LinioPay\Idle\Message\Messages\PublishSubscribe\Message;
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
 use LinioPay\Idle\Message\Message as IdleMessageInterface;
 use LinioPay\Idle\Message\Messages\DefaultMessage;
-use LinioPay\Idle\Message\Messages\PublishSubscribe\PublishableMessage as PublishSubscribeMessageInterface;
+use LinioPay\Idle\Message\Messages\PublishSubscribe\SubscriptionMessage as SubscriptionMessageInterface;
 
-class PublishableMessage extends DefaultMessage implements PublishSubscribeMessageInterface
+class SubscriptionMessage extends DefaultMessage implements SubscriptionMessageInterface
 {
     /** @var string */
-    protected $topicIdentifier;
+    protected $subscriptionIdentifier;
 
-    public function __construct(string $topicIdentifier, string $body, array $attributes = [], string $messageIdentifier = '', array $metadata = [])
+    public function __construct(string $subscriptionIdentifier, string $body, array $attributes = [], string $messageIdentifier = '', array $metadata = [])
     {
-        $this->topicIdentifier = $topicIdentifier;
+        $this->subscriptionIdentifier = $subscriptionIdentifier;
         parent::__construct($body, $attributes, $messageIdentifier, $metadata);
     }
 
-    public function getTopicIdentifier() : string
+    public function getSubscriptionIdentifier() : string
     {
-        return $this->topicIdentifier;
+        return $this->subscriptionIdentifier;
     }
 
     public function toArray() : array
     {
         return [
             'message_identifier' => $this->getMessageId(),
-            'topic_identifier' => $this->getTopicIdentifier(),
+            'subscription_identifier' => $this->getSubscriptionIdentifier(),
             'body' => $this->getBody(),
             'attributes' => $this->getAttributes(),
             'metadata' => $this->getTemporaryMetadata(),
@@ -39,15 +39,15 @@ class PublishableMessage extends DefaultMessage implements PublishSubscribeMessa
     public static function fromArray(array $parameters) : IdleMessageInterface
     {
         $required = isset(
-            $parameters['topic_identifier']
+            $parameters['subscription_identifier']
         );
 
-        if (!$required || !is_string($parameters['topic_identifier'])) {
-            throw new InvalidMessageParameterException('[topic_identifier]');
+        if (!$required || !is_string($parameters['subscription_identifier'])) {
+            throw new InvalidMessageParameterException('[subscription_identifier]');
         }
 
-        return new PublishableMessage(
-            $parameters['topic_identifier'],
+        return new SubscriptionMessage(
+            $parameters['subscription_identifier'],
             $parameters['body'],
             $parameters['attributes'] ?? [],
             $parameters['message_identifier'] ?? '',
@@ -57,6 +57,6 @@ class PublishableMessage extends DefaultMessage implements PublishSubscribeMessa
 
     public function getSourceName() : string
     {
-        return $this->getTopicIdentifier();
+        return $this->getSubscriptionIdentifier();
     }
 }

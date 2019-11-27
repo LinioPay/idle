@@ -7,8 +7,8 @@ namespace LinioPay\Idle\Message\Messages\Factory;
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
 use LinioPay\Idle\Message\Message as MessageInterface;
 use LinioPay\Idle\Message\MessageFactory as MessageFactoryInterface;
-use LinioPay\Idle\Message\Messages\PublishSubscribe\Message\PublishableMessage;
-use LinioPay\Idle\Message\Messages\PublishSubscribe\Message\PulledMessage;
+use LinioPay\Idle\Message\Messages\PublishSubscribe\Message\TopicMessage;
+use LinioPay\Idle\Message\Messages\PublishSubscribe\Message\SubscriptionMessage;
 use LinioPay\Idle\Message\Messages\Queue\Message\Message as QueueMessage;
 use LinioPay\Idle\Message\ServiceFactory as ServiceFactoryInterface;
 use Psr\Container\ContainerInterface;
@@ -19,8 +19,8 @@ class MessageFactory implements MessageFactoryInterface
     protected $container;
 
     protected const TYPE_IDENTIFIER_MAP = [
-        'topic_identifier' => PublishableMessage::class,
-        'subscription_identifier' => PulledMessage::class,
+        'topic_identifier' => TopicMessage::class,
+        'subscription_identifier' => SubscriptionMessage::class,
         'queue_identifier' => QueueMessage::class,
     ];
 

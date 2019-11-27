@@ -7,29 +7,29 @@ namespace LinioPay\Idle\Message\Messages\PublishSubscribe\Message;
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
 use LinioPay\Idle\Message\Message as IdleMessageInterface;
 use LinioPay\Idle\Message\Messages\DefaultMessage;
-use LinioPay\Idle\Message\Messages\PublishSubscribe\PulledMessage as PulledMessageInterface;
+use LinioPay\Idle\Message\Messages\PublishSubscribe\TopicMessage as PublishSubscribeMessageInterface;
 
-class PulledMessage extends DefaultMessage implements PulledMessageInterface
+class TopicMessage extends DefaultMessage implements PublishSubscribeMessageInterface
 {
     /** @var string */
-    protected $subscriptionIdentifier;
+    protected $topicIdentifier;
 
-    public function __construct(string $subscriptionIdentifier, string $body, array $attributes = [], string $messageIdentifier = '', array $metadata = [])
+    public function __construct(string $topicIdentifier, string $body, array $attributes = [], string $messageIdentifier = '', array $metadata = [])
     {
-        $this->subscriptionIdentifier = $subscriptionIdentifier;
+        $this->topicIdentifier = $topicIdentifier;
         parent::__construct($body, $attributes, $messageIdentifier, $metadata);
     }
 
-    public function getSubscriptionIdentifier() : string
+    public function getTopicIdentifier() : string
     {
-        return $this->subscriptionIdentifier;
+        return $this->topicIdentifier;
     }
 
     public function toArray() : array
     {
         return [
             'message_identifier' => $this->getMessageId(),
-            'subscription_identifier' => $this->getSubscriptionIdentifier(),
+            'topic_identifier' => $this->getTopicIdentifier(),
             'body' => $this->getBody(),
             'attributes' => $this->getAttributes(),
             'metadata' => $this->getTemporaryMetadata(),
@@ -39,15 +39,15 @@ class PulledMessage extends DefaultMessage implements PulledMessageInterface
     public static function fromArray(array $parameters) : IdleMessageInterface
     {
         $required = isset(
-            $parameters['subscription_identifier']
+            $parameters['topic_identifier']
         );
 
-        if (!$required || !is_string($parameters['subscription_identifier'])) {
-            throw new InvalidMessageParameterException('[subscription_identifier]');
+        if (!$required || !is_string($parameters['topic_identifier'])) {
+            throw new InvalidMessageParameterException('[topic_identifier]');
         }
 
-        return new PulledMessage(
-            $parameters['subscription_identifier'],
+        return new TopicMessage(
+            $parameters['topic_identifier'],
             $parameters['body'],
             $parameters['attributes'] ?? [],
             $parameters['message_identifier'] ?? '',
@@ -57,6 +57,6 @@ class PulledMessage extends DefaultMessage implements PulledMessageInterface
 
     public function getSourceName() : string
     {
-        return $this->getSubscriptionIdentifier();
+        return $this->getTopicIdentifier();
     }
 }

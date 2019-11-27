@@ -4,9 +4,8 @@ use LinioPay\Idle\Job\Jobs\MessageJob;
 use LinioPay\Idle\Job\Jobs\SimpleJob;
 use LinioPay\Idle\Job\Workers\DynamoDBTrackerWorker;
 use LinioPay\Idle\Job\Workers\FooWorker;
-use LinioPay\Idle\Message\Messages\PublishSubscribe\PublishableMessage;
-use LinioPay\Idle\Message\Messages\PublishSubscribe\PulledMessage;
-use LinioPay\Idle\Message\Messages\PublishSubscribe\PulledMessage as SubscriptionMessage;
+use LinioPay\Idle\Message\Messages\PublishSubscribe\TopicMessage;
+use LinioPay\Idle\Message\Messages\PublishSubscribe\SubscriptionMessage;
 use LinioPay\Idle\Message\Messages\Queue\Message as QueueMessage;
 use LinioPay\Idle\Message\Messages\Queue\Service\SQS\Service as SQS;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\Service\Google\PubSub\Service as GooglePubSub;
@@ -124,7 +123,7 @@ return [
                     ]
                 ]
             ],
-            PublishableMessage::IDENTIFIER => [
+            TopicMessage::IDENTIFIER => [
                 'default' => [
                     'publish' => [
                         'parameters' => [],
@@ -144,7 +143,7 @@ return [
                     ]
                 ]
             ],
-            PulledMessage::IDENTIFIER => [
+            SubscriptionMessage::IDENTIFIER => [
                 'default' => [
                     'pull' => [
                         'parameters' => [],

@@ -7,9 +7,9 @@ namespace LinioPay\Idle\Message\Messages\PublishSubscribe\Service\Google\PubSub;
 use Google\Cloud\PubSub\Message as GoogleCloudMessage;
 use Google\Cloud\PubSub\PubSubClient;
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
-use LinioPay\Idle\Message\Messages\PublishSubscribe\Message\PulledMessage;
-use LinioPay\Idle\Message\Messages\PublishSubscribe\PublishableMessage as PublishableMessageInterface;
-use LinioPay\Idle\Message\Messages\PublishSubscribe\PulledMessage as PulledMessageInterface;
+use LinioPay\Idle\Message\Messages\PublishSubscribe\Message\SubscriptionMessage;
+use LinioPay\Idle\Message\Messages\PublishSubscribe\TopicMessage as TopicMessageInterface;
+use LinioPay\Idle\Message\Messages\PublishSubscribe\SubscriptionMessage as SubscriptionMessageInterface;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\Service\DefaultService;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -31,7 +31,7 @@ class Service extends DefaultService
         $this->logger = $logger;
     }
 
-    public function publish(PublishableMessageInterface $message, array $parameters = []) : bool
+    public function publish(TopicMessageInterface $message, array $parameters = []) : bool
     {
         $this->logger->info('Idle publishing a message.', ['service' => self::IDENTIFIER, 'message' => $message->toArray()]);
 
@@ -67,7 +67,7 @@ class Service extends DefaultService
     }
 
     /**
-     * @return PulledMessage[]
+     * @return SubscriptionMessage[]
      *
      * @throws Throwable
      */
@@ -99,7 +99,7 @@ class Service extends DefaultService
         return [];
     }
 
-    public function acknowledge(PulledMessageInterface $message, array $parameters = []) : bool
+    public function acknowledge(SubscriptionMessageInterface $message, array $parameters = []) : bool
     {
         $this->logger->info('Idle acknowledging a message.', ['service' => self::IDENTIFIER, 'message' => $message->toArray()]);
 
@@ -134,7 +134,7 @@ class Service extends DefaultService
     }
 
     /**
-     * @return PulledMessage[]
+     * @return SubscriptionMessage[]
      */
     protected function buildMessagesFromResult(array $resultMessages) : array
     {
@@ -142,7 +142,7 @@ class Service extends DefaultService
 
         /** @var GoogleCloudMessage $message */
         foreach ($resultMessages as $message) {
-            $out[] = new PulledMessage(
+            $out[] = new SubscriptionMessage(
                 $message->subscription()->name(),
                 $message->data(),
                 $message->attributes(),

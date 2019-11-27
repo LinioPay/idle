@@ -33,7 +33,7 @@ Messaging is the second aspect of Idle and essentially is responsible for commun
 - Publish/Subscribe
     - A `Publish/Subscribe` implementation is similar to a queue based implementation but it allows more flexibility at retrieval time.  From an architectural point of view, a `topic` must be configured with at least one `subscriptions` in order to be useful.  When a message is sent to a given `topic`, it will then add the message to each of the `subscription(s)`.  Each of the `subscriptions` will then hold the message until some external entity pulls the message out of it.  The main distinction with a `queue` based approach is that a `PublishSubscribe` model allows multiple things to occur to the message at different times.  Whereas a queue is more linear and typically once you retrieve a message that flow is complete.
     - Idle currently ships with `Google PubSub` as a `Publish/Subscribe` service.
-    - Idle has two main types of message for dealing with Publish/Subscribe: PublishableMessage (implying it can be published to a `topic`), and a PulledMessage (implying it has been pulled from a `subscription`).  
+    - Idle has two main types of message for dealing with Publish/Subscribe: TopicMessage (implying it can be published to a `topic`), and a SubscriptionMessage (implying it has been pulled from a `subscription`).  
 
 ## Installing Idle
 
@@ -166,7 +166,7 @@ Below is a simplified Idle config for MessageJob.  It is slightly more complicat
             MessageJob::IDENTIFIER => [
                 'class' => MessageJob::class,
                 'parameters' => [
-                    QueueMessage::IDENTIFIER => [ // (alias of LinioPay\Idle\Message\Messages\Queue\Message::IDENTIFIER)
+                    QueueMessage::IDENTIFIER => [
                         'my_queue' => [ // Define the our queue.. in this case this is the name of the queue in the queueing service
                             'parameters' => [
                                 'workers' => [ // Define any workers responsible for handling different aspects of the job
@@ -184,7 +184,7 @@ Below is a simplified Idle config for MessageJob.  It is slightly more complicat
                             ],
                         ]
                     ],
-                    SubscriptionMessage::IDENTIFIER => [ // ( alias of LinioPay\Idle\Message\Messages\PublishSubscribe\PulledMessage::IDENTIFIER)
+                    SubscriptionMessage::IDENTIFIER => [ 
                         'my_subscription' => [
                             'parameters' => [
                                 'workers' => [
@@ -303,7 +303,7 @@ The second aspect to Idle is messaging.  This is simply a way to interact with m
                         ]
                     ]
                 ],
-                PublishableMessage::IDENTIFIER => [ // Configure support for TopicMessages
+                TopicMessage::IDENTIFIER => [ // Configure support for TopicMessages
                     'default' => [
                         'publish' => [ // Default publishing configuration
                             'parameters' => [],
@@ -323,7 +323,7 @@ The second aspect to Idle is messaging.  This is simply a way to interact with m
                         ]
                     ]
                 ],
-                PulledMessage::IDENTIFIER => [ // Configure support for SubscriptionMessages
+                SubscriptionMessage::IDENTIFIER => [ // Configure support for SubscriptionMessages
                     'default' => [
                         'pull' => [
                             'parameters' => [],
@@ -378,7 +378,7 @@ $message1 = $messageFactory->createMessage([
 $sqsService = $message1->getService(); // Because `my_queue` is configured to work with SQS, the message factory injects the service to the message for us.
 
 $message2 = $messageFactory->createMessage([
-   'topic_identifier' => 'my_topic', // Because we provide a topic_identifier, Idle knows its a PublishableMessage..
+   'topic_identifier' => 'my_topic', // Because we provide a topic_identifier, Idle knows its a TopicMessage..
    'body'=> 'hello pubsub payload!',
    'attributes' => [
        'foo' => 'bar',
@@ -387,7 +387,7 @@ $message2 = $messageFactory->createMessage([
 $pubSubService = $message2->getService(); // Because `my_topic` is configured to work with PubSub, the message factory injects the service to the message for us.
 
 $message3 = $messageFactory->createMessage([
-   'topic_identifier' => 'my_subscription', // Because we provide a subscription_identifier, Idle knows its a PulledMessage..
+   'topic_identifier' => 'my_subscription', // Because we provide a subscription_identifier, Idle knows its a SubscriptionMessage..
    'body'=> 'hello pubsub payload!',
    'attributes' => [
        'foo' => 'bar',

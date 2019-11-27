@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Message\Messages\PublishSubscribe\Service\Google\PubSub\Factory;
 
-use LinioPay\Idle\Message\Messages\PublishSubscribe\Message\PublishableMessage;
+use LinioPay\Idle\Message\Messages\PublishSubscribe\Message\TopicMessage;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\Service\Google\PubSub\Service as PubSubService;
 use LinioPay\Idle\TestCase;
 use Mockery as m;
@@ -31,7 +31,7 @@ class ServiceFactoryTest extends TestCase
                 'idle' => [
                     'message' => [
                         'types' => [
-                            PublishableMessage::IDENTIFIER => [
+                            TopicMessage::IDENTIFIER => [
                                 'types' => [
                                     'my-topic' => [
                                         'publish' => [
@@ -66,7 +66,7 @@ class ServiceFactoryTest extends TestCase
         $factory = new ServiceFactory();
         $factory($container);
 
-        $message = new PublishableMessage('my-topic', 'foobody');
+        $message = new TopicMessage('my-topic', 'foobody');
         $service = $factory->createFromMessage($message);
 
         $this->assertInstanceOf(PubSubService::class, $service);

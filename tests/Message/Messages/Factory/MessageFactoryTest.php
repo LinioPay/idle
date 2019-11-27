@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace LinioPay\Idle\Message\Messages\Factory;
 
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
-use LinioPay\Idle\Message\Messages\PublishSubscribe\PublishableMessage;
-use LinioPay\Idle\Message\Messages\PublishSubscribe\PulledMessage;
+use LinioPay\Idle\Message\Messages\PublishSubscribe\TopicMessage;
+use LinioPay\Idle\Message\Messages\PublishSubscribe\SubscriptionMessage;
 use LinioPay\Idle\Message\Messages\Queue\Message as QueueMessage;
 use LinioPay\Idle\Message\Service as ServiceInterface;
 use LinioPay\Idle\Message\ServiceFactory as ServiceFactoryInterface;
@@ -18,8 +18,8 @@ class MessageFactoryTest extends TestCase
 {
     public function messageDataProvider()
     {
-        yield [['topic_identifier' => 'foo', 'body' => ''], PublishableMessage::class];
-        yield [['subscription_identifier' => 'foo', 'body' => ''], PulledMessage::class];
+        yield [['topic_identifier' => 'foo', 'body' => ''], TopicMessage::class];
+        yield [['subscription_identifier' => 'foo', 'body' => ''], SubscriptionMessage::class];
         yield [['queue_identifier' => 'foo', 'body' => ''], QueueMessage::class];
     }
 

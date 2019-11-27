@@ -9,14 +9,14 @@ use LinioPay\Idle\Message\Messages\PublishSubscribe\Service as PublishSubscribeS
 use LinioPay\Idle\TestCase;
 use Mockery as m;
 
-class PublishableMessageTest extends TestCase
+class SubscriptionMessageTest extends TestCase
 {
     public function testGettersAndSetters()
     {
-        $message = new PublishableMessage('foo_topic', 'body', ['red' => true], 'foo123', ['meta' => true]);
+        $message = new SubscriptionMessage('foo_subscription', 'body', ['red' => true], 'foo123', ['meta' => true]);
 
-        $this->assertSame('foo_topic', $message->getTopicIdentifier());
-        $this->assertSame('foo_topic', $message->getSourceName());
+        $this->assertSame('foo_subscription', $message->getSubscriptionIdentifier());
+        $this->assertSame('foo_subscription', $message->getSourceName());
 
         $this->assertSame('foo123', $message->getMessageId());
         $message->setMessageId('123foo');
@@ -38,18 +38,18 @@ class PublishableMessageTest extends TestCase
         $message->setService($service);
         $this->assertSame($service, $message->getService());
 
-        $this->assertSame(PublishableMessage::IDENTIFIER, $message->getIdleIdentifier());
+        $this->assertSame(SubscriptionMessage::IDENTIFIER, $message->getIdleIdentifier());
     }
 
     public function testToArrayAndFromArray()
     {
-        $message = new PublishableMessage('foo_topic', 'body', ['red' => true], 'foo123', ['redmeta' => true]);
+        $message = new SubscriptionMessage('foo_subscription', 'body', ['red' => true], 'foo123', ['redmeta' => true]);
 
         $asArray = $jsonOut = $message->toArray();
-        $this->assertSame($asArray, PublishableMessage::fromArray($message->toArray())->toArray());
+        $this->assertSame($asArray, SubscriptionMessage::fromArray($message->toArray())->toArray());
 
         $this->assertArrayHasKey('message_identifier', $asArray);
-        $this->assertArrayHasKey('topic_identifier', $asArray);
+        $this->assertArrayHasKey('subscription_identifier', $asArray);
         $this->assertArrayHasKey('body', $asArray);
         $this->assertArrayHasKey('attributes', $asArray);
         $this->assertArrayHasKey('metadata', $asArray);
@@ -61,7 +61,7 @@ class PublishableMessageTest extends TestCase
     public function testFromArrayThrowsInvalidMessageParameterExceptionWhenMissingRequiredParameters()
     {
         $this->expectException(InvalidMessageParameterException::class);
-        PublishableMessage::fromArray([
+        SubscriptionMessage::fromArray([
            'body' => 'foobody',
            'attributes' => [
                'red' => true,

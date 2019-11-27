@@ -6,9 +6,9 @@ namespace LinioPay\Idle\Message\Messages\PublishSubscribe;
 
 use LinioPay\Idle\Message\Message as MessageInterface;
 
-interface PublishableMessage extends MessageInterface
+interface SubscriptionMessage extends MessageInterface
 {
-    const IDENTIFIER = 'topic';
+    const IDENTIFIER = 'subscription';
 
-    public function getTopicIdentifier() : string;
+    public function getSubscriptionIdentifier() : string;
 }
