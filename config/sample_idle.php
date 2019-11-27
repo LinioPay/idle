@@ -40,7 +40,7 @@ return [
                             'parameters' => [
                                 'workers' => [
                                     [
-                                        'type' => FooWorker::class,
+                                        'type' => FooWorker::IDENTIFIER,
                                         'parameters' => [],
                                     ],
                                 ],
@@ -57,7 +57,7 @@ return [
                             'parameters' => [
                                 'workers' => [
                                     [
-                                        'type' => FooWorker::class,
+                                        'type' => FooWorker::IDENTIFIER,
                                         'parameters' => [],
                                     ],
                                 ]
