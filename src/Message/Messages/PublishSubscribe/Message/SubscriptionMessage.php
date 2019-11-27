@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace LinioPay\Idle\Message\Messages\PublishSubscribe\Message;
 
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
+use LinioPay\Idle\Message\Exception\UndefinedServiceException;
 use LinioPay\Idle\Message\Message as IdleMessageInterface;
 use LinioPay\Idle\Message\Messages\DefaultMessage;
+use LinioPay\Idle\Message\Messages\PublishSubscribe\Service as PublishSubscribeServiceInterface;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\SubscriptionMessage as SubscriptionMessageInterface;
 
 class SubscriptionMessage extends DefaultMessage implements SubscriptionMessageInterface
@@ -14,7 +16,10 @@ class SubscriptionMessage extends DefaultMessage implements SubscriptionMessageI
     /** @var string */
     protected $subscriptionIdentifier;
 
-    public function __construct(string $subscriptionIdentifier, string $body, array $attributes = [], string $messageIdentifier = '', array $metadata = [])
+    /** @var PublishSubscribeServiceInterface */
+    protected $service;
+
+    public function __construct(string $subscriptionIdentifier, string $body = '', array $attributes = [], string $messageIdentifier = '', array $metadata = [])
     {
         $this->subscriptionIdentifier = $subscriptionIdentifier;
         parent::__construct($body, $attributes, $messageIdentifier, $metadata);
@@ -55,8 +60,31 @@ class SubscriptionMessage extends DefaultMessage implements SubscriptionMessageI
         );
     }
 
+    public function getIdleIdentifier() : string
+    {
+        return SubscriptionMessageInterface::IDENTIFIER;
+    }
+
     public function getSourceName() : string
     {
         return $this->getSubscriptionIdentifier();
+    }
+
+    public function acknowledge(array $parameters = []) : bool
+    {
+        if (is_null($this->service)) {
+            throw new UndefinedServiceException($this);
+        }
+
+        return $this->service->acknowledge($this, $parameters);
+    }
+
+    public function pull(array $parameters = []) : array
+    {
+        if (is_null($this->service)) {
+            throw new UndefinedServiceException($this);
+        }
+
+        return $this->service->pull($this->getSubscriptionIdentifier(), $parameters);
     }
 }

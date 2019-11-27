@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LinioPay\Idle\Message\Messages\PublishSubscribe\Message;
 
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
+use LinioPay\Idle\Message\Exception\UndefinedServiceException;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\Service as PublishSubscribeServiceInterface;
 use LinioPay\Idle\TestCase;
 use Mockery as m;
@@ -67,5 +68,49 @@ class SubscriptionMessageTest extends TestCase
                'red' => true,
            ],
         ]);
+    }
+
+    public function testProxiesCallToAcknowledge()
+    {
+        $message = new SubscriptionMessage('foo_subscription', 'body', ['red' => true], 'foo123', ['redmeta' => true]);
+
+        $service = m::mock(PublishSubscribeServiceInterface::class);
+        $service->shouldReceive('acknowledge')
+            ->once()
+            ->with($message, ['foo' => 'bar'])
+            ->andReturn(true);
+
+        $message->setService($service);
+        $this->assertTrue($message->acknowledge(['foo' => 'bar']));
+    }
+
+    public function testAcknowledgeThrowsUndefinedServiceException()
+    {
+        $message = new SubscriptionMessage('foo_subscription', 'body', ['red' => true], 'foo123', ['redmeta' => true]);
+
+        $this->expectException(UndefinedServiceException::class);
+        $message->acknowledge();
+    }
+
+    public function testProxiesCallToPull()
+    {
+        $message = new SubscriptionMessage('foo_subscription');
+
+        $service = m::mock(PublishSubscribeServiceInterface::class);
+        $service->shouldReceive('pull')
+            ->once()
+            ->with($message->getSubscriptionIdentifier(), ['foo' => 'bar'])
+            ->andReturn(['foo']);
+
+        $message->setService($service);
+        $this->assertSame(['foo'], $message->pull(['foo' => 'bar']));
+    }
+
+    public function testPullThrowsUndefinedServiceException()
+    {
+        $message = new SubscriptionMessage('foo_subscription', 'body', ['red' => true], 'foo123', ['redmeta' => true]);
+
+        $this->expectException(UndefinedServiceException::class);
+        $message->pull();
     }
 }

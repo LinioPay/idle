@@ -8,9 +8,9 @@ use Google\Cloud\PubSub\Message as GoogleCloudMessage;
 use Google\Cloud\PubSub\PubSubClient;
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\Message\SubscriptionMessage;
-use LinioPay\Idle\Message\Messages\PublishSubscribe\TopicMessage as TopicMessageInterface;
-use LinioPay\Idle\Message\Messages\PublishSubscribe\SubscriptionMessage as SubscriptionMessageInterface;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\Service\DefaultService;
+use LinioPay\Idle\Message\Messages\PublishSubscribe\SubscriptionMessage as SubscriptionMessageInterface;
+use LinioPay\Idle\Message\Messages\PublishSubscribe\TopicMessage as TopicMessageInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 

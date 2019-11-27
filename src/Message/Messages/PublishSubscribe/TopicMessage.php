@@ -11,4 +11,9 @@ interface TopicMessage extends MessageInterface
     const IDENTIFIER = 'topic';
 
     public function getTopicIdentifier() : string;
+
+    /**
+     * Proxies a publish call to the service.
+     */
+    public function publish(array $parameters = []) : bool;
 }

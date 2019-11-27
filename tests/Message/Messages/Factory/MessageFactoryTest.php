@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace LinioPay\Idle\Message\Messages\Factory;
 
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
-use LinioPay\Idle\Message\Messages\PublishSubscribe\TopicMessage;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\SubscriptionMessage;
+use LinioPay\Idle\Message\Messages\PublishSubscribe\TopicMessage;
 use LinioPay\Idle\Message\Messages\Queue\Message as QueueMessage;
 use LinioPay\Idle\Message\Service as ServiceInterface;
 use LinioPay\Idle\Message\ServiceFactory as ServiceFactoryInterface;

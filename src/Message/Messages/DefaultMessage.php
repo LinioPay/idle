@@ -81,11 +81,6 @@ abstract class DefaultMessage implements MessageInterface
         return $data;
     }
 
-    public function getIdleIdentifier() : string
-    {
-        return static::IDENTIFIER;
-    }
-
     public function getService() : ?Service
     {
         return $this->service;

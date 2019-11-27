@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LinioPay\Idle\Message\Messages\PublishSubscribe\Message;
 
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
+use LinioPay\Idle\Message\Exception\UndefinedServiceException;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\Service as PublishSubscribeServiceInterface;
 use LinioPay\Idle\TestCase;
 use Mockery as m;
@@ -67,5 +68,27 @@ class TopicMessageTest extends TestCase
                'red' => true,
            ],
         ]);
+    }
+
+    public function testProxiesCallToPublish()
+    {
+        $message = new TopicMessage('foo_topic', 'body', ['red' => true], 'foo123', ['redmeta' => true]);
+
+        $service = m::mock(PublishSubscribeServiceInterface::class);
+        $service->shouldReceive('publish')
+            ->once()
+            ->with($message, ['foo' => 'bar'])
+            ->andReturn(true);
+
+        $message->setService($service);
+        $this->assertTrue($message->publish(['foo' => 'bar']));
+    }
+
+    public function testPublishThrowsUndefinedServiceException()
+    {
+        $message = new TopicMessage('foo_topic', 'body', ['red' => true], 'foo123', ['redmeta' => true]);
+
+        $this->expectException(UndefinedServiceException::class);
+        $message->publish();
     }
 }

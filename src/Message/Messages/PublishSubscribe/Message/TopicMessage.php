@@ -5,16 +5,21 @@ declare(strict_types=1);
 namespace LinioPay\Idle\Message\Messages\PublishSubscribe\Message;
 
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
+use LinioPay\Idle\Message\Exception\UndefinedServiceException;
 use LinioPay\Idle\Message\Message as IdleMessageInterface;
 use LinioPay\Idle\Message\Messages\DefaultMessage;
-use LinioPay\Idle\Message\Messages\PublishSubscribe\TopicMessage as PublishSubscribeMessageInterface;
+use LinioPay\Idle\Message\Messages\PublishSubscribe\Service as PublishSubscribeServiceInterface;
+use LinioPay\Idle\Message\Messages\PublishSubscribe\TopicMessage as TopicMessageInterface;
 
-class TopicMessage extends DefaultMessage implements PublishSubscribeMessageInterface
+class TopicMessage extends DefaultMessage implements TopicMessageInterface
 {
     /** @var string */
     protected $topicIdentifier;
 
-    public function __construct(string $topicIdentifier, string $body, array $attributes = [], string $messageIdentifier = '', array $metadata = [])
+    /** @var PublishSubscribeServiceInterface */
+    protected $service;
+
+    public function __construct(string $topicIdentifier, string $body = '', array $attributes = [], string $messageIdentifier = '', array $metadata = [])
     {
         $this->topicIdentifier = $topicIdentifier;
         parent::__construct($body, $attributes, $messageIdentifier, $metadata);
@@ -55,8 +60,22 @@ class TopicMessage extends DefaultMessage implements PublishSubscribeMessageInte
         );
     }
 
+    public function getIdleIdentifier() : string
+    {
+        return TopicMessageInterface::IDENTIFIER;
+    }
+
     public function getSourceName() : string
     {
         return $this->getTopicIdentifier();
+    }
+
+    public function publish(array $parameters = []) : bool
+    {
+        if (is_null($this->service)) {
+            throw new UndefinedServiceException($this);
+        }
+
+        return $this->service->publish($this, $parameters);
     }
 }

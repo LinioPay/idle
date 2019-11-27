@@ -363,8 +363,9 @@ The second aspect to Idle is messaging.  This is simply a way to interact with m
 
 With the configuration above we have enabled support for an SQS queue named `my_queue`, a Google PubSub topic named `my_topic`, and a Google PubSub subscription named `my_subscription`.  Once this is done, adding a queue message or a topic message is a breeze!
 
-### Creating Messages
+### Creating and Interacting with Messages
 
+#### Queue Messages
 ```php
 $messageFactory = $container->get(\LinioPay\Idle\Message\MessageFactory::class);
 
@@ -375,24 +376,186 @@ $message1 = $messageFactory->createMessage([
         'foo' => 'bar',
     ]
 ]);
-$sqsService = $message1->getService(); // Because `my_queue` is configured to work with SQS, the message factory injects the service to the message for us.
 
-$message2 = $messageFactory->createMessage([
+$sqsService = $message1->getService(); // Because `my_queue` is configured to work with SQS, the message factory injects the service to the message for us.
+$sqsService->queue($message1); // Now we can send the message to the service
+
+// Or as a shortcut we can send it directly from the message (alternative to the above two lines)
+$message1->queue($message1);
+```
+
+#### Topic Messages
+
+A `TopicMessage` is a message which we want to publish to a `topic`.
+  
+```php
+$messageFactory = $container->get(\LinioPay\Idle\Message\MessageFactory::class);
+$message = $messageFactory->createMessage([
    'topic_identifier' => 'my_topic', // Because we provide a topic_identifier, Idle knows its a TopicMessage..
    'body'=> 'hello pubsub payload!',
    'attributes' => [
        'foo' => 'bar',
    ]
 ]);
-$pubSubService = $message2->getService(); // Because `my_topic` is configured to work with PubSub, the message factory injects the service to the message for us.
 
-$message3 = $messageFactory->createMessage([
-   'topic_identifier' => 'my_subscription', // Because we provide a subscription_identifier, Idle knows its a SubscriptionMessage..
+$pubSubService = $message->getService(); // Because `my_topic` is configured to work with PubSub, the message factory injects the service to the message for us.
+$pubSubService->publish($message); // Now we can send the message to the service
+
+// Or as a shortcut we can send it directly from the message (alternative to the above two lines)
+$message->publish();
+```
+
+#### Subscription Messages
+
+A `SubscriptionMessage` is a message which has been obtained from a `subscription`.  Typically you would only create a SubscriptionMessage, if you're creating it from the data obtained from a subscription `push` webhook.  In most other scenarios you would simply receive a `SubscriptionMessage` after performing a `pull` on the `PublishSubscribe` service for the given `subscription`.  Below we instantiate it directly as an example.
+
+```php
+$messageFactory = $container->get(\LinioPay\Idle\Message\MessageFactory::class);
+$message = $messageFactory->createMessage([
+   'subscription_identifier' => 'my_subscription', // Because we provide a subscription_identifier, Idle knows its a SubscriptionMessage..
    'body'=> 'hello pubsub payload!',
    'attributes' => [
        'foo' => 'bar',
    ]
 ]);
-$pubSubService = $message3->getService(); // Because `my_subscription` is configured to work with PubSub, the message factory injects the service to the message for us.
+
+$pubSubService = $message->getService(); // Because `my_subscription` is configured to work with PubSub, the message factory injects the service to the message for us.
+$pubSubService->acknowledge($message); // Now we can acknowledge the message on the service
+
+// Or as a shortcut we can acknowledge it directly from the message (alternative to the above two lines)
+$message->acknowledge();
 ```
 
+### Retrieving Messages from Services
+
+Idle services are defined within the 'message' section of the Idle config.  Below is an excerpt of the messaging section of the Idle config.  Within this sample config you can see that a message must belong to one of the three types currently supported by Idle: 
+
+- QueueMessage
+    - This type is utilized when following a normal queueing pattern.
+- TopicMessage
+    - This type is utilized when following a PublishSubscribe pattern and represents a message which will be published to a topic.
+- SubscriptionMessage
+    - This type is utilized when following PublishSubscribe pattern and represents a message which has been retrieved from a `subscription`.
+    
+Within each of these message types you can see a bit of the cascading configuration at work.  Each type has a default configuration, with general parameters which will apply to all queues (or topic/subscription in the case of PublishSubscribe), as well as the ability to define specific options for a particular queue (or topic/subscription).  This makes it possible for us to override all aspects of each entity's parameters, including the actual service which is used.  If we wanted we could have my-queue utilizing RabbitMQ (or any other service as long as we add an adapter for it) and have all other queues utilize SQS.
+
+Below the type configurations, there is a service configuration section.  In this area we can define the parameters for instantiating a given service.  In the example below, there is configuration for SQS which allows us to set any client parameters such as the region, or version.  We have also defined the same for Google PubSub. 
+```php
+[
+    'message' => [
+        'types' => [
+            QueueMessage::IDENTIFIER => [
+                'default' => [
+                    'dequeue' => [
+                        'parameters' => [ // Configure behavior for when retrieving messages
+                            //'MaxNumberOfMessages' => 1, // The maximum number of messages to return. Amazon SQS never returns more messages than this value but may return fewer. Values can be from 1 to 10.
+                            //'VisibilityTimeout' => 30, // The duration (in seconds) that the received messages are hidden from subsequent retrieve requests after being retrieved by a ReceiveMessage request.
+                            //'WaitTimeSeconds' => 2, // The duration (in seconds) for which the call will wait for a message to arrive in the queue before returning. If a message is available, the call will return sooner than WaitTimeSeconds.
+                        ],
+                        'error' => [
+                            'suppression' => true,
+                        ],
+                    ],
+                    'queue' => [
+                        'parameters' => [ // Configure behavior for when adding a new message
+                            //'DelaySeconds' => 0, // The number of seconds (0 to 900 - 15 minutes) to delay a specific message. Messages with a positive DelaySeconds value become available for processing after the delay time is finished. If you don't specify a value, the default value for the queue applies.
+                        ],
+                        'error' => [
+                            'suppression' => true,
+                        ],
+                    ],
+                    'delete' => [
+                        'parameters' => [ // Configure behavior for when deleting a message
+                        ],
+                        'error' => [
+                            'suppression' => true,
+                        ],
+                    ],
+                    'parameters' => [
+                        'service' => SQS::IDENTIFIER,
+                    ],
+                ],
+                'types' => [
+                    'my-queue' => [
+                        'parameters' => [
+                            //'service' => SQS::IDENTIFIER,
+                        ],
+                    ]
+                ]
+            ],
+            TopicMessage::IDENTIFIER => [
+                'default' => [
+                    'publish' => [
+                        'parameters' => [],
+                        'error' => [
+                            'suppression' => true,
+                        ],
+                    ],
+                    'parameters' => [
+                        'service' => GooglePubSub::IDENTIFIER,
+                    ],
+                ],
+                'types' => [
+                    'my-topic' => [
+                        'parameters' => [
+                            //'service' => GooglePubSub::IDENTIFIER,
+                        ],
+                    ]
+                ]
+            ],
+            SubscriptionMessage::IDENTIFIER => [
+                'default' => [
+                    'pull' => [
+                        'parameters' => [],
+                        'error' => [
+                            'suppression' => true,
+                        ],
+                    ],
+                    'parameters' => [
+                        'service' => GooglePubSub::IDENTIFIER,
+                    ],
+                ],
+                'types' => [
+                    'my-subscription' => [
+                        'parameters' => [],
+                    ]
+                ]
+            ],
+        ],
+        'service' => [
+            'types' => [
+                SQS::IDENTIFIER  => [
+                    'class' => SQS::class,
+                    'client' => [
+                        'version' => 'latest',
+                        'region' => getenv('AWS_REGION'),
+                    ],
+                ],
+                GooglePubSub::IDENTIFIER => [
+                    'class' => GooglePubSub::class,
+                    'client' => [],
+                ]
+            ]
+        ],
+    ],
+]
+```
+
+Since Idle is very flexible, the type of service and its configuration is completely dependent upon which entity we're interacting with.  This means we could have one queue for SQS and another for RabbitMQ, and we could have completely different parameters for retrieving and adding messages. Essentially, this means Idle is message centric and therefore the simplest way of obtaining a service is with a message:
+
+```php
+$messageFactory = $container->get(\LinioPay\Idle\Message\MessageFactory::class);
+$message = $messageFactory->createMessage([
+   'subscription_identifier' => 'my_subscription'
+]);
+
+// To retrieve a configured service
+$service = $message->getService();
+
+// Perform the operation
+$message->pull();
+
+// Or one line it:
+/** @var array $messages */
+$messages = $messageFactory->createMessage(['subscription_identifier' => 'my_subscription'])->pull()
+```
