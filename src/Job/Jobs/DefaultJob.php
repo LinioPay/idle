@@ -9,7 +9,6 @@ use LinioPay\Idle\Job\Exception\ConfigurationException;
 use LinioPay\Idle\Job\Job;
 use LinioPay\Idle\Job\TrackableWorker;
 use LinioPay\Idle\Job\TrackingWorker;
-use LinioPay\Idle\Job\Worker;
 use LinioPay\Idle\Job\Worker as WorkerInterface;
 use LinioPay\Idle\Job\Workers\Factory\WorkerFactory as WorkerFactoryInterface;
 use Ramsey\Uuid\Uuid;
@@ -121,7 +120,7 @@ abstract class DefaultJob implements Job
     {
         $data = [];
 
-        array_map(function (Worker $worker) use (&$data) {
+        array_map(function (WorkerInterface $worker) use (&$data) {
             if (is_a($worker, TrackableWorker::class)) {
                 /** @var TrackableWorker $worker */
                 $data = array_merge($data, $worker->getTrackerData());
@@ -135,7 +134,7 @@ abstract class DefaultJob implements Job
     {
         $errors = [];
 
-        array_map(function (Worker $worker) use (&$errors) {
+        array_map(function (WorkerInterface $worker) use (&$errors) {
             $errors = array_merge($errors, $worker->getErrors());
         }, $this->workers);
 
@@ -195,7 +194,7 @@ abstract class DefaultJob implements Job
     {
         $workers = $this->workers;
 
-        /** @var Worker $worker */
+        /** @var WorkerInterface $worker */
         while (!empty($workers) && ($worker = array_shift($workers)) && $worker->work()) {
             array_merge($this->errors, $worker->getErrors());
         }
