@@ -18,9 +18,10 @@ A worker is the entity responsible for doing the work of one or more tasks which
 
 - Worker
     - A `Worker` is a generic worker which performs some kind of task.
+    - Idle currently ships with: `DeleteMessageWorker`, and `AcknowledgeMessageWorker`.
 - TrackingWorker
     - A `TrackingWorker` is a type of worker which handles the task of persisting overall job details.
-        - Idle currently ships with: `DynamoDBTrackerWorker`, `DeleteMessageWorker`, and `AcknowledgeMessageWorker`.
+        - Idle currently ships with: `DynamoDBTrackerWorker`.
 - TrackableWorker
     - A `TrackableWorker` as the name implies is useful whenever a worker has data which we wish to persist as part of the overall job tracking process.
 
