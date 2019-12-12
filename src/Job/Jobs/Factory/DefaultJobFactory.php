@@ -17,7 +17,7 @@ abstract class DefaultJobFactory implements JobFactoryInterface
     /** @var array */
     protected $jobConfig;
 
-    public function __invoke(ContainerInterface $container) : JobFactory
+    public function __invoke(ContainerInterface $container) : JobFactoryInterface
     {
         $this->container = $container;
 
