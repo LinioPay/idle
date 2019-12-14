@@ -4,62 +4,56 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Job\Jobs;
 
-use LinioPay\Idle\Job\Exception\ConfigurationException;
-use LinioPay\Idle\Job\Tracker\Service\Factory\Service as TrackerServiceFactoryInterface;
-use LinioPay\Idle\Job\Workers\Factory\Worker as WorkerFactoryInterface;
-use Zend\Stdlib\ArrayUtils;
+use LinioPay\Idle\Job\Exception\InvalidJobParameterException;
+use LinioPay\Idle\Job\Workers\Factory\WorkerFactory as WorkerFactoryInterface;
 
 class SimpleJob extends DefaultJob
 {
     const IDENTIFIER = 'simple';
 
     /** @var string */
-    protected $workerIdentifier;
+    protected $simpleIdentifier;
 
-    public function __construct(array $config, WorkerFactoryInterface $workerFactory, TrackerServiceFactoryInterface $trackerServiceFactory)
+    public function __construct(array $config, WorkerFactoryInterface $workerFactory)
     {
         $this->config = $config;
         $this->workerFactory = $workerFactory;
-        $this->trackerServiceFactory = $trackerServiceFactory;
     }
 
     public function setParameters(array $parameters = []) : void
     {
-        if (!isset($parameters['worker_identifier'])) {
-            throw new ConfigurationException(self::IDENTIFIER);
+        $this->simpleIdentifier = $parameters['simple_identifier'] ?? '';
+
+        $config = $this->getSimpleJobConfig();
+
+        parent::setParameters(array_merge_recursive($config['parameters'] ?? [], $parameters));
+    }
+
+    public function validateParameters() : void
+    {
+        $config = $this->getConfigParameters();
+
+        if (empty($this->simpleIdentifier) || !isset($config['supported'][$this->simpleIdentifier])) {
+            throw new InvalidJobParameterException($this, 'simple_identifier');
         }
-
-        $this->workerIdentifier = $parameters['worker_identifier'];
-
-        $this->prepareJob($parameters);
-        $this->prepareWorker($parameters);
     }
 
-    protected function prepareJob(array $parameters) : void
+    protected function getSimpleJobConfig() : array
     {
-        parent::setParameters(ArrayUtils::merge(
-            $this->getConfigParameters(),
-            $parameters
-        ));
+        $config = $this->getConfigParameters();
+
+        return $config['supported'][$this->simpleIdentifier] ?? [];
     }
 
-    protected function prepareWorker(array $parameters) : void
+    protected function getSimpleJobConfigWorkers() : array
     {
-        $this->validateWorkerSupport();
-        $workerConfig = $this->getParameters()['supported'][$this->workerIdentifier];
+        $config = $this->getSimpleJobConfig();
 
-        $this->buildWorker($workerConfig['type'], ArrayUtils::merge(
-            $workerConfig['parameters'] ?? [],
-            $parameters
-        ));
+        return $config['parameters']['workers'] ?? [];
     }
 
-    protected function validateWorkerSupport() : void
+    protected function getWorkersConfig() : array
     {
-        $parameters = $this->getParameters();
-
-        if (empty($parameters['supported'][$this->workerIdentifier]['type'])) {
-            throw new ConfigurationException(self::IDENTIFIER);
-        }
+        return $this->getSimpleJobConfigWorkers();
     }
 }

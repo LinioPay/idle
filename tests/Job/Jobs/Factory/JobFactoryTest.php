@@ -21,15 +21,23 @@ class JobFactoryTest extends TestCase
         parent::setUp();
 
         $this->config = [
-            'job' => [
-                SimpleJob::IDENTIFIER => [
-                    'type' => SimpleJob::class,
-                    'parameters' => [
-                        'supported' => [
-                            FooWorker::IDENTIFIER => [
-                                'type' => FooWorker::class,
-                                'parameters' => [
-                                    'size' => 'large',
+            'idle' => [
+                'job' => [
+                    'types' => [
+                        SimpleJob::IDENTIFIER => [
+                            'class' => SimpleJob::class,
+                            'parameters' => [
+                                'supported' => [
+                                    'my_simple_job' => [
+                                        'workers' => [
+                                            [
+                                                'class' => FooWorker::class,
+                                                'parameters' => [
+                                                    'size' => 'large',
+                                                ],
+                                            ],
+                                        ],
+                                    ],
                                 ],
                             ],
                         ],
@@ -47,6 +55,10 @@ class JobFactoryTest extends TestCase
         $mockJob->shouldReceive('setParameters')
             ->once()
             ->with($parameters);
+        $mockJob->shouldReceive('validateConfig')
+            ->once();
+        $mockJob->shouldReceive('validateParameters')
+            ->once();
 
         $container = m::mock(ContainerInterface::class);
         $container->shouldReceive('get')
@@ -69,7 +81,7 @@ class JobFactoryTest extends TestCase
     public function testFailsToCreateJob()
     {
         $mockJob = m::mock(SimpleJob::class);
-        $mockJob->shouldReceive('setParameters')
+        $mockJob->shouldReceive('validateConfig')
             ->once()
             ->andThrow(new Exception('fooo'));
 

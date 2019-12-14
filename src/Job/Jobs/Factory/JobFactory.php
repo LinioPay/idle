@@ -4,35 +4,20 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Job\Jobs\Factory;
 
-use LinioPay\Idle\Job\Exception\ConfigurationException;
 use LinioPay\Idle\Job\Job;
 use LinioPay\Idle\Job\Jobs\FailedJob;
-use Psr\Container\ContainerInterface;
 use Throwable;
 
-class JobFactory
+class JobFactory extends DefaultJobFactory
 {
-    /** @var ContainerInterface */
-    protected $container;
-
-    /** @var array */
-    protected $jobConfig;
-
-    public function __invoke(ContainerInterface $container) : JobFactory
-    {
-        $this->container = $container;
-
-        $this->jobConfig = $container->get('config')['job'] ?? [];
-
-        return $this;
-    }
-
     public function createJob(string $jobIdentifier, array $parameters) : Job
     {
         try {
             /** @var Job $job */
             $job = $this->container->get($this->getJobClass($jobIdentifier));
+            $job->validateConfig();
             $job->setParameters($parameters);
+            $job->validateParameters();
 
             return $job;
         } catch (Throwable $t) {
@@ -42,16 +27,5 @@ class JobFactory
                 'line' => $t->getLine(),
             ]);
         }
-    }
-
-    protected function getJobClass(string $jobIdentifier) : string
-    {
-        $jobClass = $this->jobConfig[$jobIdentifier]['type'] ?? '';
-
-        if (empty($jobClass)) {
-            throw new ConfigurationException($jobIdentifier);
-        }
-
-        return $jobClass;
     }
 }

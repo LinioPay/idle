@@ -1,28 +1,44 @@
 #Idle
 
-Idle is a package for managing Jobs and Queues.  The two aspects work in harmony to make background and queued job processing breeze.
+Idle is a package for managing Jobs and Messaging systems.  The two aspects work in harmony to make background and queued job processing a breeze.
 
 ## Primary Components
 
-#### Worker
+### Job
 
-A worker is the entity responsible for doing the actual work which needs to be done.  
+A job as the name implies represents an objective which we wish to accomplish.  Idle currently ships with two main types of jobs:
+- SimpleJob 
+    - A `SimpleJob` is a generic job which will be made up of one or more workers.
+- MessageJob
+    - A `MessageJob` is a more specialized type of job which is responsible for accomplishing an objective while making use of data which is received from a message.
 
-#### Job
+#### Job > Worker
 
-A job as far as Idle is concerned, is a task which needs to be performed, as well as the entity responsible for delegating the processing of a given task to a worker.  That is, a job, acts as a manager or task master which figures out what needs to be done, which worker can do it, and gets that worker to do the actual work.  Idle ships with two base jobs `SimpleJob` and `QueueJob`, it also supports the creation of custom jobs.
+A worker is the entity responsible for doing the work of one or more tasks which make up a job.  It is up to you to create your own custom workers depending on needed functionality. Idle ships with three types of workers:
 
-###### SimpleJob
+- Worker
+    - A `Worker` is a generic worker which performs some kind of task.
+    - Idle currently ships with: `DeleteMessageWorker`, and `AcknowledgeMessageWorker`.
+- TrackingWorker
+    - A `TrackingWorker` is a type of worker which handles the task of persisting overall job details.
+        - Idle currently ships with: `DynamoDBTrackerWorker`.
+- TrackableWorker
+    - A `TrackableWorker` as the name implies is useful whenever a worker has data which we wish to persist as part of the overall job tracking process.
 
-A SimpleJob is essentially a transparent taskmaster which forwards all task details to the worker doing the actual work.  It is useful when the task being performed does not require any pre-processing or orchestration.  Since its a dummy taskmaster, it needs to be told exactly which worker will complete the task, and what the parameters the worker will need in order to complete the task.  SimpleJobs have only one required parameter: `worker_identifier`.
+### Message
 
-###### QueueJob
+Messaging is the other half of Idle, and is responsible for communication to and from messaging services.  Idle currently ships with two main strategies for dealing with messages:  
 
-QueueJobs are another kind of job which is used when the task details are retrieved from a message queue.  The QueueJob has only one required parameter, and that is, a `message` which has within it details about which queue it belongs, as well as a body, and custom attributes.  Armed with the message details, a QueueJob figures out which worker is responsible for processing messages for the Message's queue.  It then instantiates this worker, and asks it to perform the actual work.  Once the worker is done, the QueueJob can delete the message from the queue (if configured to do so), or simply return the details of how the work went.
-
-#### Queue Access
-
-In order to allow QueueJob and other parts of an application to work with queues, it helps to be able to communicate with queue services and issue commands.  This part of the package handles this responsibility and makes it possible to perform operations such as add, read, or delete a message from/to a queue.
+- Queue
+    - A `Queue` based implementation entails creating a message which contains data you will need at a later date.  This message is then sent to a queueing service which will hold it in a `queue` until it is retrieved.
+    - Idle currently ships with `SQS` as a queueing service. It is very simple to add adapters for other services by implementing the corresponding Service interface.
+    - Idle utilizes `QueueMessage` to manage the data on these messages.  
+- Publish/Subscribe
+    - A `Publish/Subscribe` implementation is similar to a queue based implementation, but it allows more flexibility at the time of retrieval.  From an architectural point of view it consists of one `topic` and one or more `subscriptions`. When a message is sent to a given `topic`, it will forward the message to each of its `subscription(s)`.  The `subscription(s)` will then hold the message until its retrieved.
+    - Idle currently ships with `Google PubSub` as a `Publish/Subscribe` service.
+    - Idle utilizes two main types of message for dealing with Publish/Subscribe: 
+        - `TopicMessage` which can be published to a `topic`.
+        - `SubscriptionMessage` which has been obtained (pulled or pushed) from a `subscription`).  
 
 ## Installing Idle
 
@@ -35,191 +51,107 @@ The recommended way to install Idle is through
 curl -sS https://getcomposer.org/installer | php
 ```
 
-Next, run the Composer command to install the latest stable version of Idle:
+Next, install the latest stable version of Idle:
 
 ```bash
 php composer.phar require liniopay/idle
 ```
-### Configuration files
-Once the package is available to your application, it must be configured.  Idle ships with two sample configuration files.  The first is for jobs and its located at `config/sample_job.php`, the other is for queue management and its located at `config/sample_queue.php`.
+### Configuration
+Once the package is available to your application, it must be configured.  Idle ships with a sample configuration file to make it easy to get started.  This file is located at `config/sample_idle.php`.  Copy it to the appropriate config directory for your application:
 
 ```bash
-cp vendor/liniopay/idle/config/sample_job.php config/job.php
-cp vendor/liniopay/idle/config/sample_queue.php config/queue.php
+cp vendor/liniopay/idle/config/sample_idle.php config/job.php
 ```
 
-### Prepare the container
-Once these configuration files have been added to their target directory, they must be registered with the application's container. The built in factories assume these are added to the container under the `config` key as an array.  Within this array there should be a `job` and `queue` corresponding to each of the configs.   
+### Preparing the Container
+Once the configuration file has been added to the target directory, it must be registered with the application's container. The built in factories assume these are added to the container under the `config` key as an array which contains an `idle` key.
 
-When retrieved from the container, the it should be compatible with the code below:
+For clarity, it should be compatible with the code below:
 ```php
 $config = $container->get('config');
-$jobConfig = $config['job']; // should contain the contents of the job config
-$queueConfig = $config['queue']; // should contain the contents of the queue config
+$jobConfig = $config['idle']['job'] ?? []; 
+$messageConfig = $config['idle']['message'] ?? [];
 ```
 
-Additionally, the container must be made aware of the following factories and invokables:
+Now that the container is aware of Idle's config, it must be made aware of its factories:
 ```php
-\LinioPay\Idle\Job\Jobs\Factory\JobFactory::class => \LinioPay\Idle\Job\Jobs\Factory\JobFactory::class,
-\LinioPay\Idle\Job\Jobs\QueueJob::class => \LinioPay\Idle\Job\Jobs\Factory\QueueJobFactory::class,
+// JOB 
+\LinioPay\Idle\Job\JobFactory::class => \LinioPay\Idle\Job\Jobs\Factory\JobFactory::class,
+\LinioPay\Idle\Job\WorkerFactory::class => \LinioPay\Idle\Job\Workers\Factory\WorkerFactory::class,
+\LinioPay\Idle\Job\Jobs\MessageJob::class => \LinioPay\Idle\Job\Jobs\Factory\MessageJobFactory::class,
 \LinioPay\Idle\Job\Jobs\SimpleJob::class => \LinioPay\Idle\Job\Jobs\Factory\SimpleJobFactory::class,
-\LinioPay\Idle\Job\Workers\Factory\Worker::class => \LinioPay\Idle\Job\Workers\Factory\WorkerFactory::class,
-\LinioPay\Idle\Queue\Service::class => \LinioPay\Idle\Queue\Service\Factory\ServiceFactory::class,
-(optional - only if using SQS) \LinioPay\Idle\Queue\Service\SQS\Service::class => \LinioPay\Idle\Queue\Service\SQS\Factory\ServiceFactory::class,
-(optional - sample worker) \LinioPay\Idle\Job\Workers\FooWorker::class => \LinioPay\Idle\Job\Workers\FooWorker::class,
+
+// MESSAGE
+\LinioPay\Idle\Message\MessageFactory::class => \LinioPay\Idle\Message\Messages\Factory\MessageFactory::class,
+\LinioPay\Idle\Message\ServiceFactory::class => \LinioPay\Idle\Message\Messages\Factory\ServiceFactory::class,
+
+// CUSTOM
+(optional - only if using AWS DynamoDB) \LinioPay\Idle\Job\Workers\DynamoDBTrackerWorker::class => \LinioPay\Idle\Job\Workers\Factory\DynamoDBTrackerWorkerFactory::class,
+(optional - only if using AWS SQS) \LinioPay\Idle\Message\Messages\Queue\Service\SQS\Service::class => \LinioPay\Idle\Message\Messages\Queue\Service\SQS\Factory\ServiceFactory::class,
+(optional - only if using Google PubSub) \LinioPay\Idle\Message\Messages\PublishSubscribe\Service\Google\PubSub\Service::class => \LinioPay\Idle\Message\Messages\PublishSubscribe\Service\Google\PubSub\Factory\ServiceFactory::class,
 ```
 
-### Custom factories
-It is possible your container or application may not be compatible with all or some of the provided factories.  In this case custom factories may be created.  When following this approach simply create the custom factories and ensure at some point you create a Worker factory which implements the Worker factory interface class `idle/src/Job/Workers/Factory/Worker.php`.
+### Custom Factories
 
-## Running and creating simple jobs
+It is possible your container or application may not be compatible with the provided factories.  It is also possible you will want to add a new service.  Idle is extremely flexible in both configuration and its factory usage.  Any component can be replaced without affecting the other by simply implementing the corresponding interface.
 
-Idle is capable of running any type of job, not just QueueJob. The configuration file `config/sample_job.php` contains the default configuration for jobs.  Idle ships with two built in job types: `SimpleJob` and `QueueJob`.
+## Job Usage
+
+### SimpleJob
+
+Lets start off with the simplest case.. `SimpleJob`. Below is a simplified Idle config which only shows the SimpleJob section and its workers. 
 
 ```php
-return [
-    QueueJob::IDENTIFIER => [
-        'type' => QueueJob::class,
-        'parameters' => []
-    ],
-    SimpleJob::IDENTIFIER => [
-        'type' => SimpleJob::class,
-        'parameters' => [
-            'supported' => [
-                FooWorker::IDENTIFIER => [
-                    'type' => FooWorker::class,
-                    'parameters' => [],
+[
+    'job' => [
+        'types' => [
+            SimpleJob::IDENTIFIER  => [
+                'class' => SimpleJob::class,
+                'parameters' => [
+                    'supported' => [ // The `supported` parameter allows us to define named simple jobs.
+                        'my_simple_job' => [ // Configure support for a simple job which we're calling 'my_simple_job'
+                            'parameters' => [ // Define any parameters which are relevant to this type of job.. such as its workers
+                                'workers' => [
+                                    [ // Define the usage of FooWorker
+                                        'type' => FooWorker::IDENTIFIER,
+                                        'parameters' => [ // Override any parameters for this specific instance of FooWorker
+                                            'foo' => 'baz',
+                                        ],
+                                    ],
+                                ]
+                            ]
+                        ],
+                    ]
+                ]
+            ]
+        ],
+        'worker' => [ // Global worker configuration
+            'types' => [
+                FooWorker::IDENTIFIER => [ // Make idle aware of FooWorker
+                    'class' => FooWorker::class, // Set its class
+                    'parameters' => [], // Set any default global parameters for this worker
                 ],
-                // ...
             ]
         ]
     ]
-];
-```
-
-The Idle job configuration serves two purposes: define the job types Idle is capable of processing, and define the default parameters for each of these jobs.  
-
-In some cases applications need to run random one off, straight forward jobs, in order to address this need, Idle ships with a Job type called `SimpleJob` which as the name suggests simply forwards the job details to the desired worker.   
-```json
-{
-    "identifier": "simple", // This is the job type identifier for SimpleJob
-    "parameters": {
-      "worker_identifier": "foo", // Same as FooWorker::IDENTIFIER, which is configured as a `supported` worker under SimpleJob
-      "color": "red" // A random parameter the worker may need to do its work
-    }
-}
+]
 ```  
 
-Creating a SimpleJob is very straight forward when utilizing the built in Job factory.
+Creating a SimpleJob is very straight forward when utilizing the `JobFactory`.
 
 ```php
-$jobFactory = $container->get(JobFactory::class);
-...
-$job = $jobFactory->createJob($jobData['identifier'] ?? '', $jobData['parameters'] ?? []);
+$jobFactory = $container->get(\LinioPay\Idle\Job\JobFactory::class);
+
+$job = $jobFactory->createJob(SimpleJob::IDENTIFIER, [ // Create a Job of the type SimpleJob::IDENTIFIER
+    'simple_identifier' => 'my_simple_job', // Within SimpleJob, we're creating a "subjob" with the supported id "my_simple_job"
+    'foo' => 'bar', // Set parameters to override the configured defaults
+]);
 ```
 
-In this case the payload contains an `identifier` of 'simple', this will result in the factory creating a `SimpleJob`.  The `SimpleJob` validation expects a `worker_identifier` as its only required parameter.  If one is not provided -or an unsupported worker identifier- it will return a FailedJob containing the details.  Since our payload contains a valid `worker_identifier`, a `SimpleJob` will be created in this example.
-
-Processing and retrieving job details is the same as for any other job type.  At this point all that is left is to process the job.  When a `SimpleJob` is initiated through a call to `process`, it calls the appropriate worker's `work` method.
+Processing and retrieving job details is straight forward.  At this point all that is left to do is to process the job.
 
 ```php
-$job->process();
-$success = $job->isSuccessful();
-$duration = $job->getDuration();
-$errors = $job->getErrors();
-```
-
-### Running and creating custom jobs
-
-Idle also allows for the creation of custom jobs which may involve more orchestration and complexity.  In these cases a custom job can be created which figures out what needs to be done, and which worker(s) will do it. 
-
-This can be done by creating a custom job with an appropriate name, for example `FancyJob`.  
-
-```php
-class FancyJob extends DefaultJob
-{
-    const IDENTIFIER = 'fancy';
-
-    public function __construct(array $config, WorkerFactoryInterface $workerFactory) // Add other parameters if needed, but these two are good to have
-    {
-        $this->config = $config;
-        $this->workerFactory = $workerFactory;
-    }
-
-    public function setParameters(array $parameters = []) : void
-    {
-        // Define some validation rules for this job.
-        if (!isset($parameters['fancy_parameter'])) {
-            throw new FancyException('Not fancy enough'!);
-        }
-    }
-    
-    public function process() : void
-    {
-        // Figure out which worker is needed
-        $workerType = $this->paramrters['fancy_parameter'] == 'ultra' 
-            ? UltraWorker::class 
-            : LameWorker::class;
-        
-        // Let the DefaultWorker handle creation of the chosen worker and providing it its parameters
-        $this->buildWorker($workerType, ['action' => 'jump']); // Add whatever parameters are needed.. perhaps some of the Job's own parameters
-        
-        // Let the DefaultWorker handle the actual running of the worker
-        parent::process();
-    }
-}
-```
-
-Once created, add the Job's IDENTIFIER of 'fancy' to the Idle job config.  Provide any default parameters if needed.
-
-```php
-return [
-    QueueJob::IDENTIFIER => [
-        'type' => QueueJob::class,
-        'parameters' => []
-    ],
-    SimpleJob::IDENTIFIER => [
-        'type' => SimpleJob::class,
-        'parameters' => [
-            'supported' => [
-                FooWorker::IDENTIFIER => [
-                    'type' => FooWorker::class,
-                    'parameters' => [],
-                ],
-                // ...
-            ]
-        ]
-    ],
-    FancyJob::IDENTIFIER => [
-        'type' => FancyJob::class,
-        'parameters' => [],
-    ],
-];
-```
-
-Now that Idle is aware of this new Job, it is time to register `FancyJob` with the application container.  This can be done by creating a factory for it, and registering it with the container.  Once this is done, its the same flow as for the built in jobs:
-
-```json
-{
-    "identifier": "fancy", // This is the job type identifier for FancyJob (FancyJob::IDENTIFIER)
-    "parameters": {
-      "fancy_paramerter": "ultra"
-    }
-}
-```  
-
-Creating a FancyJob is very straight forward when utilizing the built in Job factory.
-
-```php
-$jobFactory = $container->get(JobFactory::class);
-...
-$job = $jobFactory->createJob($jobData['identifier'] ?? '', $jobData['parameters'] ?? []);
-```
-
-All other functionality available to the built in jobs is still available to the FancyJob.
-
-```php
-$job->process();
+$job->process(); // Calls each of its worker's `work` method.  In the case of `my_simple_job` only `FooWorker`.
 $success = $job->isSuccessful();
 $duration = $job->getDuration();
 $errors = $job->getErrors();
@@ -227,197 +159,102 @@ $errors = $job->getErrors();
 
 ### Outputting job results
 
-Idle includes a `league/fractal` transformer to be able to quickly output basic job details. This is located at `src/Job/Output/Transformer/JobDetails.php`. 
+Idle includes an optional `league/fractal` transformer to quickly output basic job details. This is located at `src/Job/Output/Transformer/JobDetails.php`. 
 
-## Working with queues
+### MessageJob
 
-At this time Idle ships only with Amazon's SQS support.  Over time the plan is to expand this and support all the major providers.  In the mean time it is possible to add support for any desired queue service.
-
-### Service configuration
-
-Before being able to utilize a queue service, its necessary to configure its client, queues, actions, etc.  These are all configured in the `config/sample_queue.php` configuration file.  Configuration is fairly straight forward, its broken down by service type.  Within each service there are three main areas of configuration: `type` (service class), `client` (client initialization parameters), and `queues` (queues this service supports, as well as their parameters). 
+Below is a section of the Idle config for `MessageJob`.  We configure the `MessageJob` by the type of message which will initiate the job.  In this case we have added support for messages coming from Queues and PublishSubscribe, this is through QueueMessage and SubscriptionMessage (keep in mind topics can not initiate a job because they are never polled for messages).
 
 ```php
 [
-    'active_service' => SQS::IDENTIFIER, // Indicates which service is actively being used
-    'services' => [
-        SQS::IDENTIFIER  => [ // Defines an available queue service by its name
-            'type' => SQS::class, // Indicates which class actually handles this type of service
-            'client' => [ // Client initialization parameters
-                'version' => 'latest',
-                'region' => 'us-east-1',
+    'job' => [
+        'types' => [
+            MessageJob::IDENTIFIER => [
+                'class' => MessageJob::class,
+                'parameters' => [
+                    QueueMessage::IDENTIFIER => [
+                        'my_queue' => [ // Define the name of the queue on the messaging service
+                            'parameters' => [
+                                'workers' => [
+                                    [ // Define the usage of FooWorker
+                                        'type' => FooWorker::IDENTIFIER, 
+                                        'parameters' => [],
+                                    ],
+                                    [ // Define the usage of DynamoDBTrackerWorker to persist job details
+                                        'type' => DynamoDBTrackerWorker::IDENTIFIER, 
+                                        'parameters' => [
+                                            'table' => 'job_details_my_queue', // Table to persist the job data to
+                                        ]
+                                    ]
+                                ],
+                            ],
+                        ]
+                    ],
+                    SubscriptionMessage::IDENTIFIER => [ 
+                        'my_subscription' => [ // Define the name of the subscription on the messaging service
+                            'parameters' => [
+                                'workers' => [
+                                    [ // Define the usage of FooWorker
+                                        'type' => FooWorker::IDENTIFIER,
+                                        'parameters' => [],
+                                    ],
+                                ],
+                            ],
+                        ]
+                    ],
+                ],
             ],
-            'queues' => [ // Supported queues within the service
-                // ...
+        ],
+        'worker' => [ // Global worker definition and configuration
+            'types' => [
+                FooWorker::IDENTIFIER => [ // Definition of FooWorker
+                    'class' => FooWorker::class, // Set the appropriate class
+                    'parameters' => [], // Set any default global parameters for this worker
+                ],
+                DynamoDBTrackerWorker::IDENTIFIER  => [ // Definition of DynamoDBTrackerWorker
+                    'class' => DynamoDBTrackerWorker::class, // Set its class
+                    'client' => [ // Set a custom property for this worker for instnatiating the DynamoDB client
+                        'version' => 'latest',
+                        'region' => getenv('AWS_REGION'),
+                    ],
+                    'parameters' => [], // Set any global parameters for this worker (we could set the same table for all jobs if we wanted)
+                ],
             ]
         ]
     ]
 ]
 ```
 
-### Queue configuration
-
-It is important to understand how queues are configured in order to utilize Idle effectively.  As previously mentioned, within each service there is a `queues` property which contains configuration for each of its supported queues.  In order to simply the process of configuration, there is also a `default` queue in there which contains default values for queues to extend and override. 
-
-Each queue entry in the `queues` section has four main action areas: dequeue, queue, delete, and worker.  As their names imply they simply allow extending default configuration of parameters for each of these actions.  
-
-- `queue` is used to configure parameters when adding a new message.  
-- `dequeue` is used to configure parameters when retrieving (but not deleting) a message from the queue.
-- `delete` is used to configure parameters when permanently deleting a message from the queue.
-- `worker` is used to configure the worker which will actually perform the task processing the message.
+Creating a `MessageJob` is very straight forward when utilizing the `JobFactory`.
 
 ```php
-'queues' => [
-    'default' => [ // Essentially a `dummy` queue which all others extend and override
-        'dequeue' => [
-            'parameters' => [
-                'MaxNumberOfMessages' => 1, // The maximum number of messages to return. Amazon SQS never returns more messages than this value but may return fewer. Values can be from 1 to 10.
-                'VisibilityTimeout' => 30, // The duration (in seconds) that the received messages are hidden from subsequent retrieve requests after being retrieved by a ReceiveMessage request.
-                'WaitTimeSeconds' => 2, // The duration (in seconds) for which the call will wait for a message to arrive in the queue before returning. If a message is available, the call will return sooner than WaitTimeSeconds.
-            ],
-        ],
-    ],
-    Service::FOO_QUEUE => [ // The name of the queue we're defining (should match the name in the service).
-        'worker' => [
-            'type' => FooWorker::class, // (required), defines which worker will process messages retrieved from 'foo_queue'
-        ],
-        'dequeue' => [ // (optional) Override one of the sections
-            'parameters' => [
-                'VisibilityTimeout' => 300, // Perhaps processing this message takes longer so it needs a higher visibility timeout than the default
-            ],
-        ],
-    ]
-]
-```
+$jobFactory = $container->get(\LinioPay\Idle\Job\JobFactory::class);
 
-#### Adding a message to the queue
-
-The process for adding a message to the queue simply involves creating the message and passing it to the `queue` (`public function queue(Message $message, array $parameters = []) : bool`) method in the queue service. It will return a boolean indicating success.
-
-```php
-$queueService = $container->get(LinioPay\Idle\Queue\Service::class);
-...
-$queueService->queue(new LinioPay\Idle\Queue\Message(Service::FOO_QUEUE, 'foo body'));
-```
-
-#### Reading a message from the queue
-
-The process for reading a message from the queue simply involves figuring out which queue to read from and passing it to the `dequeue` (`public function dequeue(string $queueIdentifier, array $parameters = []) : array`) method in the queue service. It will return an array of `LinioPay\Idle\Queue\Message` since its possible to read more than one Message at a time for some services.
-
-```php
-$queueService = $container->get(LinioPay\Idle\Queue\Service::class);
-...
-$messages = $queueService->dequeue(Service::FOO_QUEUE);
-```
-
-#### Deleting a message from the queue
-
-The process for deleting a message from the queue requires passing the Message which is being deleted to the `delete` (`public function delete(Message $message, array $parameters = []) : bool`) method in the queue service. It will return a boolean indicating success.
-
-```php
-$queueService = $container->get(LinioPay\Idle\Queue\Service::class);
-...
-$messages = $queueService->dequeue(Service::FOO_QUEUE);
-
-// TODO: validate there is at least one message
-
-/** @var Message $message */
-$message = $messages[0];
-
-// TODO: Do somemthing with the message
-
-/** @var bool $success */
-$success = $queueService->delete($message);
-```
-
-## Processing queue messages with JobQueue
-
-Define a constant somewhere with the name of the queue for easier referencing.
-
-```php
-class Queue
-{
-    const MY_QUEUE = 'my_queue_name';
-}
-```
-
-Create a new worker to work on messages retrieved from MY_QUEUE.  This can be done by extending the `DefaultWorker` class.
-
-```php
-class MyWorker extends DefaultWorker
-{
-    public function work(): bool
-    {
-        // TODO: Do some work..
-        return true;
-    }
-
-    public function validateParameters(array $parameters): void
-    {
-        // TODO: Add some validation of parameters
-    }
-}
-```
-
-Make Idle aware of the new queue and its corresponding worker. The only required parameter is the worker type.  The rest will be inherited from the 'default' configuration.
-
-```php
-[
-    'active_service' => SQS::IDENTIFIER,
-    'services' => [
-        SQS::IDENTIFIER  => [ 
-            'type' => SQS::class, 
-            'client' => [
-                'version' => 'latest',
-                'region' => 'us-east-1',
-            ],
-            'queues' => [
-                ...
-                Queue::MY_QUEUE => [
-                    'worker' => [
-                        'type' => MyWorker::class,
-                    ]
-                ]
-            ]
+$job1 = $jobFactory->createJob(MessageJob::IDENTIFIER, [
+    'message' => [ // The factory will automatically convert to the appropriate message entity (QueueMessage) and inject the proper messaging service.
+        'message_identifier' => '123',
+        'queue_identifier' => 'my_queue', // Because this message provides a `queue_identifier`, Idle knows its a `QueueMessage`, along with its configuration details
+        'body'=> 'hello queue payload!',
+        'attributes' => [
+            'foo' => 'bar',
         ]
     ]
-]
+]);
+
+
+$job2 = $jobFactory->createJob(MessageJob::IDENTIFIER, [
+    'message' => [ // The factory will automatically convert to the appropriate message entity (SubscriptionMessage) and inject the proper messaging service.
+        'message_identifier' => '123',
+        'subscription_identifier' => 'my_subscription', // Because this message provides a subscription_identifier, Idle knows its a `SubscriptionMessage`, along with its configuration details
+        'body'=> 'hello pubsub payload!',
+        'attributes' => [
+            'foo' => 'bar',
+        ]
+    ]
+]);
 ```
 
-### Running queue jobs
-
-Idle includes a `QueueJob` class which simplifies the process of creating and running workers for message processing. As an example, assume a separate part of the application (perhaps a lambda trigger) has already read a message from the queue and now calls the API with the following job payload: 
-
-```json
-{
-    "identifier": "queue", // This is the job type identifier, should remain as queue for QueueJob
-    "parameters": {
-        "message": { // QueueJobs require an Idle message as its only parameter 
-            "message_identifier": "123-456-7890",
-            "queue_identifier": "my_queue_name",
-            "body": "mybody",
-            "attributes": {
-                "foo": "bar"
-            },
-            "metadata": {
-                "baz": "foo"
-            }
-        }	
-    }
-}
-```  
-
-Creating a job becomes quite simple when utilizing the built in job factory.
-
-```php
-$jobFactory = $container->get(JobFactory::class);
-...
-$job = $jobFactory->createJob($jobData['identifier'] ?? '', $jobData['parameters'] ?? []);
-```
-
-In this case the payload contains an `identifier` of 'queue', this will result in the factory creating a `QueueJob`.  The QueueJob validation expects a message as its only parameter (corresponding to a `LinioPay\Idle\Queue\Message`).  If one is not provided -or an invalid Message is provided- it will return a FailedJob containing the details.  Since our payload contains a valid message, a `QueueJob` will be created in this example.
-
-Processing and retrieving job details is quite simple.  At this point all that is left is to initiate the job.  When a QueueJob is initiated through a call to `process`, it calls the appropriate worker's `work` method.
+Processing and retrieving job details is the same for all jobs:
 
 ```php
 $job->process();
@@ -425,3 +262,202 @@ $success = $job->isSuccessful();
 $duration = $job->getDuration();
 $errors = $job->getErrors();
 ```
+
+## Messaging
+
+The second aspect to Idle is messaging, which allows us to interact with messaging services from within the Idle ecosystem.  The Idle configuration for messages also utilizes a cascading style of configuration.
+
+```php
+[
+    'message' => [
+        'types' => [
+            QueueMessage::IDENTIFIER => [
+                'default' => [ // Defaults shared for all queues, unless overriden
+                    'queue' => [ // Configure behavior for when adding a new message
+                        'parameters' => [], 
+                        'error' => [
+                            'suppression' => true,
+                        ],
+                    ],
+                    'dequeue' => [ // Configure behavior for when retrieving messages
+                        'parameters' => [], 
+                        'error' => [
+                            'suppression' => true,
+                        ],
+                    ],
+                    'delete' => [ // Configure behavior for when deleting a message
+                        'parameters' => [ 
+                        ],
+                        'error' => [
+                            'suppression' => true,
+                        ],
+                    ],
+                    'parameters' => [ // Configure overall QueueMessage parameters
+                        'service' => SQS::IDENTIFIER, // Default service to be used by all queues
+                    ],
+                ],
+                'types' => [ // Define and override specific queues
+                    'my_queue' => [ // Define the queue name as it appears on the messaging service
+                        'queue' => [ // Override queueing behavior only for my_queue
+                            'parameters' => [
+                                'DelaySeconds' => 0, // SQS - Override the number of seconds (0 to 900 - 15 minutes) to delay a specific message
+                            ],
+                        ],
+                        'parameters' => [
+                            //'service' => FooMessagingService::IDENTIFIER, // Override service for `my_queue`
+                        ],
+                    ]
+                ]
+            ],
+            TopicMessage::IDENTIFIER => [ // Configure support for TopicMessages
+                'default' => [ // Defaults shared for all topics, unless overriden
+                    'publish' => [ // Default publishing configuration
+                        'parameters' => [],
+                        'error' => [
+                            'suppression' => true,
+                        ],
+                    ],
+                    'parameters' => [
+                        'service' => GooglePubSub::IDENTIFIER,
+                    ],
+                ],
+                'types' => [
+                    'my_topic' => [ // Overrides for my_topic
+                        'parameters' => [
+                            //'service' => GooglePubSub::IDENTIFIER,
+                        ],
+                    ]
+                ]
+            ],
+            SubscriptionMessage::IDENTIFIER => [ // Configure support for SubscriptionMessages
+                'default' => [ // Defaults shared for all topics, unless overriden
+                    'pull' => [
+                        'parameters' => [],
+                        'error' => [
+                            'suppression' => true,
+                        ],
+                    ],
+                    'parameters' => [
+                        'service' => GooglePubSub::IDENTIFIER,
+                    ],
+                ],
+                'types' => [
+                    'my_subscription' => [ // Override for `my_subscription`
+                        'parameters' => [],
+                    ]
+                ]
+            ],
+        ],
+        'service' => [ // Global service definition and configuration
+            'types' => [
+                SQS::IDENTIFIER  => [ // Define support for SQS and its configuration
+                    'class' => SQS::class,
+                    'client' => [
+                        'version' => 'latest',
+                        'region' => getenv('AWS_REGION'),
+                    ],
+                ],
+                GooglePubSub::IDENTIFIER => [ // Define support for PubSub and its configuration
+                    'class' => GooglePubSub::class,
+                    'client' => [],
+                ]
+            ]
+        ],
+    ],
+]
+```
+
+With the configuration above we have enabled support for an SQS queue named `my_queue`, a Google PubSub topic named `my_topic`, and a Google PubSub subscription named `my_subscription`.  Once this is done, adding a queue message or a topic message is a breeze!
+
+### Creating and Interacting with Messages
+
+#### QueueMessage
+
+A QueueMessage can be created in one of two ways:
+
+- Manually
+    - This means we're creating a new message from data.
+    ```php
+    $messageFactory = $container->get(\LinioPay\Idle\Message\MessageFactory::class);
+    
+    $message = $messageFactory->createMessage([
+        'queue_identifier' => 'my_queue', // Because we provide a queue_identifier, Idle knows its a QueueMessage along with its configuration details and which service to inject
+        'body'=> 'hello queue payload!',
+        'attributes' => [
+            'foo' => 'bar',
+        ]
+    ]);
+    
+    $sqsService = $message->getService(); // Because `my_queue` is configured to work with SQS, the message factory injects the service to the message for us.
+    $sqsService->queue($message); // Now we can send the message to the service
+    
+    // For convenience, we can send it directly from the message (alternative to the above two lines)
+    $message->queue();
+    ```
+- Dequeue
+    - This means we're creating a QueueMessage by polling the service and obtaining one or more messages from the queue.  The simplest way to achieve this is to create a message with the appropriate queue identifier:
+    ```php
+    $messageFactory = $container->get(\LinioPay\Idle\Message\MessageFactory::class);
+    
+    $messages = $messageFactory->createMessage(['queue_identifier' => 'my_queue'])->dequeue();
+    ```
+#### Topic Messages
+
+A `TopicMessage` is a message which we want to publish to a `topic`.
+  
+- Manually
+    - Simply create it from data.
+    ```php
+    $messageFactory = $container->get(\LinioPay\Idle\Message\MessageFactory::class);
+    $message = $messageFactory->createMessage([
+       'topic_identifier' => 'my_topic', // Because we provide a topic_identifier, Idle knows its a TopicMessage..
+       'body'=> 'hello pubsub payload!',
+       'attributes' => [
+           'foo' => 'bar',
+       ]
+    ]);
+    
+    $pubSubService = $message->getService(); // Because `my_topic` is configured to work with PubSub, the message factory injects the service to the message for us.
+    $pubSubService->publish($message); // Now we can send the message to the service
+    
+    // For convenience, we can send it directly from the message (alternative to the above two lines)
+    $message->publish();
+    ```
+
+#### Subscription Messages
+
+A `SubscriptionMessage` is a message which has been obtained from a `subscription`.  This can happen from one of two actions:
+
+- Pull
+    - We query the service and obtain one or more SubscriptionMessage(s).
+    ```php
+    $messageFactory = $container->get(\LinioPay\Idle\Message\MessageFactory::class);
+    $message = $messageFactory->createMessage([
+       'subscription_identifier' => 'my_subscription'
+    ]);
+    
+    // To retrieve a configured service
+    $service = $message->getService();
+    
+    // Perform the operation
+    $message->pull();
+    
+    // Or one line it:
+    /** @var array $messages */
+    $messages = $messageFactory->createMessage(['subscription_identifier' => 'my_subscription'])->pull()
+    ```
+- Push
+    - The messaging service hits a webhook on our application and we instantiate a SubscriptionMessage from the webhook data.
+
+    ```php
+    $messageFactory = $container->get(\LinioPay\Idle\Message\MessageFactory::class);
+    $message = $messageFactory->createMessage([
+       'subscription_identifier' => 'my_subscription', // Because we provide a subscription_identifier, Idle knows its a SubscriptionMessage..
+       'body'=> 'hello pubsub payload!',
+       'attributes' => [
+           'foo' => 'bar',
+       ]
+    ]);
+    
+    $pubSubService = $message->getService(); // Because `my_subscription` is configured to work with PubSub, the message factory injects the service to the message for us.
+    ```

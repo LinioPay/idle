@@ -8,6 +8,8 @@ interface Job
 {
     public function process() : void;
 
+    public function validateConfig() : void;
+
     public function getErrors() : array;
 
     public function isSuccessful() : bool;
@@ -17,6 +19,8 @@ interface Job
     public function getParameters() : array;
 
     public function setParameters(array $parameters = []) : void;
+
+    public function validateParameters() : void;
 
     public function isFinished() : bool;
 

@@ -8,6 +8,9 @@ use LinioPay\Idle\Job\Worker;
 
 abstract class DefaultWorker implements Worker
 {
+    /** @var bool Whether this worker can be instantiated without a factory or not */
+    public static $skipFactory = false;
+
     /** @var array */
     protected $parameters = [];
 
@@ -21,8 +24,6 @@ abstract class DefaultWorker implements Worker
 
     public function setParameters(array $parameters) : void
     {
-        $this->validateParameters($parameters);
-
         $this->parameters = $parameters;
     }
 
@@ -36,7 +37,7 @@ abstract class DefaultWorker implements Worker
         $this->errors = $errors;
     }
 
-    public function validateParameters(array $parameters) : void
+    public function validateParameters() : void
     {
         // Override with custom validation of worker parameters
     }
