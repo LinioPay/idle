@@ -103,7 +103,7 @@ class SubscriptionMessageTest extends TestCase
             ->andReturn(['foo']);
 
         $message->setService($service);
-        $this->assertSame(['foo'], $message->pull(['foo' => 'bar']));
+        $this->assertSame(['foo'], $message->receive(['foo' => 'bar']));
     }
 
     public function testPullThrowsUndefinedServiceException()

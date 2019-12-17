@@ -81,7 +81,7 @@ class TopicMessageTest extends TestCase
             ->andReturn(true);
 
         $message->setService($service);
-        $this->assertTrue($message->publish(['foo' => 'bar']));
+        $this->assertTrue($message->send(['foo' => 'bar']));
     }
 
     public function testPublishThrowsUndefinedServiceException()

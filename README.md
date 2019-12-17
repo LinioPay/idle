@@ -1,4 +1,5 @@
-#Idle
+
+# Idle
 
 Idle is a package for managing Jobs and Messaging systems.  The two aspects work in harmony to make background and queued job processing a breeze.
 
@@ -392,7 +393,7 @@ A QueueMessage can be created in one of two ways:
     $sqsService->queue($message); // Now we can send the message to the service
     
     // For convenience, we can send it directly from the message (alternative to the above two lines)
-    $message->queue();
+    $message->send();
     ```
 - Dequeue
     - This means we're creating a QueueMessage by polling the service and obtaining one or more messages from the queue.  The simplest way to achieve this is to create a message with the appropriate queue identifier:
@@ -421,7 +422,7 @@ A `TopicMessage` is a message which we want to publish to a `topic`.
     $pubSubService->publish($message); // Now we can send the message to the service
     
     // For convenience, we can send it directly from the message (alternative to the above two lines)
-    $message->publish();
+    $message->send();
     ```
 
 #### Subscription Messages
@@ -444,7 +445,7 @@ A `SubscriptionMessage` is a message which has been obtained from a `subscriptio
     
     // Or one line it:
     /** @var array $messages */
-    $messages = $messageFactory->createMessage(['subscription_identifier' => 'my_subscription'])->pull()
+    $messages = $messageFactory->createMessage(['subscription_identifier' => 'my_subscription'])->receive()
     ```
 - Push
     - The messaging service hits a webhook on our application and we instantiate a SubscriptionMessage from the webhook data.
