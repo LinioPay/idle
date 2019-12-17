@@ -1,5 +1,5 @@
 
-#Idle
+# Idle
 
 Idle is a package for managing Jobs and Messaging systems.  The two aspects work in harmony to make background and queued job processing a breeze.
 
