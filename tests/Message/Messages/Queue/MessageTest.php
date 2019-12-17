@@ -72,7 +72,7 @@ class MessageTest extends TestCase
             ->andReturn(true);
 
         $message->setService($service);
-        $this->assertTrue($message->queue(['foo' => 'bar']));
+        $this->assertTrue($message->send(['foo' => 'bar']));
     }
 
     public function testQueueThrowsUndefinedServiceException()
@@ -120,7 +120,7 @@ class MessageTest extends TestCase
             ->andReturn(['foo']);
 
         $message->setService($service);
-        $this->assertSame(['foo'], $message->dequeue(['foo' => 'bar']));
+        $this->assertSame(['foo'], $message->receive(['foo' => 'bar']));
     }
 
     public function testDequeueThrowsUndefinedServiceException()

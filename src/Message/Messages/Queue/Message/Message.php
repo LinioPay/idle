@@ -10,8 +10,10 @@ use LinioPay\Idle\Message\Message as IdleMessageInterface;
 use LinioPay\Idle\Message\Messages\DefaultMessage;
 use LinioPay\Idle\Message\Messages\Queue\Message as QueueMessageInterface;
 use LinioPay\Idle\Message\Messages\Queue\Service as QueueServiceInterface;
+use LinioPay\Idle\Message\ReceivableMessage as ReceivableMessageInterface;
+use LinioPay\Idle\Message\SendableMessage as SendableMessageInterface;
 
-class Message extends DefaultMessage implements QueueMessageInterface
+class Message extends DefaultMessage implements QueueMessageInterface, SendableMessageInterface, ReceivableMessageInterface
 {
     /** @var string */
     protected $queueIdentifier;
@@ -83,6 +85,14 @@ class Message extends DefaultMessage implements QueueMessageInterface
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function send(array $parameters = []): bool
+    {
+        return $this->queue($parameters);
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function dequeue(array $parameters = []) : array
@@ -92,6 +102,14 @@ class Message extends DefaultMessage implements QueueMessageInterface
         }
 
         return $this->service->dequeue($this->getQueueIdentifier(), $parameters);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function receive(array $parameters = []) : array
+    {
+        return $this->dequeue($parameters);
     }
 
     /**

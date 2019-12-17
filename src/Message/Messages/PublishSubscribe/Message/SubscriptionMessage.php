@@ -10,8 +10,9 @@ use LinioPay\Idle\Message\Message as IdleMessageInterface;
 use LinioPay\Idle\Message\Messages\DefaultMessage;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\Service as PublishSubscribeServiceInterface;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\SubscriptionMessage as SubscriptionMessageInterface;
+use LinioPay\Idle\Message\ReceivableMessage as ReceivableMessageInterface;
 
-class SubscriptionMessage extends DefaultMessage implements SubscriptionMessageInterface
+class SubscriptionMessage extends DefaultMessage implements SubscriptionMessageInterface, ReceivableMessageInterface
 {
     /** @var string */
     protected $subscriptionIdentifier;
@@ -70,6 +71,9 @@ class SubscriptionMessage extends DefaultMessage implements SubscriptionMessageI
         return $this->getSubscriptionIdentifier();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function acknowledge(array $parameters = []) : bool
     {
         if (is_null($this->service)) {
@@ -79,6 +83,9 @@ class SubscriptionMessage extends DefaultMessage implements SubscriptionMessageI
         return $this->service->acknowledge($this, $parameters);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function pull(array $parameters = []) : array
     {
         if (is_null($this->service)) {
@@ -86,5 +93,13 @@ class SubscriptionMessage extends DefaultMessage implements SubscriptionMessageI
         }
 
         return $this->service->pull($this->getSubscriptionIdentifier(), $parameters);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function receive(array $parameters = []): array
+    {
+        return $this->pull($parameters);
     }
 }

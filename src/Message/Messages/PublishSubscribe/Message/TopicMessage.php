@@ -10,8 +10,9 @@ use LinioPay\Idle\Message\Message as IdleMessageInterface;
 use LinioPay\Idle\Message\Messages\DefaultMessage;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\Service as PublishSubscribeServiceInterface;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\TopicMessage as TopicMessageInterface;
+use LinioPay\Idle\Message\SendableMessage as SendableMessageInterface;
 
-class TopicMessage extends DefaultMessage implements TopicMessageInterface
+class TopicMessage extends DefaultMessage implements TopicMessageInterface, SendableMessageInterface
 {
     /** @var string */
     protected $topicIdentifier;
@@ -70,6 +71,9 @@ class TopicMessage extends DefaultMessage implements TopicMessageInterface
         return $this->getTopicIdentifier();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function publish(array $parameters = []) : bool
     {
         if (is_null($this->service)) {
@@ -77,5 +81,13 @@ class TopicMessage extends DefaultMessage implements TopicMessageInterface
         }
 
         return $this->service->publish($this, $parameters);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function send(array $parameters = []): bool
+    {
+        return $this->publish($parameters);
     }
 }
