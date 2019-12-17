@@ -98,7 +98,7 @@ class SubscriptionMessage extends DefaultMessage implements SubscriptionMessageI
     /**
      * {@inheritdoc}
      */
-    public function receive(array $parameters = []): array
+    public function receive(array $parameters = []) : array
     {
         return $this->pull($parameters);
     }

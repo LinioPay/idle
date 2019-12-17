@@ -85,9 +85,9 @@ class Message extends DefaultMessage implements QueueMessageInterface, SendableM
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
-    public function send(array $parameters = []): bool
+    public function send(array $parameters = []) : bool
     {
         return $this->queue($parameters);
     }
@@ -105,7 +105,7 @@ class Message extends DefaultMessage implements QueueMessageInterface, SendableM
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function receive(array $parameters = []) : array
     {

@@ -7,7 +7,7 @@ namespace LinioPay\Idle\Message;
 interface SendableMessage extends Message
 {
     /**
-     * Send the message to its corresponding service.  Alias for queue, publish, etc
+     * Send the message to its corresponding service.  Alias for queue, publish, etc.
      */
     public function send(array $parameters = []) : bool;
 }

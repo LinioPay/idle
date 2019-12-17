@@ -86,7 +86,7 @@ class TopicMessage extends DefaultMessage implements TopicMessageInterface, Send
     /**
      * {@inheritdoc}
      */
-    public function send(array $parameters = []): bool
+    public function send(array $parameters = []) : bool
     {
         return $this->publish($parameters);
     }
