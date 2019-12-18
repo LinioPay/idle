@@ -150,7 +150,11 @@ class Service extends DefaultService
                 'MD5OfMessageAttributes' => $message['MD5OfMessageAttributes'] ?? '',
             ];
 
-            $out[] = new QueueMessage($queueIdentifier, $body, $messageAttributes, $messageId, $metadata);
+            $queueMessage = new QueueMessage($queueIdentifier, $body, $messageAttributes, $messageId, $metadata);
+
+            $queueMessage->setService($this);
+
+            $out[] = $queueMessage;
         }
 
         return $out;

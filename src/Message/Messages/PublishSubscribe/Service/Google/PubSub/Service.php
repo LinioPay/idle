@@ -39,11 +39,18 @@ class Service extends DefaultService
             $topicIdentifier = $message->getTopicIdentifier();
             $topic = $this->client->topic($topicIdentifier);
 
-            // Publish a message to the topic.
-            $result = $topic->publish([
+            $properties = [
                 'data' => $message->getBody(),
-                'attributes' => $message->getAttributes(),
-            ], array_replace_recursive(
+            ];
+
+            if (!empty($message->getAttributes())) {
+                $properties = array_merge($properties, [
+                    'attributes' => $message->getAttributes(),
+                ]);
+            }
+
+            // Publish a message to the topic.
+            $result = $topic->publish($properties, array_replace_recursive(
                 $this->getPublishParameterConfig(),
                 $parameters
             ));
@@ -83,7 +90,7 @@ class Service extends DefaultService
                 $parameters
             ));
 
-            return $this->buildMessagesFromResult($result);
+            return $this->buildMessagesFromResult($subscriptionIdentifier, $result);
         } catch (Throwable $throwable) {
             $this->logger->critical('Idle pull encountered an error.', [
                 'service' => self::IDENTIFIER,
@@ -136,14 +143,14 @@ class Service extends DefaultService
     /**
      * @return SubscriptionMessage[]
      */
-    protected function buildMessagesFromResult(array $resultMessages) : array
+    protected function buildMessagesFromResult(string $subscriptionIdentifier, array $resultMessages) : array
     {
         $out = [];
 
         /** @var GoogleCloudMessage $message */
         foreach ($resultMessages as $message) {
-            $out[] = new SubscriptionMessage(
-                $message->subscription()->name(),
+            $subscriptionMessage = new SubscriptionMessage(
+                $subscriptionIdentifier,
                 $message->data(),
                 $message->attributes(),
                 $message->id(),
@@ -151,6 +158,10 @@ class Service extends DefaultService
                     'gcMessage' => $message,
                 ]
             );
+
+            $subscriptionMessage->setService($this);
+
+            $out[] = $subscriptionMessage;
         }
 
         return $out;
