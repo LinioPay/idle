@@ -88,7 +88,7 @@ return [
                 'default' => [
                     'dequeue' => [
                         'parameters' => [ // Configure behavior for when retrieving messages
-                            //'MaxNumberOfMessages' => 1, // The maximum number of messages to return. Amazon SQS never returns more messages than this value but may return fewer. Values can be from 1 to 10.
+                            'MaxNumberOfMessages' => 1, // The maximum number of messages to return. Amazon SQS never returns more messages than this value but may return fewer. Values can be from 1 to 10.
                             //'VisibilityTimeout' => 30, // The duration (in seconds) that the received messages are hidden from subsequent retrieve requests after being retrieved by a ReceiveMessage request.
                             //'WaitTimeSeconds' => 2, // The duration (in seconds) for which the call will wait for a message to arrive in the queue before returning. If a message is available, the call will return sooner than WaitTimeSeconds.
                         ],
@@ -146,7 +146,9 @@ return [
             SubscriptionMessage::IDENTIFIER => [
                 'default' => [
                     'pull' => [
-                        'parameters' => [],
+                        'parameters' => [
+                            'maxMessages' => 1,
+                        ],
                         'error' => [
                             'suppression' => true,
                         ],
@@ -173,7 +175,10 @@ return [
                 ],
                 GooglePubSub::IDENTIFIER => [
                     'class' => GooglePubSub::class,
-                    'client' => [],
+                    'client' => [
+                        'projectId' => 'foo-project',
+                        'keyFilePath' => '/application/foo-sandbox.json',
+                    ],
                 ]
             ]
         ],

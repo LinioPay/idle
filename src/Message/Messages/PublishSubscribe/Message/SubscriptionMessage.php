@@ -54,7 +54,7 @@ class SubscriptionMessage extends DefaultMessage implements SubscriptionMessageI
 
         return new SubscriptionMessage(
             $parameters['subscription_identifier'],
-            $parameters['body'],
+            $parameters['body'] ?? '',
             $parameters['attributes'] ?? [],
             $parameters['message_identifier'] ?? '',
             $parameters['metadata'] ?? []
