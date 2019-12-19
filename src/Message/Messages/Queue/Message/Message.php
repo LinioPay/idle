@@ -6,7 +6,6 @@ namespace LinioPay\Idle\Message\Messages\Queue\Message;
 
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
 use LinioPay\Idle\Message\Exception\UndefinedServiceException;
-use LinioPay\Idle\Message\Message as IdleMessageInterface;
 use LinioPay\Idle\Message\Message as MessageInterface;
 use LinioPay\Idle\Message\Messages\DefaultMessage;
 use LinioPay\Idle\Message\Messages\Queue\Message as QueueMessageInterface;
@@ -44,7 +43,7 @@ class Message extends DefaultMessage implements QueueMessageInterface, SendableM
         ];
     }
 
-    public static function fromArray(array $parameters) : IdleMessageInterface
+    public static function fromArray(array $parameters) : MessageInterface
     {
         $required = isset(
             $parameters['queue_identifier']
