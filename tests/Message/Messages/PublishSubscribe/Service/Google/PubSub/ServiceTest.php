@@ -6,7 +6,9 @@ namespace LinioPay\Idle\Message\Messages\PublishSubscribe\Service\Google\PubSub;
 
 use Exception;
 use Google\Cloud\PubSub\Message as GoogleCloudMessage;
+use LinioPay\Idle\Message\Exception\FailedReceivingMessageException;
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
+use LinioPay\Idle\Message\Message as MessageInterface;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\Message\SubscriptionMessage;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\Message\TopicMessage;
 use LinioPay\Idle\TestCase;
@@ -195,6 +197,62 @@ class ServiceTest extends TestCase
         $this->assertCount(1, $records);
         $this->assertArrayHasKey('message', $records[0]);
         $this->assertSame('Idle pulling a message.', $records[0]['message']);
+    }
+
+    public function testPullOneSuccessfully()
+    {
+        $subscriptionIdentifier = 'foo-subscription';
+
+        $subscription = m::mock(TestSubscription::class);
+
+        $gcMessage = $this->fake(GoogleCloudMessage::class, [
+            'subscription' => $subscription,
+            'message' => [
+                'data' => 'mbody',
+                'attributes' => ['green' => true],
+                'messageId' => 'fooId',
+            ],
+        ]);
+
+        $subscription->shouldReceive('name')
+            ->andReturn($subscriptionIdentifier);
+        $subscription->shouldReceive('pull')
+            ->once()
+            ->andReturn([
+                $gcMessage,
+            ]);
+
+        $this->client->shouldReceive('subscription')
+            ->once()
+            ->with($subscriptionIdentifier)
+            ->andReturn($subscription);
+
+        $service = new Service($this->client, $this->config, $this->logger);
+        $message = $service->pullOneOrFail($subscriptionIdentifier, ['blue' => true]);
+        $this->assertInstanceOf(MessageInterface::class, $message);
+    }
+
+    public function testPullOneFails()
+    {
+        $subscriptionIdentifier = 'foo-subscription';
+
+        $subscription = m::mock(TestSubscription::class);
+
+        $subscription->shouldReceive('name')
+            ->andReturn($subscriptionIdentifier);
+        $subscription->shouldReceive('pull')
+            ->once()
+            ->andThrow(new Exception('kaboom!'));
+
+        $this->client->shouldReceive('subscription')
+            ->once()
+            ->with($subscriptionIdentifier)
+            ->andReturn($subscription);
+
+        $this->config['pull']['error']['suppression'] = false;
+        $service = new Service($this->client, $this->config, $this->logger);
+        $this->expectException(FailedReceivingMessageException::class);
+        $service->pullOneOrFail($subscriptionIdentifier, ['blue' => true]);
     }
 
     public function testPullBubblesUpExceptions() : void

@@ -6,7 +6,9 @@ namespace LinioPay\Idle\Message\Messages\Queue\Service\SQS;
 
 use Aws\Result;
 use Aws\Sqs\SqsClient;
+use LinioPay\Idle\Message\Exception\FailedReceivingMessageException;
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
+use LinioPay\Idle\Message\Message as MessageInterface;
 use LinioPay\Idle\Message\Messages\Queue\Message as QueueMessageInterface;
 use LinioPay\Idle\Message\Messages\Queue\Message\Message as QueueMessage;
 use LinioPay\Idle\Message\Messages\Queue\Service\DefaultService;
@@ -98,6 +100,20 @@ class Service extends DefaultService
         }
 
         return [];
+    }
+
+    public function dequeueOneOrFail(string $queueIdentifier, array $parameters = []) : MessageInterface
+    {
+        try {
+            $messages = $this->dequeue($queueIdentifier, array_merge($parameters, ['MaxNumberOfMessages' => 1]));
+        } catch (Throwable $throwable) {
+        } finally {
+            if (empty($messages) || !is_a($messages[0], MessageInterface::class)) {
+                throw new FailedReceivingMessageException(self::IDENTIFIER, QueueMessageInterface::IDENTIFIER, $queueIdentifier, $throwable ?? null);
+            }
+        }
+
+        return $messages[0];
     }
 
     public function delete(QueueMessageInterface $message, array $parameters = []) : bool

@@ -6,6 +6,7 @@ namespace LinioPay\Idle\Message\Messages\PublishSubscribe\Message;
 
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
 use LinioPay\Idle\Message\Exception\UndefinedServiceException;
+use LinioPay\Idle\Message\Message as MessageInterface;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\Service as PublishSubscribeServiceInterface;
 use LinioPay\Idle\TestCase;
 use Mockery as m;
@@ -112,5 +113,29 @@ class SubscriptionMessageTest extends TestCase
 
         $this->expectException(UndefinedServiceException::class);
         $message->pull();
+    }
+
+    public function testProxiesCallToPullOneOrFail()
+    {
+        $message = new SubscriptionMessage('foo_subscription');
+
+        $received = m::mock(MessageInterface::class);
+
+        $service = m::mock(PublishSubscribeServiceInterface::class);
+        $service->shouldReceive('pullOneOrFail')
+            ->once()
+            ->with($message->getSubscriptionIdentifier(), ['foo' => 'bar'])
+            ->andReturn($received);
+
+        $message->setService($service);
+        $this->assertSame($received, $message->receiveOneOrFail(['foo' => 'bar']));
+    }
+
+    public function testPullOneOrFailThrowsUndefinedServiceException()
+    {
+        $message = new SubscriptionMessage('foo_subscription', 'body', ['red' => true], 'foo123', ['redmeta' => true]);
+
+        $this->expectException(UndefinedServiceException::class);
+        $message->pullOneOrFail();
     }
 }

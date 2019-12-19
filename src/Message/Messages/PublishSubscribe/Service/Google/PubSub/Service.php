@@ -6,7 +6,9 @@ namespace LinioPay\Idle\Message\Messages\PublishSubscribe\Service\Google\PubSub;
 
 use Google\Cloud\PubSub\Message as GoogleCloudMessage;
 use Google\Cloud\PubSub\PubSubClient;
+use LinioPay\Idle\Message\Exception\FailedReceivingMessageException;
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
+use LinioPay\Idle\Message\Message as MessageInterface;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\Message\SubscriptionMessage;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\Service\DefaultService;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\SubscriptionMessage as SubscriptionMessageInterface;
@@ -104,6 +106,20 @@ class Service extends DefaultService
         }
 
         return [];
+    }
+
+    public function pullOneOrFail(string $subscriptionIdentifier, array $parameters = []) : MessageInterface
+    {
+        try {
+            $messages = $this->pull($subscriptionIdentifier, array_merge($parameters, ['maxMessages' => 1]));
+        } catch (Throwable $throwable) {
+        } finally {
+            if (empty($messages) || !is_a($messages[0], MessageInterface::class)) {
+                throw new FailedReceivingMessageException(self::IDENTIFIER, SubscriptionMessage::IDENTIFIER, $subscriptionIdentifier, $throwable ?? null);
+            }
+        }
+
+        return $messages[0];
     }
 
     public function acknowledge(SubscriptionMessageInterface $message, array $parameters = []) : bool

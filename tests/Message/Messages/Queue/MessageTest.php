@@ -131,4 +131,30 @@ class MessageTest extends TestCase
         $this->expectException(UndefinedServiceException::class);
         $message->dequeue();
     }
+
+    public function testProxiesCallToDequeueOneOrFail()
+    {
+        /** @var QueueMessage $message */
+        $message = QueueMessage::fromArray(['queue_identifier' => 'foo_queue']);
+
+        $receviedMessage = m::mock(QueueMessage::class);
+
+        $service = m::mock(QueueServiceInterface::class);
+        $service->shouldReceive('dequeueOneOrFail')
+            ->once()
+            ->with($message->getQueueIdentifier(), ['foo' => 'bar'])
+            ->andReturn($receviedMessage);
+
+        $message->setService($service);
+        $this->assertSame($receviedMessage, $message->receiveOneOrFail(['foo' => 'bar']));
+    }
+
+    public function testDequeueOneOrFailThrowsUndefinedServiceException()
+    {
+        /** @var QueueMessage $message */
+        $message = QueueMessage::fromArray(['queue_identifier' => 'foo_queue']);
+
+        $this->expectException(UndefinedServiceException::class);
+        $message->dequeueOneOrFail();
+    }
 }
