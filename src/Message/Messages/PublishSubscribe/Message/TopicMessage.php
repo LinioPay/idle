@@ -54,7 +54,7 @@ class TopicMessage extends DefaultMessage implements TopicMessageInterface, Send
 
         return new TopicMessage(
             $parameters['topic_identifier'],
-            $parameters['body'],
+            $parameters['body'] ?? '',
             $parameters['attributes'] ?? [],
             $parameters['message_identifier'] ?? '',
             $parameters['metadata'] ?? []

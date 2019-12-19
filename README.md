@@ -381,6 +381,7 @@ A QueueMessage can be created in one of two ways:
     ```php
     $messageFactory = $container->get(\LinioPay\Idle\Message\MessageFactory::class);
     
+    /** @var QueueMessage $message */
     $message = $messageFactory->createMessage([
         'queue_identifier' => 'my_queue', // Because we provide a queue_identifier, Idle knows its a QueueMessage along with its configuration details and which service to inject
         'body'=> 'hello queue payload!',
@@ -396,11 +397,16 @@ A QueueMessage can be created in one of two ways:
     $message->send();
     ```
 - Dequeue
-    - This means we're creating a QueueMessage by polling the service and obtaining one or more messages from the queue.  The simplest way to achieve this is to create a message with the appropriate queue identifier:
+    - This means we're creating a QueueMessage by polling the service and obtaining one message from the queue.  The simplest way to achieve this is to create a message with only the queue identifier. This will instruct the message factory to pull a message from the service:
     ```php
     $messageFactory = $container->get(\LinioPay\Idle\Message\MessageFactory::class);
     
-    $messages = $messageFactory->createMessage(['queue_identifier' => 'my_queue'])->dequeue();
+    /** @var QueueMessage $message */
+    $message = $messageFactory->receiveMessageOrFail(['queue_identifier' => 'my_queue']);
+  
+    // Or multiple messages
+    /** @var QueueMessage[] $messages */
+    $messages = $messageFactory->receiveMessages(['queue_identifier' => 'my_queue']);
     ```
 #### Topic Messages
 
@@ -410,6 +416,8 @@ A `TopicMessage` is a message which we want to publish to a `topic`.
     - Simply create it from data.
     ```php
     $messageFactory = $container->get(\LinioPay\Idle\Message\MessageFactory::class);
+  
+    /** @var TopicMessage $message */
     $message = $messageFactory->createMessage([
        'topic_identifier' => 'my_topic', // Because we provide a topic_identifier, Idle knows its a TopicMessage..
        'body'=> 'hello pubsub payload!',
@@ -430,28 +438,25 @@ A `TopicMessage` is a message which we want to publish to a `topic`.
 A `SubscriptionMessage` is a message which has been obtained from a `subscription`.  This can happen from one of two actions:
 
 - Pull
-    - We query the service and obtain one or more SubscriptionMessage(s).
+    - We query the service and obtain one or more SubscriptionMessage(s).  By only providing a subscription identifier, the factory will automatically pull a message for us.
     ```php
     $messageFactory = $container->get(\LinioPay\Idle\Message\MessageFactory::class);
-    $message = $messageFactory->createMessage([
-       'subscription_identifier' => 'my_subscription'
-    ]);
+  
+    /** @var SubscriptionMessage $message */  
+    $message = $messageFactory->receiveMessageOrFail(['subscription_identifier' => 'my_subscription']);
+
+    // Or multiple messages
     
-    // To retrieve a configured service
-    $service = $message->getService();
-    
-    // Perform the operation
-    $message->pull();
-    
-    // Or one line it:
-    /** @var array $messages */
-    $messages = $messageFactory->createMessage(['subscription_identifier' => 'my_subscription'])->receive()
+    /** @var SubscriptionMessage[] $message */  
+    $messages = $messageFactory->receiveMessages(['subscription_identifier' => 'my_subscription']);  
     ```
 - Push
     - The messaging service hits a webhook on our application and we instantiate a SubscriptionMessage from the webhook data.
 
     ```php
     $messageFactory = $container->get(\LinioPay\Idle\Message\MessageFactory::class);
+    
+    /** @var SubscriptionMessage $message */  
     $message = $messageFactory->createMessage([
        'subscription_identifier' => 'my_subscription', // Because we provide a subscription_identifier, Idle knows its a SubscriptionMessage..
        'body'=> 'hello pubsub payload!',

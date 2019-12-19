@@ -6,7 +6,7 @@ namespace LinioPay\Idle\Message\Messages\Queue\Message;
 
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
 use LinioPay\Idle\Message\Exception\UndefinedServiceException;
-use LinioPay\Idle\Message\Message as IdleMessageInterface;
+use LinioPay\Idle\Message\Message as MessageInterface;
 use LinioPay\Idle\Message\Messages\DefaultMessage;
 use LinioPay\Idle\Message\Messages\Queue\Message as QueueMessageInterface;
 use LinioPay\Idle\Message\Messages\Queue\Service as QueueServiceInterface;
@@ -43,7 +43,7 @@ class Message extends DefaultMessage implements QueueMessageInterface, SendableM
         ];
     }
 
-    public static function fromArray(array $parameters) : IdleMessageInterface
+    public static function fromArray(array $parameters) : MessageInterface
     {
         $required = isset(
             $parameters['queue_identifier']
@@ -110,6 +110,26 @@ class Message extends DefaultMessage implements QueueMessageInterface, SendableM
     public function receive(array $parameters = []) : array
     {
         return $this->dequeue($parameters);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function dequeueOneOrFail(array $parameters = []) : MessageInterface
+    {
+        if (is_null($this->service)) {
+            throw new UndefinedServiceException($this);
+        }
+
+        return $this->service->dequeueOneOrFail($this->getQueueIdentifier(), $parameters);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function receiveOneOrFail(array $parameters = []) : MessageInterface
+    {
+        return $this->dequeueOneOrFail($parameters);
     }
 
     /**

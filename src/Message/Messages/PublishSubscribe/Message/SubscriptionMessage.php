@@ -6,7 +6,7 @@ namespace LinioPay\Idle\Message\Messages\PublishSubscribe\Message;
 
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
 use LinioPay\Idle\Message\Exception\UndefinedServiceException;
-use LinioPay\Idle\Message\Message as IdleMessageInterface;
+use LinioPay\Idle\Message\Message as MessageInterface;
 use LinioPay\Idle\Message\Messages\DefaultMessage;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\Service as PublishSubscribeServiceInterface;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\SubscriptionMessage as SubscriptionMessageInterface;
@@ -42,7 +42,7 @@ class SubscriptionMessage extends DefaultMessage implements SubscriptionMessageI
         ];
     }
 
-    public static function fromArray(array $parameters) : IdleMessageInterface
+    public static function fromArray(array $parameters) : MessageInterface
     {
         $required = isset(
             $parameters['subscription_identifier']
@@ -101,5 +101,22 @@ class SubscriptionMessage extends DefaultMessage implements SubscriptionMessageI
     public function receive(array $parameters = []) : array
     {
         return $this->pull($parameters);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function pullOneOrFail(array $parameters = []) : MessageInterface
+    {
+        if (is_null($this->service)) {
+            throw new UndefinedServiceException($this);
+        }
+
+        return $this->service->pullOneOrFail($this->getSubscriptionIdentifier(), $parameters);
+    }
+
+    public function receiveOneOrFail(array $parameters = []) : MessageInterface
+    {
+        return $this->pullOneOrFail($parameters);
     }
 }

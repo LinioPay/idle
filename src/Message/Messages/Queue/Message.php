@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Message\Messages\Queue;
 
+use LinioPay\Idle\Message\Exception\FailedReceivingMessageException;
 use LinioPay\Idle\Message\Message as MessageInterface;
 
 interface Message extends MessageInterface
@@ -23,6 +24,13 @@ interface Message extends MessageInterface
      * @return MessageInterface[]
      */
     public function dequeue(array $parameters = []) : array;
+
+    /**
+     * Proxies a dequeueOneOrFail call to the service to retrieve a message.
+     *
+     * @throws FailedReceivingMessageException
+     */
+    public function dequeueOneOrFail(array $parameters = []) : MessageInterface;
 
     /**
      * Proxies a delete call to the service.

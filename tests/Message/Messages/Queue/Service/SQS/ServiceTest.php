@@ -6,7 +6,9 @@ namespace LinioPay\Idle\Message\Messages\Queue\Service\SQS;
 
 use Aws\Result;
 use Aws\Sqs\SqsClient;
+use LinioPay\Idle\Message\Exception\FailedReceivingMessageException;
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
+use LinioPay\Idle\Message\Messages\Queue\Message as QueueMessageInterface;
 use LinioPay\Idle\Message\Messages\Queue\Message\Message;
 use LinioPay\Idle\TestCase;
 use Mockery as m;
@@ -204,6 +206,63 @@ class ServiceTest extends TestCase
 
         $this->expectException(\Exception::class);
         $service->dequeue($this->queueIdentifier);
+    }
+
+    public function testDequeueingOneSuccessfully()
+    {
+        $this->sqsClient->shouldReceive('getQueueUrl')
+            ->once()
+            ->with(['QueueName' => $this->queueIdentifier])
+            ->andReturn(new Result(['QueueUrl' => 'http://foo.bar']));
+
+        $this->sqsClient->shouldReceive('receiveMessage')
+            ->once()
+            ->with([
+                'MaxNumberOfMessages' => 1,
+                'VisibilityTimeout' => 5,
+                'QueueUrl' => 'http://foo.bar',
+            ])
+            ->andReturn(new Result([
+                'Messages' => [
+                    [
+                        'MessageId' => '123',
+                        'Body' => 'mbody',
+                        'MessageAttributes' => [
+                            [
+                                'Name' => 'myattr',
+                                'Value' => [
+                                    'StringValue' => 'myval',
+                                    'DataType' => 'String',
+                                ],
+                            ],
+                        ],
+                        'ReceiptHandle' => '123handle',
+                    ],
+                ],
+            ]));
+
+        $service = new Service($this->sqsClient, $this->config, $this->logger);
+        $message = $service->dequeueOneOrFail($this->queueIdentifier, ['VisibilityTimeout' => 5]);
+        $this->assertInstanceOf(QueueMessageInterface::class, $message);
+    }
+
+    public function testDequeueingOneFails()
+    {
+        $this->sqsClient->shouldReceive('getQueueUrl')
+            ->once()
+            ->andThrow(new \Exception('kaboom!'));
+
+        $config = ArrayUtils::merge($this->config, [
+            'dequeue' => [
+                'error' => [
+                    'suppression' => false,
+                ],
+            ],
+        ]);
+
+        $service = new Service($this->sqsClient, $config, $this->logger);
+        $this->expectException(FailedReceivingMessageException::class);
+        $service->dequeueOneOrFail($this->queueIdentifier, ['VisibilityTimeout' => 5]);
     }
 
     public function testDeletingSuccessfully()
