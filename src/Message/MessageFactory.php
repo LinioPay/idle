@@ -6,12 +6,12 @@ namespace LinioPay\Idle\Message;
 
 interface MessageFactory
 {
-    public function createMessage(array $parameters) : Message;
+    public function createMessage(array $messageParameters) : Message;
 
-    public function receiveMessageOrFail(array $parameters) : Message;
+    public function receiveMessageOrFail(array $messageParameters, array $receiveParameters = []) : Message;
 
     /**
      * @return Message[]
      */
-    public function receiveMessages(array $parameters) : array;
+    public function receiveMessages(array $messageParameters, array $receiveParameters = []) : array;
 }

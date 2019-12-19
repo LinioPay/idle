@@ -32,10 +32,10 @@ class MessageFactory implements MessageFactoryInterface
         return $this;
     }
 
-    public function createMessage(array $parameters) : MessageInterface
+    public function createMessage(array $messageParameters) : MessageInterface
     {
         /** @var MessageInterface $message */
-        $message = call_user_func_array([$this->getMessageClassFromParameters($parameters), 'fromArray'], [$parameters]);
+        $message = call_user_func_array([$this->getMessageClassFromParameters($messageParameters), 'fromArray'], [$messageParameters]);
 
         /** @var ServiceFactoryInterface $serviceFactory */
         $serviceFactory = $this->container->get(ServiceFactoryInterface::class);
@@ -45,14 +45,14 @@ class MessageFactory implements MessageFactoryInterface
         return $message;
     }
 
-    public function receiveMessageOrFail(array $parameters) : MessageInterface
+    public function receiveMessageOrFail(array $messageParameters, array $receiveParameters = []) : MessageInterface
     {
-        return $this->createReceivableMessage($parameters)->receiveOneOrFail();
+        return $this->createReceivableMessage($messageParameters)->receiveOneOrFail($receiveParameters);
     }
 
-    public function receiveMessages(array $parameters) : array
+    public function receiveMessages(array $messageParameters, array $receiveParameters = []) : array
     {
-        return $this->createReceivableMessage($parameters)->receive();
+        return $this->createReceivableMessage($messageParameters)->receive($receiveParameters);
     }
 
     protected function createReceivableMessage(array $parameters) : ReceivableMessageInterface
