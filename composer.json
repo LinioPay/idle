@@ -1,8 +1,9 @@
 {
     "name": "liniopay/idle",
     "type": "project",
-    "license": "proprietary",
+    "license": "BSD-3-Clause",
     "description": "Job and Queue management",
+    "keywords": ["linio", "liniopay", "queue", "sqs", "pubsub", "publish", "subscribe", "job", "messaging"],
     "autoload": {
         "psr-4": {
             "LinioPay\\Idle\\": [
