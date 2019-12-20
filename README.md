@@ -92,6 +92,8 @@ Now that the container is aware of Idle's config, it must be made aware of its f
 (optional - only if using Google PubSub) \LinioPay\Idle\Message\Messages\PublishSubscribe\Service\Google\PubSub\Service::class => \LinioPay\Idle\Message\Messages\PublishSubscribe\Service\Google\PubSub\Factory\ServiceFactory::class,
 ```
 
+It also requires a registered `Psr\Log\LoggerInterface::class` entry for logging purposes. This should return a `LoggerInterface` compatible logger.
+
 ### Custom Factories
 
 It is possible your container or application may not be compatible with the provided factories.  It is also possible you will want to add a new service.  Idle is extremely flexible in both configuration and its factory usage.  Any component can be replaced without affecting the other by simply implementing the corresponding interface.
