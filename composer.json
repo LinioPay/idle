@@ -60,7 +60,7 @@
         "cs": [
             "vendor/bin/php-cs-fixer fix --dry-run --ansi -v"
         ],
-        "cs-fix": [
+        "lint": [
             "vendor/bin/php-cs-fixer fix --ansi -v"
         ],
         "test": [
