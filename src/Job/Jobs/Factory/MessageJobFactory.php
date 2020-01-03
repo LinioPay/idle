@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace LinioPay\Idle\Job\Jobs\Factory;
 
 use LinioPay\Idle\Job\Jobs\MessageJob;
-use LinioPay\Idle\Job\Workers\Factory\WorkerFactory as WorkerFactoryInterface;
+use LinioPay\Idle\Job\WorkerFactory as WorkerFactoryInterface;
 use LinioPay\Idle\Message\MessageFactory as MessageFactoryInterface;
 use Psr\Container\ContainerInterface;
 

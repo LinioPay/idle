@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace LinioPay\Idle\Job\Jobs;
 
 use LinioPay\Idle\Job\Exception\InvalidJobParameterException;
-use LinioPay\Idle\Job\Workers\Factory\WorkerFactory as WorkerFactoryInterface;
+use LinioPay\Idle\Job\WorkerFactory as WorkerFactoryInterface;
 
 class SimpleJob extends DefaultJob
 {
