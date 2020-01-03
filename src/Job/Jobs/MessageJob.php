@@ -7,7 +7,7 @@ namespace LinioPay\Idle\Job\Jobs;
 use LinioPay\Idle\Job\Exception\ConfigurationException;
 use LinioPay\Idle\Job\Exception\InvalidJobParameterException;
 use LinioPay\Idle\Job\Worker as WorkerInterface;
-use LinioPay\Idle\Job\Workers\Factory\WorkerFactory as WorkerFactoryInterface;
+use LinioPay\Idle\Job\WorkerFactory as WorkerFactoryInterface;
 use LinioPay\Idle\Message\Message as MessageInterface;
 use LinioPay\Idle\Message\MessageFactory as MessageFactoryInterface;
 

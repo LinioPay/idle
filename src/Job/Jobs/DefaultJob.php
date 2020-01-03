@@ -10,7 +10,7 @@ use LinioPay\Idle\Job\Job;
 use LinioPay\Idle\Job\TrackableWorker;
 use LinioPay\Idle\Job\TrackingWorker;
 use LinioPay\Idle\Job\Worker as WorkerInterface;
-use LinioPay\Idle\Job\Workers\Factory\WorkerFactory as WorkerFactoryInterface;
+use LinioPay\Idle\Job\WorkerFactory as WorkerFactoryInterface;
 use Ramsey\Uuid\Uuid;
 
 abstract class DefaultJob implements Job

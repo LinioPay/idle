@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace LinioPay\Idle\Job\Jobs\Factory;
 
 use LinioPay\Idle\Job\Jobs\SimpleJob;
+use LinioPay\Idle\Job\WorkerFactory as WorkerFactoryInterface;
 use LinioPay\Idle\Job\Workers\Factory\WorkerFactory;
-use LinioPay\Idle\Job\Workers\Factory\WorkerFactory as WorkerFactoryInterface;
 use LinioPay\Idle\TestCase;
 use Mockery as m;
 use Psr\Container\ContainerInterface;
