@@ -19,8 +19,7 @@ class ServiceFactory extends DefaultServiceFactory
 
         $logger = $this->container->get(LoggerInterface::class);
 
-        $serviceConfig = $this->getServiceConfig(SQSService::IDENTIFIER);
-        $client = new SqsClient($serviceConfig['client'] ?? []);
+        $client = new SqsClient($messageConfig['parameters']['service']['client'] ?? []);
 
         return new SQSService($client, $messageConfig, $logger);
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Message\Messages\Factory;
 
+use LinioPay\Idle\Message\Exception\ConfigurationException;
 use LinioPay\Idle\Message\Message;
 use LinioPay\Idle\Message\Service;
 use LinioPay\Idle\Message\ServiceFactory as ServiceFactoryInterface;
@@ -34,12 +35,19 @@ abstract class DefaultServiceFactory implements ServiceFactoryInterface
 
         $override = $messageTypeConfig['types'][$message->getSourceName()] ?? [];
 
-        return ArrayUtils::merge($default, $override);
+        $mergedConfig = ArrayUtils::merge($default, $override);
+
+        // Inject service config
+        $mergedConfig['parameters']['service'] = $this->getServiceConfig($config, $message, $mergedConfig['parameters']['service'] ?? '');
+
+        return $mergedConfig;
     }
 
-    protected function getServiceConfig(string $serviceIdentifier)
+    protected function getServiceConfig(array $config, Message $message, string $serviceIdentifier)
     {
-        $config = $this->container->get('config') ?? [];
+        if (!isset($config['idle']['message']['service']['types'][$serviceIdentifier]['class'])) {
+            throw new ConfigurationException($message->getIdleIdentifier());
+        }
 
         return $config['idle']['message']['service']['types'][$serviceIdentifier] ?? [];
     }

@@ -69,6 +69,7 @@ class ServiceFactoryTest extends TestCase
                         'service' => [
                             'types' => [
                                 SQSService::IDENTIFIER => [
+                                    'class' => SQSService::class,
                                     'client' => [
                                         'version' => 'latest',
                                         'region' => 'us-east-1',
