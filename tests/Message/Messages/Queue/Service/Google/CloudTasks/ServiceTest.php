@@ -60,7 +60,7 @@ class ServiceTest extends TestCase
             ],
             'parameters' => [
                 'service' => [
-                    'project' => 'foo-project',
+                    'projectId' => 'foo-project',
                     'location' => 'foo-location',
                 ]
             ]
@@ -88,7 +88,7 @@ class ServiceTest extends TestCase
 
         $this->tasksClient->shouldReceive('queueName')
             ->once()
-            ->with($serviceConfig['project'], $serviceConfig['location'], $this->queueIdentifier)
+            ->with($serviceConfig['projectId'], $serviceConfig['location'], $this->queueIdentifier)
             ->andReturn($queueName);
 
         $this->tasksClient->shouldReceive('createTask')

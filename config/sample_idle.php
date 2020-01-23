@@ -25,7 +25,7 @@ return [
                 GoogleCloudTasks::IDENTIFIER => [ // Define support for GoogleCloudTasks
                     'class' => GoogleCloudTasks::class,
                     'client' => [],
-                    'project' => 'my-project',
+                    'projectId' => 'my-project',
                     'location' => 'us-central1',
                 ],
                 GooglePubSub::IDENTIFIER => [ // Define support for Google PubSub

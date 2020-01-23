@@ -55,7 +55,7 @@ class ServiceFactoryTest extends TestCase
                                             'keyFile' => __DIR__ . '/../../../../../Helper/Google/credentials.json'
                                         ]
                                     ],
-                                    'project' => 'foo-project',
+                                    'projectId' => 'foo-project',
                                     'location' => 'foo-location',
                                 ],
                             ],
