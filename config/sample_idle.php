@@ -24,15 +24,19 @@ return [
                 ],
                 GoogleCloudTasks::IDENTIFIER => [ // Define support for GoogleCloudTasks
                     'class' => GoogleCloudTasks::class,
-                    'client' => [],
+                    'client' => [
+                        //'credentialsConfig' => [
+                        //    'keyFile' => '/application/my-sandbox.json',
+                        //]
+                    ],
                     'projectId' => 'my-project',
                     'location' => 'us-central1',
                 ],
                 GooglePubSub::IDENTIFIER => [ // Define support for Google PubSub
                     'class' => GooglePubSub::class,
                     'client' => [
-                        'projectId' => 'my-project',
-                        'keyFilePath' => '/application/my-sandbox.json',
+                        //'projectId' => 'my-project',
+                        //'keyFilePath' => '/application/my-sandbox.json',
                     ],
                 ]
             ]
