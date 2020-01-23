@@ -63,6 +63,11 @@ class ServiceTest extends TestCase
                     'suppression' => true,
                 ],
             ],
+            'parameters' => [
+                'service' => [
+                    'foo' => 'bar'
+                ]
+            ]
         ];
     }
 
@@ -88,6 +93,7 @@ class ServiceTest extends TestCase
         $service = new Service($this->sqsClient, $this->config, $this->logger);
         $this->assertTrue($service->queue($message));
         $this->assertSame($this->config, $service->getConfig());
+        $this->assertSame($this->config['parameters']['service'], $service->getServiceConfig());
     }
 
     public function testQueueingFailure()

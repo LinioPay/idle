@@ -23,15 +23,17 @@
     "require": {
         "php": ">= 7.2",
         "linio/input": "^2.5",
-        "psr/log": "~1.0",
         "psr/container": "~1.0",
-        "zendframework/zend-stdlib": "^3.2",
-        "ramsey/uuid": "^3.8"
+        "psr/http-message": "^1.0",
+        "psr/log": "~1.0",
+        "ramsey/uuid": "^3.8",
+        "zendframework/zend-stdlib": "^3.2"
     },
     "require-dev": {
         "aws/aws-sdk-php": "^3.87",
         "friendsofphp/php-cs-fixer": "^2.13",
         "google/cloud-pubsub": "^1.18",
+        "google/cloud-tasks": "^1.4",
         "infection/infection": "^0.10.6",
         "league/fractal": "^0.17.0",
         "michaelmoussa/php-coverage-checker": "^1.1",
@@ -47,7 +49,8 @@
     "suggest": {
         "league/fractal": "Adds support for transformers.",
         "aws/aws-sdk-php": "Adds support for AWS SQS",
-        "google/cloud-pubsub": "Adds support for Google Pub/Sub"
+        "google/cloud-pubsub": "Adds support for Google Pub/Sub",
+        "google/cloud-tasks": "Adds support for Google Cloud Tasks"
     },
     "scripts": {
         "check": [

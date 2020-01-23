@@ -56,6 +56,11 @@ class ServiceTest extends TestCase
                     'suppression' => true,
                 ],
             ],
+            'parameters' => [
+                'service' => [
+                    'foo' => 'bar'
+                ]
+            ]
         ];
 
         $this->client = m::mock(TestPubSubClient::class);
@@ -96,6 +101,7 @@ class ServiceTest extends TestCase
         $this->assertTrue($service->publish($message, ['blue' => true]));
         $this->assertSame('fooid', $message->getMessageId());
         $this->assertSame($this->config, $service->getConfig());
+        $this->assertSame($this->config['parameters']['service'], $service->getServiceConfig());
 
         $records = $this->apiTestHandler->getRecords();
         $this->assertCount(1, $records);
