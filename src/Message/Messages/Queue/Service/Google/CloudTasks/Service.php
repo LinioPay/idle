@@ -63,7 +63,9 @@ class Service extends DefaultService
                 ])
             ]);
 
-            $response = $this->client->createTask($this->getGCPQueueName($message, $parameters), $task, $parameters);
+            $mergedParameters = array_replace_recursive($this->getQueueingParameters(), $parameters);
+
+            $response = $this->client->createTask($this->getGCPQueueName($message, $mergedParameters), $task, $mergedParameters);
 
             $message->setMessageId($response->getName());
             $message->setTemporaryMetadata([
@@ -123,7 +125,7 @@ class Service extends DefaultService
                 throw new InvalidMessageParameterException('messageId');
             }
 
-            $this->client->deleteTask($messageId, $parameters);
+            $this->client->deleteTask($messageId, array_replace_recursive($this->getDeletingParameters(), $parameters));
 
             return true;
         } catch (Throwable $throwable) {
