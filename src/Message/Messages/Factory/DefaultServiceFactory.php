@@ -35,10 +35,17 @@ abstract class DefaultServiceFactory implements ServiceFactoryInterface
 
         $override = $messageTypeConfig['types'][$message->getSourceName()] ?? [];
 
-        $mergedConfig = ArrayUtils::merge($default, $override);
+        $messageServiceIdentifier = isset($override['parameters']['service'])
+            ? $override['parameters']['service']
+            : $default['parameters']['service'] ?? '';
+
+        $serviceDefault = $messageTypeConfig['service_default'][$messageServiceIdentifier] ?? [];
+
+        $mergedDefaultConfig = ArrayUtils::merge($default, $serviceDefault);
+        $mergedConfig = ArrayUtils::merge($mergedDefaultConfig, $override);
 
         // Inject service config
-        $mergedConfig['parameters']['service'] = $this->getServiceConfig($config, $message, $mergedConfig['parameters']['service'] ?? '');
+        $mergedConfig['parameters']['service'] = $this->getServiceConfig($config, $message, $messageServiceIdentifier);
 
         return $mergedConfig;
     }

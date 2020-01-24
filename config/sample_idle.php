@@ -45,17 +45,13 @@ return [
             QueueMessage::IDENTIFIER => [ // Define support for QueueMessage, utilized by queue services such as SQS and CloudTasks.
                 'default' => [ // Default parameters shared amongst all QueueMessage
                     'dequeue' => [ // QueueMessage retrieval configuration
-                        'parameters' => [
-                            //'MaxNumberOfMessages' => 1, // SQS: The maximum number of messages to return.
-                        ],
+                        'parameters' => [],
                         'error' => [
                             'suppression' => false,
                         ],
                     ],
                     'queue' => [ // QueueMessage addition configuration
-                        'parameters' => [
-                            //'DelaySeconds' => 0, // SQS: The number of seconds (0 to 900 - 15 minutes) to delay a specific message.
-                        ],
+                        'parameters' => [],
                         'error' => [
                             'suppression' => false,
                         ],
@@ -68,6 +64,15 @@ return [
                     ],
                     'parameters' => [ // General QueueMessage parameters
                         'service' => SQS::IDENTIFIER, // Default service for all configured QueueMessages
+                    ],
+                ],
+                'service_default' => [ // Optional service overrides
+                    SQS::IDENTIFIER => [ // SQS defaults override
+                        'queue' => [ // QueueMessage addition configuration
+                            'parameters' => [
+                                //'DelaySeconds' => 0, // SQS: The number of seconds (0 to 900 - 15 minutes) to delay a specific message.
+                            ],
+                        ]
                     ],
                 ],
                 'types' => [ // Define the queues where the QueueMessages are coming from

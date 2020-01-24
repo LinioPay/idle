@@ -33,23 +33,31 @@ class ServiceFactoryTest extends TestCase
                             QueueMessage::IDENTIFIER => [
                                 'default' => [
                                     'dequeue' => [
-                                        'parameters' => [ // Configure behavior for when retrieving messages
+                                        'parameters' => [
                                             'MaxNumberOfMessages' => 1,
+                                            'Delay' => 30,
                                         ],
                                         'error' => [
                                             'suppression' => true,
                                         ],
                                     ],
                                     'queue' => [
-                                        'parameters' => [ // Configure behavior for when adding a new message
-                                            //'DelaySeconds' => 0, // The number of seconds (0 to 900 - 15 minutes) to delay a specific message. Messages with a positive DelaySeconds value become available for processing after the delay time is finished. If you don't specify a value, the default value for the queue applies.
-                                        ],
+                                        'parameters' => [],
                                         'error' => [
                                             'suppression' => true,
                                         ],
                                     ],
                                     'parameters' => [
                                         'service' => SQSService::IDENTIFIER,
+                                    ],
+                                ],
+                                'service_default' => [
+                                    SQSService::IDENTIFIER => [
+                                        'dequeue' => [
+                                            'parameters' => [
+                                                'Delay' => 60
+                                            ],
+                                        ],
                                     ],
                                 ],
                                 'types' => [
@@ -93,5 +101,9 @@ class ServiceFactoryTest extends TestCase
         $service = $factory->createFromMessage($message);
 
         $this->assertInstanceOf(SQSService::class, $service);
+
+        $config = $service->getConfig();
+        $this->assertSame(2, $config['dequeue']['parameters']['MaxNumberOfMessages'] ?? 0);
+        $this->assertSame(60, $config['dequeue']['parameters']['Delay'] ?? 0);
     }
 }
