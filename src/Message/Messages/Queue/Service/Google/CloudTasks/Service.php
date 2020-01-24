@@ -47,25 +47,13 @@ class Service extends DefaultService
         $this->logger->info('Idle queuing a message.', ['service' => Service::IDENTIFIER, 'message' => $message->toArray()]);
 
         try {
-            $request = $this->getRequestFromMessage($message);
-
-            $body = $request->getBody();
-            $body->rewind();
-
-            $task = new Task([
-                'http_request' => new HttpRequest([
-                    'url' => (string) $request->getUri(),
-                    'http_method' => HttpMethod::value(strtoupper($request->getMethod())),
-                    'headers' => array_map(function ($headerValue) {
-                        return $headerValue[0] ?? '';
-                    }, $request->getHeaders()),
-                    'body' => $body->getContents(),
-                ]),
-            ]);
-
             $mergedParameters = array_replace_recursive($this->getQueueingParameters(), $parameters);
 
-            $response = $this->client->createTask($this->getGCPQueueName($message, $mergedParameters), $task, $mergedParameters);
+            $response = $this->client->createTask(
+                $this->getGCPQueueName($message, $mergedParameters),
+                $this->getTaskFromMessage($message),
+                $mergedParameters
+            );
 
             $message->setMessageId($response->getName());
             $message->setTemporaryMetadata([
@@ -169,5 +157,24 @@ class Service extends DefaultService
         }
 
         return $request;
+    }
+
+    protected function getTaskFromMessage(QueueMessageInterface $message) : Task
+    {
+        $request = $this->getRequestFromMessage($message);
+
+        $body = $request->getBody();
+        $body->rewind();
+
+        return new Task([
+            'http_request' => new HttpRequest([
+                'url' => (string) $request->getUri(),
+                'http_method' => HttpMethod::value(strtoupper($request->getMethod())),
+                'headers' => array_map(function ($headerValue) {
+                    return $headerValue[0] ?? '';
+                }, $request->getHeaders()),
+                'body' => $body->getContents(),
+            ]),
+        ]);
     }
 }
