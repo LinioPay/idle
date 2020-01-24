@@ -58,9 +58,9 @@ class ServiceTest extends TestCase
             ],
             'parameters' => [
                 'service' => [
-                    'foo' => 'bar'
-                ]
-            ]
+                    'foo' => 'bar',
+                ],
+            ],
         ];
 
         $this->client = m::mock(TestPubSubClient::class);

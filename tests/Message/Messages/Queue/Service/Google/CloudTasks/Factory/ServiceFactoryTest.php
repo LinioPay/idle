@@ -52,8 +52,8 @@ class ServiceFactoryTest extends TestCase
                                     'class' => CloudTasksService::class,
                                     'client' => [
                                         'credentialsConfig' => [
-                                            'keyFile' => __DIR__ . '/../../../../../Helper/Google/credentials.json'
-                                        ]
+                                            'keyFile' => __DIR__ . '/../../../../../Helper/Google/credentials.json',
+                                        ],
                                     ],
                                     'projectId' => 'foo-project',
                                     'location' => 'foo-location',

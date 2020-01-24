@@ -57,10 +57,10 @@ class Service extends DefaultService
                     'url' => (string) $request->getUri(),
                     'http_method' => HttpMethod::value(strtoupper($request->getMethod())),
                     'headers' => array_map(function ($headerValue) {
-                            return $headerValue[0] ?? '';
-                        }, $request->getHeaders()),
+                        return $headerValue[0] ?? '';
+                    }, $request->getHeaders()),
                     'body' => $body->getContents(),
-                ])
+                ]),
             ]);
 
             $mergedParameters = array_replace_recursive($this->getQueueingParameters(), $parameters);
@@ -154,8 +154,7 @@ class Service extends DefaultService
 
     protected function validateServiceConfig(array $serviceConfig) : void
     {
-        if (empty($serviceConfig['projectId']) || empty($serviceConfig['location']))
-        {
+        if (empty($serviceConfig['projectId']) || empty($serviceConfig['location'])) {
             throw new InvalidServiceConfigurationException(static::IDENTIFIER, 'project|location');
         }
     }
@@ -165,8 +164,7 @@ class Service extends DefaultService
         $attributes = $message->getAttributes();
         $request = $attributes['request'] ?? false;
 
-        if (!$request || !is_a($request, RequestInterface::class))
-        {
+        if (!$request || !is_a($request, RequestInterface::class)) {
             throw new InvalidMessageRequestException();
         }
 

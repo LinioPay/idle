@@ -55,7 +55,7 @@ class ServiceFactoryTest extends TestCase
                                     SQSService::IDENTIFIER => [
                                         'dequeue' => [
                                             'parameters' => [
-                                                'Delay' => 60
+                                                'Delay' => 60,
                                             ],
                                         ],
                                     ],

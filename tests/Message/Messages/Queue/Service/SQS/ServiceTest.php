@@ -65,9 +65,9 @@ class ServiceTest extends TestCase
             ],
             'parameters' => [
                 'service' => [
-                    'foo' => 'bar'
-                ]
-            ]
+                    'foo' => 'bar',
+                ],
+            ],
         ];
     }
 

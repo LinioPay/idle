@@ -7,17 +7,17 @@ namespace LinioPay\Idle\Message\Messages\Queue\Service\Google\CloudTasks;
 use Google\Cloud\Tasks\V2\CloudTasksClient;
 use Google\Cloud\Tasks\V2\HttpMethod;
 use Google\Cloud\Tasks\V2\Task;
+use GuzzleHttp\Psr7\Request;
 use LinioPay\Idle\Message\Exception\FailedReceivingMessageException;
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
 use LinioPay\Idle\Message\Exception\InvalidServiceConfigurationException;
 use LinioPay\Idle\Message\Exception\UnsupportedServiceOperationException;
-use LinioPay\Idle\Message\Messages\Queue\Message as QueueMessageInterface;
+use LinioPay\Idle\Message\Messages\Queue\Message\Message;
 use LinioPay\Idle\Message\Messages\Queue\Service\Google\CloudTasks\Exception\InvalidMessageRequestException;
 use LinioPay\Idle\Message\Messages\Queue\Service\Google\CloudTasks\Service as CloudTasksService;
-use LinioPay\Idle\Message\Messages\Queue\Message\Message;
 use LinioPay\Idle\TestCase;
-use GuzzleHttp\Psr7\Request;
 use Mockery as m;
+use Mockery\Mock;
 use Monolog\Handler\TestHandler;
 use Zend\Stdlib\ArrayUtils;
 
@@ -31,7 +31,7 @@ class ServiceTest extends TestCase
 
     protected $queueIdentifier;
 
-    /** @var m/Mock|CloudTasksClient  */
+    /** @var Mock|CloudTasksClient */
     protected $tasksClient;
 
     protected function setUp() : void
@@ -62,8 +62,8 @@ class ServiceTest extends TestCase
                 'service' => [
                     'projectId' => 'foo-project',
                     'location' => 'foo-location',
-                ]
-            ]
+                ],
+            ],
         ];
     }
 
@@ -79,7 +79,7 @@ class ServiceTest extends TestCase
         );
 
         $message = new Message($this->queueIdentifier, '', [
-            'request' => $request
+            'request' => $request,
         ]);
 
         $serviceConfig = $this->config['parameters']['service'];
@@ -93,7 +93,7 @@ class ServiceTest extends TestCase
 
         $this->tasksClient->shouldReceive('createTask')
             ->once()
-            ->with($queueName, m::on(function(Task $task) use ($request) {
+            ->with($queueName, m::on(function (Task $task) use ($request) {
                 $this->assertInstanceOf(Task::class, $task);
                 $taskRequest = $task->getHttpRequest();
 
@@ -136,7 +136,7 @@ class ServiceTest extends TestCase
         );
 
         $message = new Message($this->queueIdentifier, '', [
-            'request' => $request
+            'request' => $request,
         ]);
 
         unset($this->config['parameters']['service']['location']);
@@ -201,7 +201,7 @@ class ServiceTest extends TestCase
         );
 
         $message = new Message($this->queueIdentifier, '', [
-            'request' => $request
+            'request' => $request,
         ], 'foo-id');
 
         $this->tasksClient->shouldReceive('deleteTask')
