@@ -70,7 +70,7 @@ return [
                     SQS::IDENTIFIER => [ // SQS defaults override
                         'queue' => [ // QueueMessage addition configuration
                             'parameters' => [
-                                //'DelaySeconds' => 0, // SQS: The number of seconds (0 to 900 - 15 minutes) to delay a specific message.
+                                'DelaySeconds' => 5, // All SQS QueueMessages will have a 5 second delay
                             ],
                         ]
                     ],
@@ -81,7 +81,7 @@ return [
                             // Inherit SQS as its service
                         ],
                     ],
-                    'my-task' => [
+                    'my-task-queue' => [
                         'parameters' => [
                             'service' => GoogleCloudTasks::IDENTIFIER, // Override the service to use Google CloudTasks instead of AWS SQS
                         ]
@@ -167,9 +167,9 @@ return [
                                 ],
                             ],
                         ],
-                        'my-task' => [ // The queue which will trigger this job, in this case my-task on CloudTasks which was defined previously in the message section
+                        'my-task-queue' => [ // The queue which will trigger this job, in this case my-task-queue on CloudTasks which was defined previously in the message section
                             'parameters' => [
-                                'workers' => [ // Define all the workers which will be processed when a QueueMessage is received from the queue 'my-task'.
+                                'workers' => [ // Define all the workers which will be processed when a QueueMessage is received from the queue 'my-task-queue'.
                                     [
                                         'type' => FooWorker::IDENTIFIER, // Sample worker
                                         'parameters' => [],

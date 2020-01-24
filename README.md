@@ -137,17 +137,13 @@ The messaging component allows us to interact with messaging services from withi
             QueueMessage::IDENTIFIER => [ // Define support for QueueMessage, utilized by queue services such as SQS and CloudTasks.
                 'default' => [ // Default parameters shared amongst all QueueMessage
                     'dequeue' => [ // QueueMessage retrieval configuration
-                        'parameters' => [
-                            //'MaxNumberOfMessages' => 1, // SQS: The maximum number of messages to return.
-                        ],
+                        'parameters' => [],
                         'error' => [
                             'suppression' => false,
                         ],
                     ],
                     'queue' => [ // QueueMessage addition configuration
-                        'parameters' => [
-                            //'DelaySeconds' => 0, // SQS: The number of seconds (0 to 900 - 15 minutes) to delay a specific message.
-                        ],
+                        'parameters' => [],
                         'error' => [
                             'suppression' => false,
                         ],
@@ -162,13 +158,22 @@ The messaging component allows us to interact with messaging services from withi
                         'service' => SQS::IDENTIFIER, // Default service for all configured QueueMessages
                     ],
                 ],
+                'service_default' => [ // Optional service default overrides
+                    SQS::IDENTIFIER => [ // SQS defaults override
+                        'queue' => [ // QueueMessage addition configuration
+                            'parameters' => [
+                                'DelaySeconds' => 5, // All SQS QueueMessages will have a 5 second delay
+                            ],
+                        ]
+                    ],
+                ],
                 'types' => [ // Define the queues where the QueueMessages are coming from
                     'my-queue' => [
                         'parameters' => [
                             // Inherit SQS as its service
                         ],
                     ],
-                    'my-task' => [
+                    'my-task-queue' => [
                         'parameters' => [
                             'service' => GoogleCloudTasks::IDENTIFIER, // Override the service to use Google CloudTasks instead of AWS SQS
                         ]
@@ -223,7 +228,7 @@ The messaging component allows us to interact with messaging services from withi
 With the configuration above we have configured support for the following:
 
 - An AWS SQS queue named `my-queue` with a corresponding MessageJob entry which allows us to run jobs with its messages.
-- A Google CloudTasks queue named `my-task` with a corresponding MessageJob entry which allows us to run jobs with its messages.
+- A Google CloudTasks queue named `my-task-queue` with a corresponding MessageJob entry which allows us to run jobs with its messages.
 - A Google PubSub topic named `my-topic`
 - A Google PubSub subscription named `my-subscription` with a corresponding MessageJob entry which allows us to run jobs with its messages.
 
@@ -264,6 +269,36 @@ A QueueMessage can be created in one of two ways:
     /** @var QueueMessage[] $messages */
     $messages = $messageFactory->receiveMessages(['queue_identifier' => 'my-queue']);
     ```
+  
+### Cloud Tasks
+
+Google CloudTasks is a queue service which allows the user to to define an action which will be performed when the message reaches the top of the queue.  Idle currently supports HTTP Request based Tasks.  An example of this can be seen below:
+
+```php
+    use GuzzleHttp\Psr7\Request; // Any Request class may be used as long as it implements PSR7
+    // ...
+    $messageFactory = $container->get(\LinioPay\Idle\Message\MessageFactory::class);
+    
+    /** @var QueueMessage $message */
+    $message = $messageFactory->createMessage([
+            'queue_identifier' => 'my-task-queue',
+            'attributes' => [
+                'request' => new Request(
+                    'PUT',
+                    'http://foobar.example.com',
+                    [
+                        'Content-Type' => 'application/json',
+                    ],
+                    'payload'
+                ),
+            ]
+        ]);
+
+    $message->send();
+``` 
+
+Note: CloudTasks does not currently support dequeueing messages from queues since its primarily a 'Push' based queue service.
+
 #### Topic Messages
 
 A `TopicMessage` is a message which we want to publish to a `topic`.
@@ -435,9 +470,9 @@ Below is a section of the Idle config for `MessageJob`.  We configure the `Messa
                                 ],
                             ],
                         ],
-                        'my-task' => [ // The queue which will trigger this job, in this case my-task on CloudTasks which was defined previously in the message section
+                        'my-task-queue' => [ // The queue which will trigger this job, in this case my-task-queue on CloudTasks which was defined previously in the message section
                             'parameters' => [
-                                'workers' => [ // Define all the workers which will be processed when a QueueMessage is received from the queue 'my-task'.
+                                'workers' => [ // Define all the workers which will be processed when a QueueMessage is received from the queue 'my-task-queue'.
                                     [
                                         'type' => FooWorker::IDENTIFIER, // Sample worker
                                         'parameters' => [],
