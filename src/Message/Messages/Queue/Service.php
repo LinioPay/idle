@@ -23,6 +23,4 @@ interface Service extends ServiceInterface
     public function dequeueOneOrFail(string $queueIdentifier, array $parameters = []) : MessageInterface;
 
     public function delete(Message $message, array $parameters = []) : bool;
-
-    public function getConfig() : array;
 }

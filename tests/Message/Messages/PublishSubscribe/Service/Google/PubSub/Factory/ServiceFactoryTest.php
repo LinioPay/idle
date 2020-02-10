@@ -39,6 +39,7 @@ class ServiceFactoryTest extends TestCase
                                             ],
                                         ],
                                         'parameters' => [
+                                            'service' => PubSubService::IDENTIFIER,
                                             'red' => true,
                                         ],
                                     ],
@@ -48,6 +49,7 @@ class ServiceFactoryTest extends TestCase
                         'service' => [
                             'types' => [
                                 PubSubService::IDENTIFIER => [
+                                    'class' => PubSubService::class,
                                     'client' => [
                                         'projectId' => 'fooProject',
                                     ],

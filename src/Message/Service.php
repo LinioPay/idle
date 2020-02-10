@@ -6,4 +6,7 @@ namespace LinioPay\Idle\Message;
 
 interface Service
 {
+    public function getConfig() : array;
+
+    public function getServiceConfig() : array;
 }

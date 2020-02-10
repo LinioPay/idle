@@ -19,6 +19,11 @@ abstract class DefaultService implements QueueServiceInterface
         return $this->config;
     }
 
+    public function getServiceConfig() : array
+    {
+        return $this->config['parameters']['service'] ?? [];
+    }
+
     protected function getQueueingParameters() : array
     {
         return $this->config['queue']['parameters'] ?? [];

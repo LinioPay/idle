@@ -35,9 +35,8 @@ class TestCase extends TestCaseBase
     /**
      * Injects a value into an inaccessible object property via reflection.
      *
-     * @param mixed  $classOrObject
-     * @param string $propertyNane
-     * @param mixed  $propertyValue
+     * @param mixed $classOrObject
+     * @param mixed $propertyValue
      */
     protected function inject($classOrObject, string $propertyNane, $propertyValue)
     {
@@ -57,7 +56,6 @@ class TestCase extends TestCaseBase
      * @see http://martinfowler.com/articles/mocksArentStubs.html
      *
      * @param string $className
-     * @param array  $data
      *
      * @return object
      */

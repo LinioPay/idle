@@ -19,6 +19,4 @@ interface Service extends ServiceInterface
     public function pullOneOrFail(string $subscriptionIdentifier, array $parameters = []) : MessageInterface;
 
     public function acknowledge(SubscriptionMessage $message, array $parameters = []) : bool;
-
-    public function getConfig() : array;
 }

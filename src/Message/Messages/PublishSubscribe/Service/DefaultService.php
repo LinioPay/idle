@@ -19,6 +19,11 @@ abstract class DefaultService implements Service
         return $this->config;
     }
 
+    public function getServiceConfig() : array
+    {
+        return $this->config['parameters']['service'] ?? [];
+    }
+
     public function getPublishParameterConfig() : array
     {
         return $this->config['publish']['parameters'] ?? [];

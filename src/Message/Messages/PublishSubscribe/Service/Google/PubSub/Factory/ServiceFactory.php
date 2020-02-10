@@ -15,14 +15,12 @@ class ServiceFactory extends DefaultServiceFactory
 {
     public function createFromMessage(Message $message) : Service
     {
-        $messageConfig = $this->container->get('config')['idle']['message'] ?? [];
-
-        $serviceConfig = $messageConfig['service']['types'][PubSubService::IDENTIFIER] ?? [];
+        $messageConfig = $this->getMessageConfig($message);
 
         $logger = $this->container->get(LoggerInterface::class);
 
-        $client = new PubSubClient($serviceConfig['client'] ?? []);
+        $client = new PubSubClient($messageConfig['parameters']['service']['client'] ?? []);
 
-        return new PubSubService($client, $serviceConfig, $logger);
+        return new PubSubService($client, $messageConfig, $logger);
     }
 }

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace LinioPay\Idle\Message\Messages\Queue\Service\SQS\Factory;
+namespace LinioPay\Idle\Message\Messages\Queue\Service\Google\CloudTasks\Factory;
 
-use Aws\Sqs\SqsClient;
+use Google\Cloud\Tasks\V2\CloudTasksClient;
 use LinioPay\Idle\Message\Message;
 use LinioPay\Idle\Message\Messages\Factory\DefaultServiceFactory;
-use LinioPay\Idle\Message\Messages\Queue\Service\SQS\Service as SQSService;
+use LinioPay\Idle\Message\Messages\Queue\Service\Google\CloudTasks\Service as CloudTasksService;
 use LinioPay\Idle\Message\Service;
 use Psr\Log\LoggerInterface;
 
@@ -19,8 +19,8 @@ class ServiceFactory extends DefaultServiceFactory
 
         $logger = $this->container->get(LoggerInterface::class);
 
-        $client = new SqsClient($messageConfig['parameters']['service']['client'] ?? []);
+        $client = new CloudTasksClient($messageConfig['parameters']['service']['client'] ?? []);
 
-        return new SQSService($client, $messageConfig, $logger);
+        return new CloudTasksService($client, $messageConfig, $logger);
     }
 }
