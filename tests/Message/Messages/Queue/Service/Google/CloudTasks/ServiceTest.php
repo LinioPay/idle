@@ -119,7 +119,13 @@ class ServiceTest extends TestCase
     {
         $message = new Message($this->queueIdentifier, '', []);
 
+        $this->tasksClient->shouldReceive('queueName')
+            ->once()
+            ->with('foo-project', 'foo-location', 'bar')
+            ->andReturn('foo/foo/bar');
+
         $service = new CloudTasksService($this->tasksClient, $this->config, $this->logger);
+
         $this->expectException(InvalidMessageRequestException::class);
         $service->queue($message);
     }

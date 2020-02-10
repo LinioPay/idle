@@ -94,12 +94,7 @@ class Service extends DefaultService
 
     public function dequeueOneOrFail(string $queueIdentifier, array $parameters = []) : MessageInterface
     {
-        throw new FailedReceivingMessageException(
-            self::IDENTIFIER,
-            QueueMessageInterface::IDENTIFIER,
-            $queueIdentifier,
-            new UnsupportedServiceOperationException(Service::IDENTIFIER, 'dequeue')
-        );
+        throw new FailedReceivingMessageException(self::IDENTIFIER, QueueMessageInterface::IDENTIFIER, $queueIdentifier, new UnsupportedServiceOperationException(Service::IDENTIFIER, 'dequeue'));
     }
 
     public function delete(QueueMessageInterface $message, array $parameters = []) : bool
