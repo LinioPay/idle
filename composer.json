@@ -44,7 +44,7 @@
         "phpunit/phpunit": "^8.0.0",
         "roave/security-advisories": "dev-master",
         "sensiolabs/security-checker": "^5.0",
-        "laminas/laminas-hydrator": "^2.4"
+        "laminas/laminas-hydrator": "^3.0"
     },
     "suggest": {
         "league/fractal": "Adds support for transformers.",
