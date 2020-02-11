@@ -35,7 +35,7 @@
         "google/cloud-pubsub": "^1.18",
         "google/cloud-tasks": "^1.4",
         "infection/infection": "^0.10.6",
-        "league/fractal": "^0.17.0",
+        "league/fractal": "^0.19.2",
         "michaelmoussa/php-coverage-checker": "^1.1",
         "mockery/mockery": "^1.2",
         "monolog/monolog": "^1.24",
