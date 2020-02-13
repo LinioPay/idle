@@ -14,7 +14,7 @@ use ReflectionMethod;
 class TestCase extends TestCaseBase
 {
     /**
-     * @var Reflection|null
+     * @var ReflectionHydrator|null
      */
     protected static $hydrator;
 
