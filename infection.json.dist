@@ -13,5 +13,9 @@
         "badge": {
             "branch": "master"
         }
+    },
+    "mutators": {
+        "@default": true,
+        "@function_signature": false
     }
 }
