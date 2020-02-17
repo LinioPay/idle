@@ -32,19 +32,19 @@
     "require-dev": {
         "aws/aws-sdk-php": "^3.87",
         "friendsofphp/php-cs-fixer": "^2.13",
-        "google/cloud-pubsub": "^1.18",
-        "google/cloud-tasks": "^1.4",
-        "infection/infection": "^0.10.6",
-        "league/fractal": "^0.17.0",
+        "google/cloud-pubsub": "^1.21",
+        "google/cloud-tasks": "^1.5",
+        "infection/infection": "^0.10",
+        "league/fractal": "^0.19",
         "michaelmoussa/php-coverage-checker": "^1.1",
         "mockery/mockery": "^1.2",
-        "monolog/monolog": "^1.24",
+        "monolog/monolog": "^2.0",
         "phpstan/phpstan": "^0.11",
         "phpstan/phpstan-mockery": "^0.11.0",
         "phpunit/phpunit": "^8.0.0",
         "roave/security-advisories": "dev-master",
-        "sensiolabs/security-checker": "^5.0",
-        "laminas/laminas-hydrator": "^2.4"
+        "sensiolabs/security-checker": "^6.0",
+        "laminas/laminas-hydrator": "^3.0"
     },
     "suggest": {
         "league/fractal": "Adds support for transformers.",

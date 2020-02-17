@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle;
 
+use Laminas\Hydrator\ReflectionHydrator;
 use Mockery;
 use Mockery\Instantiator;
 use PHPUnit\Framework\TestCase as TestCaseBase;
 use ReflectionClass;
 use ReflectionMethod;
-use Zend\Hydrator\Reflection;
 
 class TestCase extends TestCaseBase
 {
     /**
-     * @var Reflection|null
+     * @var ReflectionHydrator|null
      */
     protected static $hydrator;
 
@@ -67,12 +67,12 @@ class TestCase extends TestCaseBase
     /**
      * Uses the Zend Reflection hydrator to populate an object's properties.
      *
-     * @return Reflection
+     * @return ReflectionHydrator
      */
     protected function getHydrator()
     {
         if (is_null(self::$hydrator)) {
-            self::$hydrator = new Reflection();
+            self::$hydrator = new ReflectionHydrator();
         }
 
         return self::$hydrator;
