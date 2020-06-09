@@ -54,27 +54,43 @@
     },
     "scripts": {
         "check": [
-            "@cs",
+            "@lint:check",
             "@security-check",
-            "@test-coverage",
-            "@test-mutation",
+            "@test:unit:check",
+            "@test:mutation",
             "@static-analysis"
-        ],
-        "cs": [
-            "vendor/bin/php-cs-fixer fix --dry-run --ansi -v"
         ],
         "lint": [
             "vendor/bin/php-cs-fixer fix --ansi -v"
         ],
-        "test": [
-            "vendor/bin/phpunit --colors=always --no-coverage"
+        "lint:check": [
+            "@lint --dry-run"
         ],
-        "test-coverage": [
-            "vendor/bin/phpunit --colors=always",
-            "vendor/bin/php-coverage-checker build/coverage-clover.xml 100"
+        "test:unit:base": [
+            "php -d pcov.enabled=1 vendor/bin/phpunit --color=always"
         ],
-        "test-mutation": [
+        "test:unit": [
+            "@test:unit:base --log-junit build/junit.xml --coverage-xml build/coverage-xml --coverage-clover build/coverage-clover.xml"
+        ],
+        "test:unit:with-html-coverage": [
+            "@test:unit:base --coverage-html build/coverage-html"
+        ],
+        "test:unit:no-coverage": [
+            "@test:unit:base --no-coverage"
+        ],
+        "test:unit:coverage-checker": [
+            "php-coverage-checker build/coverage-clover.xml 100; # comment trick to allow composer params :D"
+        ],
+        "test:unit:check": [
+            "if [ -f build/coverage-clover.xml ]; then rm build/coverage-clover.xml; echo '>>> REMOVED OLD CLOVER.XML BUILD FILE!'; fi; # comment trick to allow composer params :D",
+            "@test:unit",
+            "@test:unit:coverage-checker"
+        ],
+        "test:mutation": [
             "vendor/bin/infection --only-covered --min-msi=100 --min-covered-msi=100 --coverage=build --ansi"
+        ],
+        "test:mutation:ci": [
+            "@test:mutation --log-verbosity=none --no-progress"
         ],
         "static-analysis": [
             "vendor/bin/phpstan analyse --ansi"
