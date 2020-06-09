@@ -1,0 +1,134 @@
+name: Continuous Integration
+on:
+  push:
+    branches: [master]
+  pull_request: ~
+env:
+  PHP_VERSION: 7.2
+jobs:
+  code-style-lint:
+    name: Code style lint
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          coverage: none
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+      - name: Cache Composer cache
+        uses: actions/cache@v1
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer
+      - name: Store vendor
+        uses: actions/cache@v1
+        with:
+          path: vendor
+          key: ${{ runner.os }}-vendor
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-interaction
+      - name: Cache PHP-CS-Fixer
+        uses: actions/cache@v1
+        with:
+          path: .php_cs.cache
+          key: ${{ runner.os }}-php-cs-fixer
+      - name: Run code style check
+        run: composer lint:check
+  security-check:
+    name: Security check
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          coverage: none
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+      - name: Cache Composer cache
+        uses: actions/cache@v1
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer
+      - name: Store vendor
+        uses: actions/cache@v1
+        with:
+          path: vendor
+          key: ${{ runner.os }}-vendor
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-interaction
+      - name: Run security check
+        run: composer security-check
+  test-unit-coverage-and-mutation:
+    name: Unit tests, coverage and mutation
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          coverage: pcov
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+      - name: Cache Composer cache
+        uses: actions/cache@v1
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer
+      - name: Store vendor
+        uses: actions/cache@v1
+        with:
+          path: vendor
+          key: ${{ runner.os }}-vendor
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-interaction
+      - name: Run unit tests check
+        run: composer test:unit:check
+      - name: Run mutation check
+        run: |
+          echo $(nproc)
+          composer test:mutation:ci
+  static-analysis:
+    name: Static analysis
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          coverage: none
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+      - name: Cache Composer cache
+        uses: actions/cache@v1
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer
+      - name: Store vendor
+        uses: actions/cache@v1
+        with:
+          path: vendor
+          key: ${{ runner.os }}-vendor
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-interaction
+      - name: Cache PHPStan
+        uses: actions/cache@v1
+        with:
+          path: data/cache/phpstan
+          key: ${{ runner.os }}-phpstan
+      - name: Run code static analysis
+        run: composer static-analysis
