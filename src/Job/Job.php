@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Job;
 
+use Ramsey\Uuid\Uuid;
+
 interface Job
 {
     public function process() : void;
@@ -27,4 +29,6 @@ interface Job
     public function getTrackerData() : array;
 
     public function getTypeIdentifier() : string;
+
+    public function getJobId() : Uuid;
 }
