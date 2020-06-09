@@ -70,7 +70,7 @@
             "php -d pcov.enabled=1 vendor/bin/phpunit --color=always"
         ],
         "test:unit": [
-            "@test:unit:base --log-junit build/junit.xml --coverage-xml build/coverage-xml --coverage-clover build/coverage-clover.xml"
+            "@test:unit:base --log-junit build/phpunit.junit.xml --coverage-xml build/coverage-xml --coverage-clover build/coverage-clover.xml"
         ],
         "test:unit:with-html-coverage": [
             "@test:unit:base --coverage-html build/coverage-html"
@@ -90,7 +90,7 @@
             "vendor/bin/infection --only-covered --min-msi=100 --min-covered-msi=100 --coverage=build --ansi"
         ],
         "test:mutation:ci": [
-            "@test:mutation --log-verbosity=none --no-progress"
+            "@test:mutation --log-verbosity=none"
         ],
         "static-analysis": [
             "vendor/bin/phpstan analyse --ansi"
