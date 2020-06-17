@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Job\Jobs;
 
+use function json_decode;
 use LinioPay\Idle\Job\Exception\ConfigurationException;
 use LinioPay\Idle\Job\Exception\InvalidJobParameterException;
 use LinioPay\Idle\Job\Job;
@@ -109,6 +110,13 @@ class SimpleJobTest extends TestCase
         $this->assertArrayHasKey('errors', $data);
         $this->assertArrayHasKey('parameters', $data);
         $this->assertArrayHasKey('foo_worker', $data);
+
+        $this->assertSame($data['id'], $job->getJobId()->toString());
+        $this->assertSame($data['start'], $job->getStartDate()->format('Y-m-d H:i:s'));
+        $this->assertSame($data['duration'], $job->getDuration());
+        $this->assertSame($data['successful'], $job->isSuccessful());
+        $this->assertSame($data['finished'], $job->isFinished());
+        $this->assertSame(json_decode($data['parameters'], true), $job->getParameters());
 
         $this->assertSame('bar_worker', $data['foo_worker']);
     }
