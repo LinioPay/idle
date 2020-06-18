@@ -89,7 +89,9 @@ abstract class DefaultJob implements Job
 
             $this->performWork();
 
-            $this->successful = (empty($this->errors));
+            $this->successful = (empty(
+                array_merge($this->errors, $this->getWorkersErrors())
+            ));
         } catch (\Throwable $throwable) {
             $this->errors[] = sprintf('Encountered an error: %s', $throwable->getMessage());
 
