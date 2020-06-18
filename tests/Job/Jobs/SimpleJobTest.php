@@ -145,6 +145,27 @@ class SimpleJobTest extends TestCase
         }
     }
 
+    public function testJobNotSuccessfulIfWorkerHasErrors()
+    {
+        /** @var FooWorker $worker */
+        $worker = $this->fake(FooWorker::class, [
+            'errors' => ['error'],
+        ]);
+
+        $this->workerFactory->shouldReceive('createWorker')
+            ->andReturn($worker);
+
+        $job = new SimpleJob($this->config, $this->workerFactory);
+        $job->setParameters(['simple_identifier' => 'foo_job']);
+        $job->validateConfig();
+        $job->process();
+        $job->validateParameters();
+
+        $this->assertTrue($job->isFinished());
+        $this->assertFalse($job->isSuccessful());
+        $this->assertNotEquals(0, count($job->getErrors()));
+    }
+
     public function testCanGetIdentifier()
     {
         $job = new SimpleJob($this->config, $this->workerFactory);
