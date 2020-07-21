@@ -47,6 +47,12 @@ abstract class DefaultJob implements Job
     /** @var WorkerFactoryInterface */
     protected $workerFactory;
 
+    /** @var array */
+    protected $context = [];
+
+    /** @var array */
+    protected $output = [];
+
     /** @var bool */
     protected $finished = false;
 
@@ -205,6 +211,36 @@ abstract class DefaultJob implements Job
     protected function getWorkersConfig() : array
     {
         return $this->getConfigParameters()['workers'] ?? [];
+    }
+
+    public function setContext(array $data) : void
+    {
+        $this->context = $data;
+    }
+
+    public function addContext(string $key, $value) : void
+    {
+        $this->context[$key] = $value;
+    }
+
+    public function getContextEntry(string $key)
+    {
+        return $this->context[$key] ?? null;
+    }
+
+    public function addOutput(string $key, $value) : void
+    {
+        $this->output[$key] = $value;
+    }
+
+    public function setOutput(array $data) : void
+    {
+        $this->output = $data;
+    }
+
+    public function getOutput() : array
+    {
+        return $this->output;
     }
 
     public function getConfig() : array

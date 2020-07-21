@@ -15,6 +15,7 @@ class JobDetails extends TransformerAbstract
             'finished' => $job->isFinished(),
             'successful' => $job->isSuccessful(),
             'duration' => $job->getDuration(),
+            'output' => $job->getOutput(),
             'errors' => $job->getErrors(),
         ];
     }

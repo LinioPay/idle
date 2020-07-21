@@ -17,6 +17,7 @@ class JobDetailsTest extends TestCase
             'finished' => true,
             'successful' => false,
             'duration' => 0.0,
+            'output' => [],
             'errors' => ['error'],
         ], (new JobDetails())->transform($job));
     }

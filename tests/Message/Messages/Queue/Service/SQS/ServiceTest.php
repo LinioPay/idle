@@ -6,6 +6,7 @@ namespace LinioPay\Idle\Message\Messages\Queue\Service\SQS;
 
 use Aws\Result;
 use Aws\Sqs\SqsClient;
+use Laminas\Stdlib\ArrayUtils;
 use LinioPay\Idle\Message\Exception\FailedReceivingMessageException;
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
 use LinioPay\Idle\Message\Messages\Queue\Message as QueueMessageInterface;
@@ -13,7 +14,6 @@ use LinioPay\Idle\Message\Messages\Queue\Message\Message;
 use LinioPay\Idle\TestCase;
 use Mockery as m;
 use Monolog\Handler\TestHandler;
-use Zend\Stdlib\ArrayUtils;
 
 class ServiceTest extends TestCase
 {

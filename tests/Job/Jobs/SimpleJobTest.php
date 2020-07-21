@@ -173,6 +173,32 @@ class SimpleJobTest extends TestCase
         $this->assertSame('simple', $job->getTypeIdentifier());
     }
 
+    public function testCanGetAndSetWorkerContext()
+    {
+        $job = new SimpleJob($this->config, $this->workerFactory);
+
+        $job->setContext(['foo' => 'bar']);
+        $this->assertSame('bar', $job->getContextEntry('foo'));
+
+        $job->addContext('baz', 'foo');
+        $this->assertSame('foo', $job->getContextEntry('baz'));
+    }
+
+    public function testCanGetAndSetOutput()
+    {
+        $job = new SimpleJob($this->config, $this->workerFactory);
+
+        $job->setOutput(['foo' => 'bar']);
+        $job->addOutput('baz', 'foo');
+
+        $output = $job->getOutput();
+
+        $this->assertIsArray($output);
+
+        $this->assertArrayHasKey('foo', $output);
+        $this->assertArrayHasKey('baz', $output);
+    }
+
     public function testItThrowsConfigurationExceptionWhenJobConfigurationIsInvalid()
     {
         $failConfig = [
