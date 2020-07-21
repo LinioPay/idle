@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Job\Workers\Factory;
 
+use Laminas\Stdlib\ArrayUtils;
 use LinioPay\Idle\Job\Exception\ConfigurationException;
 use LinioPay\Idle\Job\Worker as WorkerInterface;
 use LinioPay\Idle\Job\WorkerFactory as WorkerFactoryInterface;
 use Psr\Container\ContainerInterface;
-use Zend\Stdlib\ArrayUtils;
 
 abstract class DefaultWorkerFactory implements WorkerFactoryInterface
 {

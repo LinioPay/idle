@@ -31,4 +31,16 @@ interface Job
     public function getTypeIdentifier() : string;
 
     public function getJobId() : Uuid;
+
+    public function setContext(array $data) : void;
+
+    public function addContext(string $key, $value) : void;
+
+    public function getContextEntry(string $key);
+
+    public function setOutput(array $data) : void;
+
+    public function addOutput(string $key, $value) : void;
+
+    public function getOutput() : array;
 }

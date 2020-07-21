@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Message\Messages\Factory;
 
+use Laminas\Stdlib\ArrayUtils;
 use LinioPay\Idle\Message\Exception\ConfigurationException;
 use LinioPay\Idle\Message\Message;
 use LinioPay\Idle\Message\Service;
 use LinioPay\Idle\Message\ServiceFactory as ServiceFactoryInterface;
 use Psr\Container\ContainerInterface;
-use Zend\Stdlib\ArrayUtils;
 
 abstract class DefaultServiceFactory implements ServiceFactoryInterface
 {
