@@ -6,8 +6,10 @@ namespace LinioPay\Idle\Message\Messages\Queue\Service\Google\CloudTasks;
 
 use Google\Cloud\Tasks\V2\CloudTasksClient;
 use Google\Cloud\Tasks\V2\HttpMethod;
+use Google\Cloud\Tasks\V2\OidcToken;
 use Google\Cloud\Tasks\V2\Task;
 use GuzzleHttp\Psr7\Request;
+use Laminas\Stdlib\ArrayUtils;
 use LinioPay\Idle\Message\Exception\FailedReceivingMessageException;
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
 use LinioPay\Idle\Message\Exception\InvalidServiceConfigurationException;
@@ -19,7 +21,6 @@ use LinioPay\Idle\TestCase;
 use Mockery as m;
 use Mockery\Mock;
 use Monolog\Handler\TestHandler;
-use Zend\Stdlib\ArrayUtils;
 
 class ServiceTest extends TestCase
 {
@@ -78,8 +79,11 @@ class ServiceTest extends TestCase
             'payload'
         );
 
+        $oidcToken = $this->fake(OidcToken::class);
+
         $message = new Message($this->queueIdentifier, '', [
             'request' => $request,
+            'oidc_token' => $oidcToken,
         ]);
 
         $serviceConfig = $this->config['parameters']['service'];
@@ -93,7 +97,7 @@ class ServiceTest extends TestCase
 
         $this->tasksClient->shouldReceive('createTask')
             ->once()
-            ->with($queueName, m::on(function (Task $task) use ($request) {
+            ->with($queueName, m::on(function (Task $task) use ($request, $oidcToken) {
                 $this->assertInstanceOf(Task::class, $task);
                 $taskRequest = $task->getHttpRequest();
 
@@ -104,6 +108,8 @@ class ServiceTest extends TestCase
                 $this->assertSame(HttpMethod::value(strtoupper($request->getMethod())), $taskRequest->getHttpMethod());
                 $this->assertSame('application/json', $taskRequest->getHeaders()->offsetGet('Content-Type'));
                 $this->assertSame($body->getContents(), $taskRequest->getBody());
+
+                $this->assertSame($oidcToken, $taskRequest->getOidcToken());
 
                 return true;
             }), [])

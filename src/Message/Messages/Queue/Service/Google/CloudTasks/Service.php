@@ -24,6 +24,9 @@ class Service extends DefaultService
 {
     const IDENTIFIER = 'cloud-tasks';
 
+    /** @var string[] Arguments which we want to extract from message attributes into HttpRequest */
+    const HTTP_REQUEST_ATTRIBUTES = ['oauth_token', 'oidc_token'];
+
     /** @var CloudTasksClient */
     protected $client;
 
@@ -162,14 +165,19 @@ class Service extends DefaultService
         $body->rewind();
 
         return new Task([
-            'http_request' => new HttpRequest([
-                'url' => (string) $request->getUri(),
-                'http_method' => HttpMethod::value(strtoupper($request->getMethod())),
-                'headers' => array_map(function ($headerValue) {
-                    return $headerValue[0] ?? '';
-                }, $request->getHeaders()),
-                'body' => $body->getContents(),
-            ]),
+            'http_request' => new HttpRequest(
+                array_merge(
+                    [
+                        'url' => (string) $request->getUri(),
+                        'http_method' => HttpMethod::value(strtoupper($request->getMethod())),
+                        'headers' => array_map(function ($headerValue) {
+                            return $headerValue[0] ?? '';
+                        }, $request->getHeaders()),
+                        'body' => $body->getContents(),
+                    ],
+                    array_intersect_key($message->getAttributes(), array_flip(self::HTTP_REQUEST_ATTRIBUTES))
+                )
+            ),
         ]);
     }
 }
