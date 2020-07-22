@@ -11,6 +11,7 @@ use LinioPay\Idle\Message\Messages\PublishSubscribe\Message\SubscriptionMessage;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\Message\TopicMessage;
 use LinioPay\Idle\Message\Messages\Queue\Message\Message as QueueMessage;
 use LinioPay\Idle\Message\ReceivableMessage as ReceivableMessageInterface;
+use LinioPay\Idle\Message\SendableMessage as SendableMessageInterface;
 use LinioPay\Idle\Message\ServiceFactory as ServiceFactoryInterface;
 use Psr\Container\ContainerInterface;
 
@@ -55,12 +56,23 @@ class MessageFactory implements MessageFactoryInterface
         return $this->createReceivableMessage($messageParameters)->receive($receiveParameters);
     }
 
-    protected function createReceivableMessage(array $parameters) : ReceivableMessageInterface
+    public function createSendableMessage(array $messageParameters) : SendableMessageInterface
+    {
+        $message = $this->createMessage($messageParameters);
+
+        if (!is_a($message, SendableMessageInterface::class)) {
+            throw new InvalidMessageParameterException('topic_identifier|queue_identifier');
+        }
+
+        return $message;
+    }
+
+    public function createReceivableMessage(array $parameters) : ReceivableMessageInterface
     {
         $message = $this->createMessage($parameters);
 
         if (!is_a($message, ReceivableMessageInterface::class)) {
-            throw new InvalidMessageParameterException('subscription_identifier|topic_identifier');
+            throw new InvalidMessageParameterException('subscription_identifier|queue_identifier');
         }
 
         return $message;

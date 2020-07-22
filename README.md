@@ -77,21 +77,23 @@ $messageConfig = $config['idle']['message'] ?? [];
 
 Now that the container is aware of Idle's config, it must be made aware of its factories:
 ```php
-// JOB 
-\LinioPay\Idle\Job\JobFactory::class => \LinioPay\Idle\Job\Jobs\Factory\JobFactory::class,
-\LinioPay\Idle\Job\WorkerFactory::class => \LinioPay\Idle\Job\Workers\Factory\WorkerFactory::class,
-\LinioPay\Idle\Job\Jobs\MessageJob::class => \LinioPay\Idle\Job\Jobs\Factory\MessageJobFactory::class,
-\LinioPay\Idle\Job\Jobs\SimpleJob::class => \LinioPay\Idle\Job\Jobs\Factory\SimpleJobFactory::class,
-
-// MESSAGE
-\LinioPay\Idle\Message\MessageFactory::class => \LinioPay\Idle\Message\Messages\Factory\MessageFactory::class,
-\LinioPay\Idle\Message\ServiceFactory::class => \LinioPay\Idle\Message\Messages\Factory\ServiceFactory::class,
-
-// CUSTOM
-(optional - only if using AWS DynamoDB) \LinioPay\Idle\Job\Workers\DynamoDBTrackerWorker::class => \LinioPay\Idle\Job\Workers\Factory\DynamoDBTrackerWorkerFactory::class,
-(optional - only if using AWS SQS) \LinioPay\Idle\Message\Messages\Queue\Service\SQS\Service::class => \LinioPay\Idle\Message\Messages\Queue\Service\SQS\Factory\ServiceFactory::class,
-(optional - only if using Google CloudTasks) \LinioPay\Idle\Message\Messages\Queue\Service\Google\CloudTasks\Service::class => \LinioPay\Idle\Message\Messages\Queue\Service\Google\CloudTasks\Factory\ServiceFactory::class,
-(optional - only if using Google PubSub) \LinioPay\Idle\Message\Messages\PublishSubscribe\Service\Google\PubSub\Service::class => \LinioPay\Idle\Message\Messages\PublishSubscribe\Service\Google\PubSub\Factory\ServiceFactory::class,
+[
+    // JOB 
+    \LinioPay\Idle\Job\JobFactory::class => \LinioPay\Idle\Job\Jobs\Factory\JobFactory::class,
+    \LinioPay\Idle\Job\WorkerFactory::class => \LinioPay\Idle\Job\Workers\Factory\WorkerFactory::class,
+    \LinioPay\Idle\Job\Jobs\MessageJob::class => \LinioPay\Idle\Job\Jobs\Factory\MessageJobFactory::class,
+    \LinioPay\Idle\Job\Jobs\SimpleJob::class => \LinioPay\Idle\Job\Jobs\Factory\SimpleJobFactory::class,
+    
+    // MESSAGE
+    \LinioPay\Idle\Message\MessageFactory::class => \LinioPay\Idle\Message\Messages\Factory\MessageFactory::class,
+    \LinioPay\Idle\Message\ServiceFactory::class => \LinioPay\Idle\Message\Messages\Factory\ServiceFactory::class,
+    
+    // CUSTOM
+    // (optional - only if using AWS DynamoDB) \LinioPay\Idle\Job\Workers\DynamoDBTrackerWorker::class => \LinioPay\Idle\Job\Workers\Factory\DynamoDBTrackerWorkerFactory::class,
+    // (optional - only if using AWS SQS) \LinioPay\Idle\Message\Messages\Queue\Service\SQS\Service::class => \LinioPay\Idle\Message\Messages\Queue\Service\SQS\Factory\ServiceFactory::class,
+    // (optional - only if using Google CloudTasks) \LinioPay\Idle\Message\Messages\Queue\Service\Google\CloudTasks\Service::class => \LinioPay\Idle\Message\Messages\Queue\Service\Google\CloudTasks\Factory\ServiceFactory::class,
+    // (optional - only if using Google PubSub) \LinioPay\Idle\Message\Messages\PublishSubscribe\Service\Google\PubSub\Service::class => \LinioPay\Idle\Message\Messages\PublishSubscribe\Service\Google\PubSub\Factory\ServiceFactory::class,
+];
 ```
 
 It also requires a registered `Psr\Log\LoggerInterface::class` entry for logging purposes. This should return a `LoggerInterface` logger.
@@ -224,7 +226,7 @@ The messaging component allows us to interact with messaging services from withi
             ],
         ],
     ],
-]
+];
 ```
 
 With the configuration above we have configured support for the following:
@@ -245,17 +247,18 @@ A QueueMessage can be created in one of two ways:
     ```php
     $messageFactory = $container->get(\LinioPay\Idle\Message\MessageFactory::class);
     
-    /** @var QueueMessage $message */
-    $message = $messageFactory->createMessage([ // Create a QueueMessage configured to work with SQS (Because it was defined in the config)
+    /** @var SendableMessage $message */
+    $message = $messageFactory->createSendableMessage([ // Create a QueueMessage configured to work with SQS (Because it was defined in the config)
         'queue_identifier' => 'my-queue', // Must match the name of the configured queue in the config (note the use of 'queue_identifier')
         'body'=> 'hello queue payload!',
         'attributes' => [
             'foo' => 'bar',
         ]
-    ]);
-    $message->send(); // Send to SQS
+    ])->send(); // Send to SQS
   
     // Or for more control, retrieve the service
+    /** @var QueueMessage $message */
+    $message = $messageFactory->createMessage(...);
     $sqsService = $message->getService(); // Because `my-queue` is configured to work with SQS, the message factory injects the service into the message for us.
     $sqsService->queue($message); // Now we can send the message to the service
     ```
@@ -281,8 +284,7 @@ Google CloudTasks is a queue service which allows the user to to define an actio
     // ...
     $messageFactory = $container->get(\LinioPay\Idle\Message\MessageFactory::class);
     
-    /** @var QueueMessage $message */
-    $message = $messageFactory->createMessage([
+    $message = $messageFactory->createSendableMessage([
             'queue_identifier' => 'my-task-queue',
             'attributes' => [
                 'request' => new Request(
@@ -294,9 +296,7 @@ Google CloudTasks is a queue service which allows the user to to define an actio
                     'payload'
                 ),
             ]
-        ]);
-
-    $message->send();
+        ])->send();
 ``` 
 
 Note: CloudTasks does not currently support dequeueing messages from queues since its primarily a 'Push' based queue service.
@@ -310,17 +310,17 @@ A `TopicMessage` is a message which we want to publish to a `topic`.
     ```php
     $messageFactory = $container->get(\LinioPay\Idle\Message\MessageFactory::class);
   
-    /** @var TopicMessage $message */
-    $message = $messageFactory->createMessage([
+    $message = $messageFactory->createSendableMessage([
        'topic_identifier' => 'my-topic', // Must match the name of the configured topic in the config (note the use of 'topic_identifier')
        'body'=> 'hello pubsub payload!',
        'attributes' => [
            'foo' => 'bar',
        ]
-    ]);
-    $message->send(); // Send to PubSub with the configured 'publish' parameters
+    ])->send(); // Send to PubSub with the configured 'publish' parameters
     
     // Or for more control:
+    /** @var TopicMessage $message */
+    $message = $messageFactory->createMessage(...);
     $pubSubService = $message->getService(); // Because `my-topic` is configured to work with PubSub, the message factory injects the service to the message for us.
     $pubSubService->publish($message); // Now we can send the message to the service
     ```
@@ -402,7 +402,7 @@ Lets start off with the simplest case.. `SimpleJob`. Below is a simplified Idle 
             ]
         ],
     ],
-]
+];
 ```  
 
 Creating a SimpleJob is very straight forward when utilizing the `JobFactory`:
@@ -499,7 +499,7 @@ Below is a section of the Idle config for `MessageJob`.  We configure the `Messa
             ],
         ],
     ],
-]
+];
 ```
 
 Creating a `MessageJob` is very straight forward when utilizing the `JobFactory`.
