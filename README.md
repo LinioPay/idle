@@ -245,7 +245,7 @@ A QueueMessage can be created in one of two ways:
 - Manually
     - This means we're creating a new message from data.
     ```php
-    use LinioPay\Idle\Message\SendableMessage;$messageFactory = $container->get(\LinioPay\Idle\Message\MessageFactory::class);
+    $messageFactory = $container->get(\LinioPay\Idle\Message\MessageFactory::class);
     
     /** @var SendableMessage $message */
     $message = $messageFactory->createSendableMessage([ // Create a QueueMessage configured to work with SQS (Because it was defined in the config)
