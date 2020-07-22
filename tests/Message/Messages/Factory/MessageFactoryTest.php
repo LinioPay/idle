@@ -8,6 +8,7 @@ use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\SubscriptionMessage;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\TopicMessage;
 use LinioPay\Idle\Message\Messages\Queue\Message as QueueMessage;
+use LinioPay\Idle\Message\SendableMessage;
 use LinioPay\Idle\Message\Service as ServiceInterface;
 use LinioPay\Idle\Message\ServiceFactory as ServiceFactoryInterface;
 use LinioPay\Idle\TestCase;
@@ -147,5 +148,44 @@ class MessageFactoryTest extends TestCase
 
         $this->expectException(InvalidMessageParameterException::class);
         $factory->receiveMessageOrFail(['topic_identifier' => 'foo']);
+    }
+
+    public function testCreatesSendableMessage()
+    {
+        $serviceFactory = m::mock(ServiceFactoryInterface::class);
+        $serviceFactory->shouldReceive('createFromMessage')
+            ->once()
+            ->andReturn(m::mock(ServiceInterface::class));
+
+        $container = m::mock(ContainerInterface::class);
+        $container->shouldReceive('get')
+            ->once()
+            ->with(ServiceFactoryInterface::class)
+            ->andReturn($serviceFactory);
+
+        $factory = new MessageFactory();
+        $factory($container);
+
+        $this->assertInstanceOf(SendableMessage::class, $factory->createSendableMessage(['topic_identifier' => 'foo']));
+    }
+
+    public function testFailsToCreateSendableMessageWhenPropertiesDoNotResultInSendableMessage()
+    {
+        $serviceFactory = m::mock(ServiceFactoryInterface::class);
+        $serviceFactory->shouldReceive('createFromMessage')
+            ->once()
+            ->andReturn(m::mock(ServiceInterface::class));
+
+        $container = m::mock(ContainerInterface::class);
+        $container->shouldReceive('get')
+            ->once()
+            ->with(ServiceFactoryInterface::class)
+            ->andReturn($serviceFactory);
+
+        $factory = new MessageFactory();
+        $factory($container);
+
+        $this->expectException(InvalidMessageParameterException::class);
+        $factory->createSendableMessage(['subscription_identifier' => 'foo']);
     }
 }
