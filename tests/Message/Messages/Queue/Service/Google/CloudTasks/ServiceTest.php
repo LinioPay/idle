@@ -61,8 +61,10 @@ class ServiceTest extends TestCase
             ],
             'parameters' => [
                 'service' => [
-                    'projectId' => 'foo-project',
-                    'location' => 'foo-location',
+                    'client' => [
+                        'projectId' => 'foo-project',
+                        'location' => 'foo-location',
+                    ],
                 ],
             ],
         ];
@@ -92,7 +94,7 @@ class ServiceTest extends TestCase
 
         $this->tasksClient->shouldReceive('queueName')
             ->once()
-            ->with($serviceConfig['projectId'], $serviceConfig['location'], $this->queueIdentifier)
+            ->with($serviceConfig['client']['projectId'], $serviceConfig['client']['location'], $this->queueIdentifier)
             ->andReturn($queueName);
 
         $this->tasksClient->shouldReceive('createTask')
@@ -151,7 +153,7 @@ class ServiceTest extends TestCase
             'request' => $request,
         ]);
 
-        unset($this->config['parameters']['service']['location']);
+        unset($this->config['parameters']['service']['client']['location']);
 
         $service = new CloudTasksService($this->tasksClient, $this->config, $this->logger);
         $this->expectException(InvalidServiceConfigurationException::class);

@@ -135,12 +135,12 @@ class Service extends DefaultService
 
         $this->validateServiceConfig($serviceConfig);
 
-        return $this->client->queueName($serviceConfig['projectId'], $serviceConfig['location'], $message->getQueueIdentifier());
+        return $this->client->queueName($serviceConfig['client']['projectId'], $serviceConfig['client']['location'], $message->getQueueIdentifier());
     }
 
     protected function validateServiceConfig(array $serviceConfig) : void
     {
-        if (empty($serviceConfig['projectId']) || empty($serviceConfig['location'])) {
+        if (empty($serviceConfig['client']['projectId']) || empty($serviceConfig['client']['location'])) {
             throw new InvalidServiceConfigurationException(static::IDENTIFIER, 'project|location');
         }
     }

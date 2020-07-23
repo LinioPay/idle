@@ -15,24 +15,24 @@ return [
     'message' => [
         'service' => [
             'types' => [
-                SQS::IDENTIFIER  => [ // Define support for SQS
+                SQS::IDENTIFIER  => [
                     'class' => SQS::class,
                     'client' => [
                         'version' => 'latest',
                         'region' => getenv('AWS_REGION'),
                     ],
                 ],
-                GoogleCloudTasks::IDENTIFIER => [ // Define support for GoogleCloudTasks
+                GoogleCloudTasks::IDENTIFIER => [
                     'class' => GoogleCloudTasks::class,
                     'client' => [
                         //'credentialsConfig' => [
                         //    'keyFile' => '/application/my-sandbox.json',
-                        //]
+                        //],
+                        'projectId' => 'my-project',
+                        'location' => 'us-central1',
                     ],
-                    'projectId' => 'my-project',
-                    'location' => 'us-central1',
                 ],
-                GooglePubSub::IDENTIFIER => [ // Define support for Google PubSub
+                GooglePubSub::IDENTIFIER => [
                     'class' => GooglePubSub::class,
                     'client' => [
                         //'projectId' => 'my-project',
@@ -42,40 +42,40 @@ return [
             ]
         ],
         'types' => [
-            QueueMessage::IDENTIFIER => [ // Define support for QueueMessage, utilized by queue services such as SQS and CloudTasks.
-                'default' => [ // Default parameters shared amongst all QueueMessage
-                    'dequeue' => [ // QueueMessage retrieval configuration
+            QueueMessage::IDENTIFIER => [
+                'default' => [
+                    'dequeue' => [
                         'parameters' => [],
                         'error' => [
                             'suppression' => false,
                         ],
                     ],
-                    'queue' => [ // QueueMessage addition configuration
+                    'queue' => [
                         'parameters' => [],
                         'error' => [
                             'suppression' => false,
                         ],
                     ],
-                    'delete' => [ // QueueMessage deletion configuration
+                    'delete' => [
                         'parameters' => [],
                         'error' => [
                             'suppression' => false,
                         ],
                     ],
-                    'parameters' => [ // General QueueMessage parameters
-                        'service' => SQS::IDENTIFIER, // Default service for all configured QueueMessages
+                    'parameters' => [
+                        'service' => SQS::IDENTIFIER,
                     ],
                 ],
-                'service_default' => [ // Optional service overrides
-                    SQS::IDENTIFIER => [ // SQS defaults override
-                        'queue' => [ // QueueMessage addition configuration
+                'service_default' => [
+                    SQS::IDENTIFIER => [
+                        'queue' => [
                             'parameters' => [
-                                'DelaySeconds' => 5, // All SQS QueueMessages will have a 5 second delay
+                                'DelaySeconds' => 5,
                             ],
                         ]
                     ],
                 ],
-                'types' => [ // Define the queues where the QueueMessages are coming from
+                'types' => [
                     'my-queue' => [
                         'parameters' => [
                             // Inherit SQS as its service
@@ -83,45 +83,45 @@ return [
                     ],
                     'my-task-queue' => [
                         'parameters' => [
-                            'service' => GoogleCloudTasks::IDENTIFIER, // Override the service to use Google CloudTasks instead of AWS SQS
+                            'service' => GoogleCloudTasks::IDENTIFIER,
                         ]
                     ]
 
                 ]
             ],
-            TopicMessage::IDENTIFIER => [ // Define support for TopicMessage, utilized by Publish Subscribe services such as PubSub.
-                'default' => [ // Default parameters shared amongst all TopicMessages
-                    'publish' => [ // TopicMessage publishing configuration
+            TopicMessage::IDENTIFIER => [
+                'default' => [
+                    'publish' => [
                         'parameters' => [],
                     ],
-                    'parameters' => [  // General TopicMessage parameters
+                    'parameters' => [
                         'service' => GooglePubSub::IDENTIFIER,
                     ],
                 ],
-                'types' => [ // Define supported topics and their overrides
-                    'my-topic' => [ // The name/identifier of our topic
+                'types' => [
+                    'my-topic' => [
                         'parameters' => [
-                            // Will inherit GooglePubSub as the service
+                            // Inherit GooglePubSub as its service
                         ],
                     ]
                 ]
             ],
-            SubscriptionMessage::IDENTIFIER => [ // Define support for SubscriptionMessage, utilized by Publish Subscribe services such as PubSub.
-                'default' => [ // Default parameters shared amongst all SubscriptionMessages
-                    'pull' => [ // SubscriptionMessage pulling configuration
+            SubscriptionMessage::IDENTIFIER => [
+                'default' => [
+                    'pull' => [
                         'parameters' => [
                             //'maxMessages' => 1, // PubSub: Number of messages to retrieve
                         ],
                     ],
-                    'acknowledge' => [ // SubscriptionMessage acknowledge configuration
+                    'acknowledge' => [
                         'parameters' => [],
                     ],
                     'parameters' => [
-                        'service' => GooglePubSub::IDENTIFIER, // Define which service from the configured list below will be used
+                        'service' => GooglePubSub::IDENTIFIER,
                     ],
                 ],
                 'types' => [
-                    'my-subscription' => [ // The identifier of our subscription (Should match the job configuration under MessageJob)
+                    'my-subscription' => [
                         'parameters' => [
                             //'service' => GooglePubSub::IDENTIFIER,
                         ],
@@ -131,12 +131,12 @@ return [
         ],
     ],
     'job' => [
-        'worker' => [ // Define workers
+        'worker' => [
             'types' => [
-                FooWorker::IDENTIFIER => [ // Define support for the FooWorker worker as well as any relevant parameters
+                FooWorker::IDENTIFIER => [
                     'class' => FooWorker::class,
                 ],
-                DynamoDBTrackerWorker::IDENTIFIER  => [ // Define support for the DynamoDBTrackerWorker worker as well as any relevant parameters
+                DynamoDBTrackerWorker::IDENTIFIER  => [
                     'class' => DynamoDBTrackerWorker::class,
                     'client' => [
                         'version' => 'latest',
@@ -146,20 +146,20 @@ return [
                 ],
             ]
         ],
-        'types' => [ // Define jobs and their workers
-            MessageJob::IDENTIFIER => [ // Define the MessageJob job which is responsible for executing jobs based on received messages
+        'types' => [
+            MessageJob::IDENTIFIER => [
                 'class' => MessageJob::class,
                 'parameters' => [
-                    QueueMessage::IDENTIFIER => [ // Define support for running MessageJobs when receiving QueueMessages
-                        'my-queue' => [ // The queue which will trigger this job, in this case my-queue on SQS which was defined previously in the message section
+                    QueueMessage::IDENTIFIER => [
+                        'my-queue' => [
                             'parameters' => [
-                                'workers' => [ // Define all the workers which will be processed when a QueueMessage is received from the queue 'my-queue'.
+                                'workers' => [
                                     [
-                                        'type' => FooWorker::IDENTIFIER, // Sample worker
+                                        'type' => FooWorker::IDENTIFIER,
                                         'parameters' => [],
                                     ],
                                     [
-                                        'type' => DynamoDBTrackerWorker::IDENTIFIER, // Persist job details to DynamoDB under the table 'my_foo_queue_tracker_table'
+                                        'type' => DynamoDBTrackerWorker::IDENTIFIER,
                                         'parameters' => [
                                             'table' => 'my_foo_queue_tracker_table',
                                         ]
@@ -167,23 +167,23 @@ return [
                                 ],
                             ],
                         ],
-                        'my-task-queue' => [ // The queue which will trigger this job, in this case my-task-queue on CloudTasks which was defined previously in the message section
+                        'my-task-queue' => [
                             'parameters' => [
-                                'workers' => [ // Define all the workers which will be processed when a QueueMessage is received from the queue 'my-task-queue'.
+                                'workers' => [
                                     [
-                                        'type' => FooWorker::IDENTIFIER, // Sample worker
+                                        'type' => FooWorker::IDENTIFIER,
                                         'parameters' => [],
                                     ],
                                 ],
                             ],
                         ]
                     ],
-                    SubscriptionMessage::IDENTIFIER => [ // Define support for running MessageJobs when receiving SubscriptionMessages
-                        'my-subscription' => [  // The subscription which will trigger this job, in this case my-subscription on CloudTasks which was defined previously in the message section
+                    SubscriptionMessage::IDENTIFIER => [
+                        'my-subscription' => [
                             'parameters' => [
-                                'workers' => [ // Define all the workers which will be processed when a SubscriptionMessage is received from the subscription 'my-subscription'.
+                                'workers' => [
                                     [
-                                        'type' => FooWorker::IDENTIFIER, // Sample worker
+                                        'type' => FooWorker::IDENTIFIER,
                                         'parameters' => [],
                                     ],
                                 ],
@@ -192,15 +192,15 @@ return [
                     ],
                 ],
             ],
-            SimpleJob::IDENTIFIER  => [ // Define the SimpleJob job
+            SimpleJob::IDENTIFIER  => [
                 'class' => SimpleJob::class,
                 'parameters' => [
                     'supported' => [
-                        'my-simple-job' => [ // Define a SimpleJob with the name 'my-simple-job'.
+                        'my-simple-job' => [
                             'parameters' => [
-                                'workers' => [ // Define the workers which will be processed when 'my-simple-job' runs
+                                'workers' => [
                                     [
-                                        'type' => FooWorker::IDENTIFIER, // Sample worker
+                                        'type' => FooWorker::IDENTIFIER,
                                         'parameters' => [],
                                     ],
                                 ]
