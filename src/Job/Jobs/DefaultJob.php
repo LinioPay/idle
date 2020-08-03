@@ -94,10 +94,6 @@ abstract class DefaultJob implements Job
             $this->track();
 
             $this->performWork();
-
-            $this->successful = (empty(
-                array_merge($this->errors, $this->getWorkersErrors())
-            ));
         } catch (\Throwable $throwable) {
             $this->errors[] = sprintf('Encountered an error: %s', $throwable->getMessage());
 
@@ -201,11 +197,17 @@ abstract class DefaultJob implements Job
     protected function performWork() : void
     {
         $workers = $this->workers;
+        $successful = true;
 
         /** @var WorkerInterface $worker */
-        while (!empty($workers) && ($worker = array_shift($workers)) && $worker->work()) {
-            array_merge($this->errors, $worker->getErrors());
+        while (!empty($workers) && ($worker = array_shift($workers))) {
+            if (!$worker->work()) {
+                $successful = false;
+                break;
+            }
         }
+
+        $this->successful = $successful;
     }
 
     protected function getWorkersConfig() : array
