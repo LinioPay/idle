@@ -34,7 +34,7 @@
         "friendsofphp/php-cs-fixer": "^2.16",
         "google/cloud-pubsub": "^1.24",
         "google/cloud-tasks": "^1.6",
-        "infection/infection": "^0.10",
+        "infection/infection": "^0.18",
         "laminas/laminas-hydrator": "^3.0",
         "league/fractal": "^0.19",
         "michaelmoussa/php-coverage-checker": "^1.1",
