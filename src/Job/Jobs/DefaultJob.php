@@ -12,12 +12,13 @@ use LinioPay\Idle\Job\TrackingWorker;
 use LinioPay\Idle\Job\Worker as WorkerInterface;
 use LinioPay\Idle\Job\WorkerFactory as WorkerFactoryInterface;
 use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 
 abstract class DefaultJob implements Job
 {
     const IDENTIFIER = '';
 
-    /** @var Uuid */
+    /** @var UuidInterface */
     protected $jobId;
 
     /** @var DateTime */
@@ -71,7 +72,7 @@ abstract class DefaultJob implements Job
         return array_merge($this->errors, $this->getWorkersErrors());
     }
 
-    public function getJobId() : Uuid
+    public function getJobId() : UuidInterface
     {
         return $this->jobId;
     }

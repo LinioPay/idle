@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Job;
 
-use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 
 interface Job
 {
@@ -66,7 +66,7 @@ interface Job
     /**
      * Retrieve the id for the job.
      */
-    public function getJobId() : Uuid;
+    public function getJobId() : UuidInterface;
 
     /**
      * Sets and replaces the entire context.  Useful to share data between workers.
