@@ -22,11 +22,10 @@
     "prefer-stable": true,
     "require": {
         "php": ">= 7.2",
-        "linio/input": "^2.7",
         "psr/container": "~1.0",
         "psr/http-message": "^1.0",
         "psr/log": "~1.1",
-        "ramsey/uuid": "^3.9|^4.0",
+        "ramsey/uuid": "^3.0|^4.0",
         "laminas/laminas-stdlib": "^3.2"
     },
     "require-dev": {
