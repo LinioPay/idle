@@ -25,9 +25,6 @@ return [
                 GoogleCloudTasks::IDENTIFIER => [
                     'class' => GoogleCloudTasks::class,
                     'client' => [
-                        //'credentialsConfig' => [
-                        //    'keyFile' => '/application/my-sandbox.json',
-                        //],
                         'projectId' => 'my-project',
                         'location' => 'us-central1',
                     ],
@@ -35,8 +32,8 @@ return [
                 GooglePubSub::IDENTIFIER => [
                     'class' => GooglePubSub::class,
                     'client' => [
-                        //'projectId' => 'my-project',
-                        //'keyFilePath' => '/application/my-sandbox.json',
+                        'projectId' => 'my-project',
+                        'location' => 'us-central1',
                     ],
                 ]
             ]

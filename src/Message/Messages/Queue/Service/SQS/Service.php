@@ -44,7 +44,10 @@ class Service extends DefaultService
 
     public function queue(QueueMessageInterface $message, array $parameters = []) : bool
     {
-        $this->logger->info('Idle queuing a message.', ['service' => Service::IDENTIFIER, 'message' => $message->toArray()]);
+        $this->logger->info('Idle queuing a message.', [
+            'message' => $message->toArray(),
+            'service' => Service::IDENTIFIER,
+        ]);
 
         try {
             $outParameters = array_replace_recursive($this->getQueueingParameters(), $parameters, [
@@ -58,9 +61,14 @@ class Service extends DefaultService
 
             $message->setMessageId((string) $result->get('MessageId'));
 
+            $this->logger->info('Idle successfully queued a message.', [
+                'message' => $message->toArray(),
+                'service' => Service::IDENTIFIER,
+            ]);
+
             return true;
         } catch (Throwable $throwable) {
-            $this->logger->critical('Idle queuing encountered an error.', [
+            $this->logger->critical('Idle queue encountered an error.', [
                 'service' => Service::IDENTIFIER,
                 'message' => $message->toArray(),
                 'error' => $this->throwableToArray($throwable),
@@ -76,7 +84,10 @@ class Service extends DefaultService
 
     public function dequeue(string $queueIdentifier, array $parameters = []) : array
     {
-        $this->logger->info('Idle dequeuing a message.', ['service' => Service::IDENTIFIER, 'queue' => $queueIdentifier]);
+        $this->logger->info('Idle dequeuing messages(s).', [
+            'service' => Service::IDENTIFIER,
+            'queue' => $queueIdentifier,
+        ]);
 
         try {
             $outParameters = array_replace_recursive($this->getDequeueingParameters(), $parameters, [
@@ -86,9 +97,15 @@ class Service extends DefaultService
             /** @var Result $result */
             $result = $this->client->receiveMessage($outParameters);
 
+            $this->logger->info(
+                sprintf('Idle successfully dequeued %s messages(s).', $result->count()), [
+                'service' => Service::IDENTIFIER,
+                'queue' => $queueIdentifier,
+            ]);
+
             return $this->buildMessagesFromResult($queueIdentifier, $result);
         } catch (Throwable $throwable) {
-            $this->logger->critical('Idle dequeuing encountered an error.', [
+            $this->logger->critical('Idle dequeue encountered an error.', [
                 'service' => Service::IDENTIFIER,
                 'queue' => $queueIdentifier,
                 'error' => $this->throwableToArray($throwable),
@@ -118,7 +135,10 @@ class Service extends DefaultService
 
     public function delete(QueueMessageInterface $message, array $parameters = []) : bool
     {
-        $this->logger->info('Deleting message from queue', ['service' => Service::IDENTIFIER, 'message' => $message->toArray()]);
+        $this->logger->info('Idle deleting a message from queue', [
+            'message' => $message->toArray(),
+            'service' => Service::IDENTIFIER,
+        ]);
 
         try {
             $metadata = $message->getTemporaryMetadata();
@@ -134,11 +154,16 @@ class Service extends DefaultService
                 ]
             ));
 
+            $this->logger->info('Idle successfully deleted a message from queue', [
+                'message' => $message->toArray(),
+                'service' => Service::IDENTIFIER,
+            ]);
+
             return true;
         } catch (Throwable $throwable) {
-            $this->logger->critical('Deleting encountered error', [
-                'service' => Service::IDENTIFIER,
+            $this->logger->critical('Idle delete encountered an error', [
                 'message' => $message->toArray(),
+                'service' => Service::IDENTIFIER,
                 'error' => $this->throwableToArray($throwable),
             ]);
 

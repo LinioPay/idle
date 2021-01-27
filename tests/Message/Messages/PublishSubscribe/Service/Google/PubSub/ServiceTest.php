@@ -104,9 +104,11 @@ class ServiceTest extends TestCase
         $this->assertSame($this->config['parameters']['service'], $service->getServiceConfig());
 
         $records = $this->apiTestHandler->getRecords();
-        $this->assertCount(1, $records);
+        $this->assertCount(2, $records);
         $this->assertArrayHasKey('message', $records[0]);
         $this->assertSame('Idle publishing a message.', $records[0]['message']);
+        $this->assertArrayHasKey('message', $records[1]);
+        $this->assertSame('Idle successfully published a message.', $records[1]['message']);
     }
 
     public function testPublishBubblesUpExceptions() : void
@@ -200,9 +202,11 @@ class ServiceTest extends TestCase
         $this->assertSame($gcMessage, $metadata['gcMessage']);
 
         $records = $this->apiTestHandler->getRecords();
-        $this->assertCount(1, $records);
+        $this->assertCount(2, $records);
         $this->assertArrayHasKey('message', $records[0]);
-        $this->assertSame('Idle pulling a message.', $records[0]['message']);
+        $this->assertSame('Idle pulling from subscription.', $records[0]['message']);
+        $this->assertArrayHasKey('message', $records[1]);
+        $this->assertSame('Idle pulled 1 message(s) from subscription.', $records[1]['message']);
     }
 
     public function testPullOneSuccessfully()
@@ -338,9 +342,11 @@ class ServiceTest extends TestCase
         $this->assertSame($this->config, $service->getConfig());
 
         $records = $this->apiTestHandler->getRecords();
-        $this->assertCount(1, $records);
+        $this->assertCount(2, $records);
         $this->assertArrayHasKey('message', $records[0]);
         $this->assertSame('Idle acknowledging a message.', $records[0]['message']);
+        $this->assertArrayHasKey('message', $records[1]);
+        $this->assertSame('Idle successfully acknowledged a message.', $records[1]['message']);
     }
 
     public function testThrowsInvalidMessageParameterExceptionWhenMissingGCMessage() : void

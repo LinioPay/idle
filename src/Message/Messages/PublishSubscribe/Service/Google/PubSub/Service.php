@@ -35,7 +35,10 @@ class Service extends DefaultService
 
     public function publish(TopicMessageInterface $message, array $parameters = []) : bool
     {
-        $this->logger->info('Idle publishing a message.', ['service' => self::IDENTIFIER, 'message' => $message->toArray()]);
+        $this->logger->info('Idle publishing a message.', [
+            'message' => $message->toArray(),
+            'service' => self::IDENTIFIER,
+        ]);
 
         try {
             $topicIdentifier = $message->getTopicIdentifier();
@@ -59,11 +62,16 @@ class Service extends DefaultService
 
             $message->setMessageId((string) $result['messageIds'][0] ?? '');
 
+            $this->logger->info('Idle successfully published a message.', [
+                'message' => $message->toArray(),
+                'service' => self::IDENTIFIER,
+            ]);
+
             return true;
         } catch (Throwable $throwable) {
             $this->logger->critical('Idle publish encountered an error.', [
-                'service' => self::IDENTIFIER,
                 'message' => $message->toArray(),
+                'service' => self::IDENTIFIER,
                 'error' => $this->throwableToArray($throwable),
             ]);
 
@@ -82,7 +90,10 @@ class Service extends DefaultService
      */
     public function pull(string $subscriptionIdentifier, array $parameters = []) : array
     {
-        $this->logger->info('Idle pulling a message.', ['service' => self::IDENTIFIER, 'subscription' => $subscriptionIdentifier]);
+        $this->logger->info('Idle pulling from subscription.', [
+                'service' => self::IDENTIFIER,
+                'subscription' => $subscriptionIdentifier,
+        ]);
 
         try {
             $subscription = $this->client->subscription($subscriptionIdentifier);
@@ -92,11 +103,19 @@ class Service extends DefaultService
                 $parameters
             ));
 
+            $this->logger->info(
+                sprintf('Idle pulled %s message(s) from subscription.', count($result)),
+                [
+                    'service' => self::IDENTIFIER,
+                    'subscription' => $subscriptionIdentifier,
+                ]
+            );
+
             return $this->buildMessagesFromResult($subscriptionIdentifier, $result);
         } catch (Throwable $throwable) {
             $this->logger->critical('Idle pull encountered an error.', [
                 'service' => self::IDENTIFIER,
-                'queue' => $subscriptionIdentifier,
+                'subscription' => $subscriptionIdentifier,
                 'error' => $this->throwableToArray($throwable),
             ]);
 
@@ -124,7 +143,10 @@ class Service extends DefaultService
 
     public function acknowledge(SubscriptionMessageInterface $message, array $parameters = []) : bool
     {
-        $this->logger->info('Idle acknowledging a message.', ['service' => self::IDENTIFIER, 'message' => $message->toArray()]);
+        $this->logger->info('Idle acknowledging a message.', [
+            'message' => $message->toArray(),
+            'service' => self::IDENTIFIER,
+        ]);
 
         try {
             $metadata = $message->getTemporaryMetadata();
@@ -140,11 +162,16 @@ class Service extends DefaultService
                 $parameters
             ));
 
+            $this->logger->info('Idle successfully acknowledged a message.', [
+                'message' => $message->toArray(),
+                'service' => self::IDENTIFIER,
+            ]);
+
             return true;
         } catch (Throwable $throwable) {
             $this->logger->critical('Idle acknowledge encountered an error.', [
-                'service' => self::IDENTIFIER,
                 'message' => $message->toArray(),
+                'service' => self::IDENTIFIER,
                 'error' => $this->throwableToArray($throwable),
             ]);
 

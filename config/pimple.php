@@ -37,7 +37,7 @@ $container['config'] = [
 // Logs
 $container[LoggerInterface::class] = function() {
     $log = new Logger('idle');
-    $log->pushHandler(new MonologStreamHandler('php://stdout', Logger::WARNING));
+    $log->pushHandler(new MonologStreamHandler('php://stdout'));
     return $log;
 };
 
@@ -53,7 +53,7 @@ $container[MessageFactoryInterface::class] = function(PimpleContainer $container
 $container[ServiceFactoryInterface::class] = function(PimpleContainer $container) {
     return (new ServiceFactory())($container[PSRContainer::class]);
 };
-$container[JobFactoryInterface::class] = function(PSRContainer $container) {
+$container[JobFactoryInterface::class] = function(PimpleContainer $container) {
     return (new JobFactory())($container[PSRContainer::class]);
 };
 $container[MessageJobInterface::class] = function(PimpleContainer $container) {
