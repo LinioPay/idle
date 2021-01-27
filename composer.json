@@ -34,7 +34,7 @@
         "google/cloud-pubsub": "^1.24",
         "google/cloud-tasks": "^1.6",
         "infection/infection": "^0.10",
-        "laminas/laminas-hydrator": "^3.0",
+        "laminas/laminas-hydrator": "^4.1",
         "league/fractal": "^0.19",
         "michaelmoussa/php-coverage-checker": "^1.1",
         "mockery/mockery": "^1.4",
