@@ -14,11 +14,6 @@ interface Job
     public function process() : void;
 
     /**
-     * Verifies the config for the job is valid.
-     */
-    public function validateConfig() : void;
-
-    /**
      * Retrieve an array of error messages which occurred while processing the job.
      */
     public function getErrors() : array;

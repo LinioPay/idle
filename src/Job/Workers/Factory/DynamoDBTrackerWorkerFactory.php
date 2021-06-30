@@ -13,14 +13,12 @@ class DynamoDBTrackerWorkerFactory extends DefaultWorkerFactory
 {
     public function createWorker(string $workerIdentifier, array $parameters = []) : WorkerInterface
     {
-        $idleConfig = $this->container->get('config')['idle'] ?? [];
-
-        $defaultConfig = $idleConfig['job']['worker']['types'][DynamoDBTrackerWorker::IDENTIFIER] ?? [];
+        $workerConfig = $this->idleConfig->getWorkerConfig(DynamoDBTrackerWorker::IDENTIFIER);
 
         $logger = $this->container->get(LoggerInterface::class);
 
-        $client = new DynamoDbClient($defaultConfig['client'] ?? []);
+        $client = new DynamoDbClient($workerConfig['client'] ?? []);
 
-        return new DynamoDBTrackerWorker($client, $defaultConfig, $logger);
+        return new DynamoDBTrackerWorker($client, $workerConfig, $logger);
     }
 }

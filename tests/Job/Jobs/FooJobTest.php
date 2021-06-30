@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Job\Jobs;
 
+use LinioPay\Idle\Config\IdleConfig;
 use LinioPay\Idle\Job\Workers\Factory\WorkerFactory;
 use LinioPay\Idle\Job\Workers\FooWorker;
 use LinioPay\Idle\TestCase;
@@ -12,7 +13,7 @@ use Mockery\Mock;
 
 class FooJobTest extends TestCase
 {
-    /** @var array */
+    /** @var IdleConfig */
     protected $config;
 
     /** @var Mock|WorkerFactory */
@@ -24,13 +25,12 @@ class FooJobTest extends TestCase
 
         $this->workerFactory = m::mock(WorkerFactory::class);
 
-        $this->config = [
-            'types' => [
+        $this->config = new IdleConfig([], [], [
                 FooJob::IDENTIFIER => [
                     'class' => FooJob::class,
                     'workers' => [
                         [
-                            'class' => FooWorker::class,
+                            'type' => FooWorker::IDENTIFIER,
                             'parameters' => [],
                         ],
                     ],
@@ -38,8 +38,7 @@ class FooJobTest extends TestCase
                         'red' => true,
                     ],
                 ],
-            ],
-        ];
+        ]);
     }
 
     public function tearDown() : void
@@ -57,7 +56,7 @@ class FooJobTest extends TestCase
             ->andReturn($worker);
 
         $job = new FooJob($this->config, $this->workerFactory);
-        $job->validateConfig();
+
         $job->process();
         $job->validateParameters();
 

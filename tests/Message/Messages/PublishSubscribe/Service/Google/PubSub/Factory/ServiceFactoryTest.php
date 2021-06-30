@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Message\Messages\PublishSubscribe\Service\Google\PubSub\Factory;
 
+use LinioPay\Idle\Config\IdleConfig;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\Message\TopicMessage;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\Service\Google\PubSub\Service as PubSubService;
 use LinioPay\Idle\TestCase;
@@ -26,47 +27,41 @@ class ServiceFactoryTest extends TestCase
     {
         $container = m::mock(ContainerInterface::class);
         $container->shouldReceive('get')
-            ->with('config')
-            ->andReturn([
-                'idle' => [
-                    'message' => [
-                        'types' => [
-                            TopicMessage::IDENTIFIER => [
-                                'types' => [
-                                    'my-topic' => [
-                                        'publish' => [
-                                            'parameters' => [
-                                            ],
-                                        ],
-                                        'parameters' => [
-                                            'service' => PubSubService::IDENTIFIER,
-                                            'red' => true,
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
-                        'service' => [
-                            'types' => [
-                                PubSubService::IDENTIFIER => [
-                                    'class' => PubSubService::class,
-                                    'client' => [
-                                        'projectId' => 'fooProject',
-                                    ],
-                                ],
+            ->with(IdleConfig::class)
+            ->andReturn(
+                new IdleConfig(
+                    [
+                        PubSubService::IDENTIFIER => [
+                            'class' => PubSubService::class,
+                            'client' => [
+                                'projectId' => 'fooProject',
                             ],
                         ],
                     ],
-                ],
-            ]);
+                    [
+                        TopicMessage::IDENTIFIER => [
+                            'types' => [
+                                'my-topic' => [
+                                    'publish' => [
+                                        'parameters' => [
+                                        ],
+                                    ],
+                                    'parameters' => [
+                                        'service' => PubSubService::IDENTIFIER,
+                                        'red' => true,
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]
+                ));
 
         $container->shouldReceive('get')
             ->once()
             ->with(LoggerInterface::class)
             ->andReturn(new Logger('api', [$this->apiTestHandler]));
 
-        $factory = new ServiceFactory();
-        $factory($container);
+        $factory = new ServiceFactory($container);
 
         $message = new TopicMessage('my-topic', 'foobody');
         $service = $factory->createFromMessage($message);

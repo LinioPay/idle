@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Job\Workers\Factory;
 
-use LinioPay\Idle\Job\Exception\ConfigurationException;
+use LinioPay\Idle\Config\Exception\ConfigurationException;
+use LinioPay\Idle\Config\IdleConfig;
 use LinioPay\Idle\Job\Workers\BazWorker;
 use LinioPay\Idle\Job\Workers\FooWorker;
 use LinioPay\Idle\TestCase;
@@ -17,32 +18,21 @@ class WorkerFactoryTest extends TestCase
     {
         $container = m::mock(ContainerInterface::class);
         $container->shouldReceive('get')
+            ->with(IdleConfig::class)
+            ->andReturn(new IdleConfig([], [], [], [
+                BazWorker::IDENTIFIER => [
+                    'class' => BazWorker::class,
+                    'parameters' => [
+                        'red' => true,
+                    ],
+                ],
+            ]));
+        $container->shouldReceive('get')
             ->once()
             ->with(BazWorker::class)
-            ->andReturn((new BazWorkerFactory())($container));
-        $container->shouldReceive('get')
-            ->twice()
-            ->with('config')
-            ->andReturn([
-               'idle' => [
-                   'job' => [
-                       'worker' => [
-                           'types' => [
-                               BazWorker::IDENTIFIER => [
-                                   'class' => BazWorker::class,
-                                   'parameters' => [
-                                       'red' => true,
-                                   ],
-                               ],
-                           ],
-                       ],
-                   ],
-               ],
-            ]);
+            ->andReturn(new BazWorkerFactory($container));
 
-        $factory = new WorkerFactory();
-
-        $factory($container);
+        $factory = new WorkerFactory($container);
         $this->assertInstanceOf(WorkerFactory::class, $factory);
 
         $worker = $factory->createWorker(BazWorker::IDENTIFIER, ['blue' => true]);
@@ -58,28 +48,18 @@ class WorkerFactoryTest extends TestCase
     {
         $container = m::mock(ContainerInterface::class);
         $container->shouldReceive('get')
-            ->twice()
-            ->with('config')
-            ->andReturn([
-                'idle' => [
-                    'job' => [
-                        'worker' => [
-                            'types' => [
-                                FooWorker::IDENTIFIER => [
-                                    'class' => FooWorker::class,
-                                    'parameters' => [
-                                        'red' => true,
-                                    ],
-                                ],
-                            ],
-                        ],
+            ->with(IdleConfig::class)
+            ->andReturn(new IdleConfig([], [], [], [
+                FooWorker::IDENTIFIER => [
+                    'class' => FooWorker::class,
+                    'parameters' => [
+                        'red' => true,
                     ],
                 ],
-            ]);
+            ]));
 
-        $factory = new WorkerFactory();
+        $factory = new WorkerFactory($container);
 
-        $factory($container);
         $this->assertInstanceOf(WorkerFactory::class, $factory);
 
         $worker = $factory->createWorker(FooWorker::IDENTIFIER, ['blue' => true]);
@@ -95,24 +75,12 @@ class WorkerFactoryTest extends TestCase
     {
         $container = m::mock(ContainerInterface::class);
         $container->shouldReceive('get')
-            ->twice()
-            ->with('config')
-            ->andReturn([
-                'idle' => [
-                    'job' => [
-                        'worker' => [
-                            'types' => [
-                                BazWorker::IDENTIFIER => [
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ]);
+            ->with(IdleConfig::class)
+            ->andReturn(new IdleConfig([], [], [], [
+                BazWorker::IDENTIFIER => [],
+            ]));
 
-        $factory = new WorkerFactory();
-
-        $factory($container);
+        $factory = new WorkerFactory($container);
         $this->assertInstanceOf(WorkerFactory::class, $factory);
 
         $this->expectException(ConfigurationException::class);

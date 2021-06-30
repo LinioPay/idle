@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Message\Messages\Factory;
 
+use LinioPay\Idle\Config\IdleConfig;
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\SubscriptionMessage;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\TopicMessage;
@@ -39,9 +40,12 @@ class MessageFactoryTest extends TestCase
             ->once()
             ->with(ServiceFactoryInterface::class)
             ->andReturn($serviceFactory);
+        $container->shouldReceive('get')
+            ->once()
+            ->with(IdleConfig::class)
+            ->andReturn(new IdleConfig());
 
-        $factory = new MessageFactory();
-        $factory($container);
+        $factory = new MessageFactory($container);
 
         $out = $factory->createMessage($parameters);
         $this->assertInstanceOf(ServiceInterface::class, $out->getService());
@@ -52,9 +56,12 @@ class MessageFactoryTest extends TestCase
     public function testCreatesMessageThrowsInvalidMessageParameterExceptionWithInvalidType()
     {
         $container = m::mock(ContainerInterface::class);
+        $container->shouldReceive('get')
+            ->once()
+            ->with(IdleConfig::class)
+            ->andReturn(new IdleConfig());
 
-        $factory = new MessageFactory();
-        $factory($container);
+        $factory = new MessageFactory($container);
 
         $this->expectException(InvalidMessageParameterException::class);
         $factory->createMessage([]);
@@ -86,9 +93,12 @@ class MessageFactoryTest extends TestCase
             ->once()
             ->with(ServiceFactoryInterface::class)
             ->andReturn($serviceFactory);
+        $container->shouldReceive('get')
+            ->once()
+            ->with(IdleConfig::class)
+            ->andReturn(new IdleConfig());
 
-        $factory = new MessageFactory();
-        $factory($container);
+        $factory = new MessageFactory($container);
 
         $this->assertInstanceOf($outcomeClass, $factory->receiveMessageOrFail($parameters));
     }
@@ -119,9 +129,12 @@ class MessageFactoryTest extends TestCase
             ->once()
             ->with(ServiceFactoryInterface::class)
             ->andReturn($serviceFactory);
+        $container->shouldReceive('get')
+            ->once()
+            ->with(IdleConfig::class)
+            ->andReturn(new IdleConfig());
 
-        $factory = new MessageFactory();
-        $factory($container);
+        $factory = new MessageFactory($container);
 
         $messages = $factory->receiveMessages($parameters);
 
@@ -142,9 +155,12 @@ class MessageFactoryTest extends TestCase
             ->once()
             ->with(ServiceFactoryInterface::class)
             ->andReturn($serviceFactory);
+        $container->shouldReceive('get')
+            ->once()
+            ->with(IdleConfig::class)
+            ->andReturn(new IdleConfig());
 
-        $factory = new MessageFactory();
-        $factory($container);
+        $factory = new MessageFactory($container);
 
         $this->expectException(InvalidMessageParameterException::class);
         $factory->receiveMessageOrFail(['topic_identifier' => 'foo']);
@@ -162,9 +178,12 @@ class MessageFactoryTest extends TestCase
             ->once()
             ->with(ServiceFactoryInterface::class)
             ->andReturn($serviceFactory);
+        $container->shouldReceive('get')
+            ->once()
+            ->with(IdleConfig::class)
+            ->andReturn(new IdleConfig());
 
-        $factory = new MessageFactory();
-        $factory($container);
+        $factory = new MessageFactory($container);
 
         $this->assertInstanceOf(SendableMessage::class, $factory->createSendableMessage(['topic_identifier' => 'foo']));
     }
@@ -181,9 +200,12 @@ class MessageFactoryTest extends TestCase
             ->once()
             ->with(ServiceFactoryInterface::class)
             ->andReturn($serviceFactory);
+        $container->shouldReceive('get')
+            ->once()
+            ->with(IdleConfig::class)
+            ->andReturn(new IdleConfig());
 
-        $factory = new MessageFactory();
-        $factory($container);
+        $factory = new MessageFactory($container);
 
         $this->expectException(InvalidMessageParameterException::class);
         $factory->createSendableMessage(['subscription_identifier' => 'foo']);

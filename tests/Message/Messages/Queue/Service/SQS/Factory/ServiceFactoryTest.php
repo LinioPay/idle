@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Message\Messages\Queue\Service\SQS\Factory;
 
+use LinioPay\Idle\Config\IdleConfig;
 use LinioPay\Idle\Message\Messages\Queue\Message as QueueMessage;
 use LinioPay\Idle\Message\Messages\Queue\Service\SQS\Service as SQSService;
 use LinioPay\Idle\TestCase;
@@ -25,77 +26,72 @@ class ServiceFactoryTest extends TestCase
     {
         $container = m::mock(ContainerInterface::class);
         $container->shouldReceive('get')
-            ->with('config')
-            ->andReturn([
-                'idle' => [
-                    'message' => [
-                        'types' => [
-                            QueueMessage::IDENTIFIER => [
-                                'default' => [
-                                    'dequeue' => [
-                                        'parameters' => [
-                                            'MaxNumberOfMessages' => 1,
-                                            'Delay' => 30,
-                                        ],
-                                        'error' => [
-                                            'suppression' => true,
-                                        ],
-                                    ],
-                                    'queue' => [
-                                        'parameters' => [],
-                                        'error' => [
-                                            'suppression' => true,
-                                        ],
-                                    ],
-                                    'parameters' => [
-                                        'service' => SQSService::IDENTIFIER,
-                                    ],
-                                ],
-                                'service_default' => [
-                                    SQSService::IDENTIFIER => [
-                                        'dequeue' => [
-                                            'parameters' => [
-                                                'Delay' => 60,
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                                'types' => [
-                                    'my-queue' => [
-                                        'dequeue' => [
-                                            'parameters' => [
-                                                'MaxNumberOfMessages' => 2,
-                                            ],
-                                        ],
-                                        'parameters' => [
-                                            'red' => true,
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
-                        'service' => [
-                            'types' => [
-                                SQSService::IDENTIFIER => [
-                                    'class' => SQSService::class,
-                                    'client' => [
-                                        'version' => 'latest',
-                                        'region' => 'us-east-1',
-                                    ],
-                                ],
+            ->with(IdleConfig::class)
+            ->andReturn(
+                new IdleConfig(
+                    [
+                        SQSService::IDENTIFIER => [
+                            'class' => SQSService::class,
+                            'client' => [
+                                'version' => 'latest',
+                                'region' => 'us-east-1',
                             ],
                         ],
                     ],
-                ],
-            ]);
+                    [
+                        QueueMessage::IDENTIFIER => [
+                            'default' => [
+                                'dequeue' => [
+                                    'parameters' => [
+                                        'MaxNumberOfMessages' => 1,
+                                        'Delay' => 30,
+                                    ],
+                                    'error' => [
+                                        'suppression' => true,
+                                    ],
+                                ],
+                                'queue' => [
+                                    'parameters' => [],
+                                    'error' => [
+                                        'suppression' => true,
+                                    ],
+                                ],
+                                'parameters' => [
+                                    'service' => SQSService::IDENTIFIER,
+                                ],
+                            ],
+                            'service_default' => [
+                                SQSService::IDENTIFIER => [
+                                    'dequeue' => [
+                                        'parameters' => [
+                                            'Delay' => 60,
+                                        ],
+                                    ],
+                                ],
+                            ],
+                            'types' => [
+                                'my-queue' => [
+                                    'dequeue' => [
+                                        'parameters' => [
+                                            'MaxNumberOfMessages' => 2,
+                                        ],
+                                    ],
+                                    'parameters' => [
+                                        'red' => true,
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]
+                )
+            );
 
         $container->shouldReceive('get')
             ->once()
             ->with(LoggerInterface::class)
             ->andReturn(new \Monolog\Logger('api', [$this->apiTestHandler]));
 
-        $factory = new ServiceFactory();
-        $factory($container);
+        $factory = new ServiceFactory($container);
 
         $message = new QueueMessage\Message('my-queue', 'foobody');
         $service = $factory->createFromMessage($message);

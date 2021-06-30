@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LinioPay\Idle\Job\Exception;
+namespace LinioPay\Idle\Job\Workers\Exception;
 
 use Exception;
 use LinioPay\Idle\Job\Worker;

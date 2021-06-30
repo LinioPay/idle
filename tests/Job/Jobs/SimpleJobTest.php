@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace LinioPay\Idle\Job\Jobs;
 
 use function json_decode;
-use LinioPay\Idle\Job\Exception\ConfigurationException;
+use LinioPay\Idle\Config\Exception\ConfigurationException;
+use LinioPay\Idle\Config\IdleConfig;
 use LinioPay\Idle\Job\Exception\InvalidJobParameterException;
 use LinioPay\Idle\Job\Job;
 use LinioPay\Idle\Job\Worker;
@@ -20,6 +21,9 @@ class SimpleJobTest extends TestCase
     /** @var array */
     protected $config;
 
+    /** @var IdleConfig */
+    protected $idleConfig;
+
     /** @var Mock|WorkerFactory */
     protected $workerFactory;
 
@@ -29,8 +33,10 @@ class SimpleJobTest extends TestCase
 
         $this->workerFactory = m::mock(WorkerFactory::class);
 
-        $this->config = [
-            'types' => [
+        $this->idleConfig = new IdleConfig(
+            [],
+            [],
+            [
                 SimpleJob::IDENTIFIER => [
                     'class' => SimpleJob::class,
                     'parameters' => [
@@ -49,14 +55,12 @@ class SimpleJobTest extends TestCase
                     ],
                 ],
             ],
-            'worker' => [
-                'types' => [
-                    FooWorker::IDENTIFIER => [
-                        'class' => FooWorker::class,
-                    ],
+            [
+                FooWorker::IDENTIFIER => [
+                    'class' => FooWorker::class,
                 ],
-            ],
-        ];
+            ]
+        );
     }
 
     public function tearDown() : void
@@ -73,9 +77,9 @@ class SimpleJobTest extends TestCase
         $this->workerFactory->shouldReceive('createWorker')
             ->andReturn($worker);
 
-        $job = new SimpleJob($this->config, $this->workerFactory);
+        $job = new SimpleJob($this->idleConfig, $this->workerFactory);
         $job->setParameters(['simple_identifier' => 'foo_job']);
-        $job->validateConfig();
+
         $job->process();
         $job->validateParameters();
 
@@ -97,7 +101,7 @@ class SimpleJobTest extends TestCase
         $this->workerFactory->shouldReceive('createWorker')
             ->andReturn($worker);
 
-        $job = new SimpleJob($this->config, $this->workerFactory);
+        $job = new SimpleJob($this->idleConfig, $this->workerFactory);
         $job->setParameters(['simple_identifier' => 'foo_job']);
         $job->process();
 
@@ -125,7 +129,7 @@ class SimpleJobTest extends TestCase
     {
         $worker = m::mock(Worker::class);
         $worker->shouldReceive('work')
-            ->andThrow(new ConfigurationException('foo'));
+            ->andThrow(new ConfigurationException(ConfigurationException::ENTITY_WORKER, 'foo', 'class'));
         $worker->shouldReceive('getErrors')
             ->once()
             ->andReturn([]);
@@ -133,7 +137,7 @@ class SimpleJobTest extends TestCase
         $this->workerFactory->shouldReceive('createWorker')
             ->andReturn($worker);
 
-        $job = new SimpleJob($this->config, $this->workerFactory);
+        $job = new SimpleJob($this->idleConfig, $this->workerFactory);
         $job->setParameters(['simple_identifier' => 'foo_job']);
 
         try {
@@ -141,7 +145,7 @@ class SimpleJobTest extends TestCase
         } catch (ConfigurationException $e) {
             $errors = $job->getErrors();
             $this->assertArrayHasKey(0, $errors);
-            $this->assertSame('Encountered an error: Job foo is missing a proper configuration.', $errors[0]);
+            $this->assertSame('Encountered an error: Worker foo is missing a proper class configuration.', $errors[0]);
         }
     }
 
@@ -155,9 +159,9 @@ class SimpleJobTest extends TestCase
         $this->workerFactory->shouldReceive('createWorker')
             ->andReturn($worker);
 
-        $job = new SimpleJob($this->config, $this->workerFactory);
+        $job = new SimpleJob($this->idleConfig, $this->workerFactory);
         $job->setParameters(['simple_identifier' => 'foo_job']);
-        $job->validateConfig();
+
         $job->process();
         $job->validateParameters();
 
@@ -178,9 +182,9 @@ class SimpleJobTest extends TestCase
         $this->workerFactory->shouldReceive('createWorker')
             ->andReturn($worker);
 
-        $job = new SimpleJob($this->config, $this->workerFactory);
+        $job = new SimpleJob($this->idleConfig, $this->workerFactory);
         $job->setParameters(['simple_identifier' => 'foo_job']);
-        $job->validateConfig();
+
         $job->process();
         $job->validateParameters();
 
@@ -190,14 +194,14 @@ class SimpleJobTest extends TestCase
 
     public function testCanGetIdentifier()
     {
-        $job = new SimpleJob($this->config, $this->workerFactory);
+        $job = new SimpleJob($this->idleConfig, $this->workerFactory);
 
         $this->assertSame('simple', $job->getTypeIdentifier());
     }
 
     public function testCanGetAndSetWorkerContext()
     {
-        $job = new SimpleJob($this->config, $this->workerFactory);
+        $job = new SimpleJob($this->idleConfig, $this->workerFactory);
 
         $job->setContext(['foo' => 'bar']);
         $this->assertSame('bar', $job->getContextEntry('foo'));
@@ -208,7 +212,7 @@ class SimpleJobTest extends TestCase
 
     public function testCanGetAndSetOutput()
     {
-        $job = new SimpleJob($this->config, $this->workerFactory);
+        $job = new SimpleJob($this->idleConfig, $this->workerFactory);
 
         $job->setOutput(['foo' => 'bar']);
         $job->addOutput('baz', 'foo');
@@ -221,25 +225,18 @@ class SimpleJobTest extends TestCase
         $this->assertArrayHasKey('baz', $output);
     }
 
-    public function testItThrowsConfigurationExceptionWhenJobConfigurationIsInvalid()
-    {
-        $failConfig = [
-            'types' => [
-                SimpleJob::IDENTIFIER => [
-                ],
-            ],
-        ];
-
-        $this->expectException(ConfigurationException::class);
-
-        $job = new SimpleJob($failConfig, $this->workerFactory);
-        $job->validateConfig();
-    }
-
     public function testThrowsInvalidParameterExceptionWhenNoSimpleIdentifierProvided()
     {
         /** @var Job $job */
-        $job = $this->fake(SimpleJob::class);
+        $job = $this->fake(SimpleJob::class, ['idleConfig' => new IdleConfig(
+            [],
+            [],
+            [
+                SimpleJob::IDENTIFIER => [
+                    'class' => SimpleJob::class,
+                ],
+            ]
+        )]);
         $this->expectException(InvalidJobParameterException::class);
         $job->validateParameters();
     }

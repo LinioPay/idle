@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Job\Jobs;
 
-use LinioPay\Idle\Job\Exception\ConfigurationException;
+use LinioPay\Idle\Config\IdleConfig;
 use LinioPay\Idle\Job\Exception\InvalidJobParameterException;
 use LinioPay\Idle\Job\Worker as WorkerInterface;
 use LinioPay\Idle\Job\WorkerFactory as WorkerFactoryInterface;
@@ -21,9 +21,9 @@ class MessageJob extends DefaultJob
     /** @var MessageFactoryInterface */
     protected $messageFactory;
 
-    public function __construct(array $config, MessageFactoryInterface $messageFactory, WorkerFactoryInterface $workerFactory)
+    public function __construct(IdleConfig $idleConfig, MessageFactoryInterface $messageFactory, WorkerFactoryInterface $workerFactory)
     {
-        $this->config = $config;
+        $this->idleConfig = $idleConfig;
         $this->messageFactory = $messageFactory;
         $this->workerFactory = $workerFactory;
     }
@@ -34,7 +34,7 @@ class MessageJob extends DefaultJob
             ? $parameters['message']
             : $this->messageFactory->createMessage($parameters['message'] ?? []);
 
-        $config = $this->getMessageJobConfig();
+        $config = $this->getMessageJobSourceConfig();
 
         parent::setParameters(array_merge_recursive($config['parameters'] ?? [], $parameters));
     }
@@ -44,31 +44,25 @@ class MessageJob extends DefaultJob
         if (!is_a($this->message, MessageInterface::class)) {
             throw new InvalidJobParameterException($this, 'message');
         }
-
-        $parameters = $this->getConfigParameters();
-
-        if (!isset($parameters[$this->message->getIdleIdentifier()][$this->message->getSourceName()])) {
-            throw new ConfigurationException(self::IDENTIFIER);
-        }
     }
 
-    protected function getMessageJobConfig() : array
+    protected function getMessageJobSourceConfig() : array
     {
-        $config = $this->getConfigParameters();
+        $messageJobParameters = $this->idleConfig->getJobParametersConfig(self::IDENTIFIER);
+        $messageTypeIdentifier = $this->message->getIdleIdentifier();
+        $messageSourceIdentifier = $this->message->getSourceName();
 
-        return $config[$this->message->getIdleIdentifier()][$this->message->getSourceName()] ?? [];
+        return $messageJobParameters[$messageTypeIdentifier][$messageSourceIdentifier] ?? [];
     }
 
-    protected function getMessageJobConfigWorkers() : array
+    /**
+     * Obtain the list of workers which will be responsible for processing the given Message.
+     */
+    protected function getJobWorkersConfig() : array
     {
-        $config = $this->getMessageJobConfig();
+        $config = $this->getMessageJobSourceConfig();
 
         return $config['parameters']['workers'] ?? [];
-    }
-
-    protected function getWorkersConfig() : array
-    {
-        return $this->getMessageJobConfigWorkers();
     }
 
     protected function buildWorker(string $workerIdentifier, array $workerParameters) : WorkerInterface

@@ -6,9 +6,9 @@ namespace LinioPay\Idle\Job\Workers;
 
 use Aws\DynamoDb\DynamoDbClient;
 use Aws\DynamoDb\Marshaler;
-use LinioPay\Idle\Job\Exception\InvalidWorkerParameterException;
 use LinioPay\Idle\Job\Job;
 use LinioPay\Idle\Job\TrackingWorker as TrackingWorkerInterface;
+use LinioPay\Idle\Job\Workers\Exception\InvalidWorkerParameterException;
 use Psr\Log\LoggerInterface;
 use Throwable;
 

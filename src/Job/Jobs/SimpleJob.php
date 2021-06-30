@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Job\Jobs;
 
+use LinioPay\Idle\Config\IdleConfig;
 use LinioPay\Idle\Job\Exception\InvalidJobParameterException;
 use LinioPay\Idle\Job\WorkerFactory as WorkerFactoryInterface;
 
@@ -14,9 +15,9 @@ class SimpleJob extends DefaultJob
     /** @var string */
     protected $simpleIdentifier;
 
-    public function __construct(array $config, WorkerFactoryInterface $workerFactory)
+    public function __construct(IdleConfig $idleConfig, WorkerFactoryInterface $workerFactory)
     {
-        $this->config = $config;
+        $this->idleConfig = $idleConfig;
         $this->workerFactory = $workerFactory;
     }
 
@@ -31,29 +32,24 @@ class SimpleJob extends DefaultJob
 
     public function validateParameters() : void
     {
-        $config = $this->getConfigParameters();
+        $jobConfigParameters = $this->idleConfig->getJobParametersConfig(self::IDENTIFIER);
 
-        if (empty($this->simpleIdentifier) || !isset($config['supported'][$this->simpleIdentifier])) {
+        if (empty($this->simpleIdentifier) || !isset($jobConfigParameters['supported'][$this->simpleIdentifier])) {
             throw new InvalidJobParameterException($this, 'simple_identifier');
         }
     }
 
     protected function getSimpleJobConfig() : array
     {
-        $config = $this->getConfigParameters();
+        $jobConfigParameters = $this->idleConfig->getJobParametersConfig(self::IDENTIFIER);
 
-        return $config['supported'][$this->simpleIdentifier] ?? [];
+        return $jobConfigParameters['supported'][$this->simpleIdentifier] ?? [];
     }
 
-    protected function getSimpleJobConfigWorkers() : array
+    protected function getJobWorkersConfig() : array
     {
         $config = $this->getSimpleJobConfig();
 
         return $config['parameters']['workers'] ?? [];
-    }
-
-    protected function getWorkersConfig() : array
-    {
-        return $this->getSimpleJobConfigWorkers();
     }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Job\Jobs;
 
-use LinioPay\Idle\Job\Exception\ConfigurationException;
+use LinioPay\Idle\Config\IdleConfig;
 use LinioPay\Idle\Job\Exception\InvalidJobParameterException;
 use LinioPay\Idle\Job\Job;
 use LinioPay\Idle\Job\TrackingWorker;
@@ -28,8 +28,8 @@ class MessageJobTest extends TestCase
     /** @var Mock|MessageFactoryInterface */
     protected $messageFactory;
 
-    /** @var array */
-    protected $jobConfig;
+    /** @var IdleConfig */
+    protected $idleConfig;
 
     public function setUp() : void
     {
@@ -38,8 +38,10 @@ class MessageJobTest extends TestCase
         $this->workerFactory = m::mock(WorkerFactory::class);
         $this->messageFactory = m::mock(MessageFactoryInterface::class);
 
-        $this->jobConfig = [
-            'types' => [
+        $this->idleConfig = new IdleConfig(
+            [],
+            [],
+            [
                 MessageJob::IDENTIFIER => [
                     'class' => MessageJob::class,
                     'parameters' => [
@@ -65,21 +67,19 @@ class MessageJobTest extends TestCase
                     ],
                 ],
             ],
-            'worker' => [
-                'types' => [
-                    DynamoDBTrackerWorker::IDENTIFIER => [
-                        'class' => DynamoDBTrackerWorker::class,
-                        'client' => [
-                            'version' => 'latest',
-                            'region' => 'us-east-1',
-                        ],
-                    ],
-                    FooWorker::IDENTIFIER => [
-                        'class' => FooWorker::class,
+            [
+                DynamoDBTrackerWorker::IDENTIFIER => [
+                    'class' => DynamoDBTrackerWorker::class,
+                    'client' => [
+                        'version' => 'latest',
+                        'region' => 'us-east-1',
                     ],
                 ],
-            ],
-        ];
+                FooWorker::IDENTIFIER => [
+                    'class' => FooWorker::class,
+                ],
+            ]
+        );
     }
 
     public function tearDown() : void
@@ -130,8 +130,8 @@ class MessageJobTest extends TestCase
         $this->workerFactory->shouldReceive('createWorker')
             ->andReturn($worker, $trackingWorker);
 
-        $job = new MessageJob($this->jobConfig, $this->messageFactory, $this->workerFactory);
-        $job->validateConfig();
+        $job = new MessageJob($this->idleConfig, $this->messageFactory, $this->workerFactory);
+
         $job->setParameters(['message' => $message]);
         $job->validateParameters();
         $job->process();
@@ -139,14 +139,6 @@ class MessageJobTest extends TestCase
         $this->assertTrue($job->isSuccessful());
         $this->assertGreaterThan(0, $job->getDuration());
         $this->assertEmpty($job->getErrors());
-    }
-
-    public function testFailsToInstantiateIfInvalidConfiguration()
-    {
-        $this->expectException(ConfigurationException::class);
-        $job = new MessageJob($this->jobConfig, $this->messageFactory, $this->workerFactory);
-        $job->setParameters(['message' => new QueueMessage('foo', 'bar')]);
-        $job->validateParameters();
     }
 
     public function testThrowsInvalidParameterExceptionWhenNoMessageProvided()

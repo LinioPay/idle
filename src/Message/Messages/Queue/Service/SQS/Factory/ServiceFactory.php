@@ -15,7 +15,7 @@ class ServiceFactory extends DefaultServiceFactory
 {
     public function createFromMessage(Message $message) : Service
     {
-        $messageConfig = $this->getMessageConfig($message);
+        $messageConfig = $this->idleConfig->getMessageConfig($message);
 
         $logger = $this->container->get(LoggerInterface::class);
 

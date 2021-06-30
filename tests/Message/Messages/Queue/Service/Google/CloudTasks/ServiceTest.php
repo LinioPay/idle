@@ -10,9 +10,9 @@ use Google\Cloud\Tasks\V2\OidcToken;
 use Google\Cloud\Tasks\V2\Task;
 use GuzzleHttp\Psr7\Request;
 use Laminas\Stdlib\ArrayUtils;
+use LinioPay\Idle\Config\Exception\ConfigurationException;
 use LinioPay\Idle\Message\Exception\FailedReceivingMessageException;
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
-use LinioPay\Idle\Message\Exception\InvalidServiceConfigurationException;
 use LinioPay\Idle\Message\Exception\UnsupportedServiceOperationException;
 use LinioPay\Idle\Message\Messages\Queue\Message\Message;
 use LinioPay\Idle\Message\Messages\Queue\Service\Google\CloudTasks\Exception\InvalidMessageRequestException;
@@ -156,7 +156,7 @@ class ServiceTest extends TestCase
         unset($this->config['parameters']['service']['client']['location']);
 
         $service = new CloudTasksService($this->tasksClient, $this->config, $this->logger);
-        $this->expectException(InvalidServiceConfigurationException::class);
+        $this->expectException(ConfigurationException::class);
         $service->queue($message);
     }
 
