@@ -1,5 +1,8 @@
 <?php
 
+use LinioPay\Idle\Config\IdleConfig;
+use LinioPay\Idle\Job\Workers\BazWorker;
+use LinioPay\Idle\Job\Workers\Factory\BazWorkerFactory;
 use Pimple\Container as PimpleContainer;
 use Pimple\Psr11\Container as PSRContainer;
 use LinioPay\Idle\Job\JobFactory as JobFactoryInterface;
@@ -20,8 +23,6 @@ use LinioPay\Idle\Message\Messages\Queue\Service\SQS\Service as SQSService;
 use LinioPay\Idle\Message\Messages\Queue\Service\SQS\Factory\ServiceFactory as SQSServiceFactory;
 use LinioPay\Idle\Message\Messages\Queue\Service\Google\CloudTasks\Service as CloudTasksService;
 use LinioPay\Idle\Message\Messages\Queue\Service\Google\CloudTasks\Factory\ServiceFactory as CloudTasksServiceFactory;
-use LinioPay\Idle\Job\Workers\DynamoDBTrackerWorker;
-use LinioPay\Idle\Job\Workers\Factory\DynamoDBTrackerWorkerFactory;
 use Psr\Log\LoggerInterface;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler as MonologStreamHandler;
@@ -29,10 +30,14 @@ use Monolog\Handler\StreamHandler as MonologStreamHandler;
 
 $container = new PimpleContainer();
 
-// Config
-$container['config'] = [
-    'idle' => require __DIR__ . '/config.php'
-];
+$container[IdleConfig::class] = function() {
+    $serviceConfig = require('service_config.php');
+    $messageConfig = require('message_config.php');
+    $jobConfig = require('job_config.php');
+    $workerConfig = require('worker_config.php');
+
+    return new IdleConfig($serviceConfig, $messageConfig, $jobConfig, $workerConfig);
+};
 
 // Logs
 $container[LoggerInterface::class] = function() {
@@ -48,36 +53,36 @@ $container[PSRContainer::class] = function(PimpleContainer $container) {
 
 // Idle
 $container[MessageFactoryInterface::class] = function(PimpleContainer $container) {
-    return (new MessageFactory())($container[PSRContainer::class]);
+    return new MessageFactory($container[PSRContainer::class]);
 };
 $container[ServiceFactoryInterface::class] = function(PimpleContainer $container) {
-    return (new ServiceFactory())($container[PSRContainer::class]);
+    return new ServiceFactory($container[PSRContainer::class]);
 };
 $container[JobFactoryInterface::class] = function(PimpleContainer $container) {
-    return (new JobFactory())($container[PSRContainer::class]);
+    return new JobFactory($container[PSRContainer::class]);
 };
 $container[MessageJobInterface::class] = function(PimpleContainer $container) {
-    return (new MessageJobFactory())($container[PSRContainer::class]);
+    return new MessageJobFactory($container[PSRContainer::class]);
 };
 $container[SimpleJobInterface::class] = function(PimpleContainer $container) {
-    return (new SimpleJobFactory())($container[PSRContainer::class]);
+    return new SimpleJobFactory($container[PSRContainer::class]);
 };
 $container[WorkerFactoryInterface::class] = function(PimpleContainer $container) {
-    return (new WorkerFactory())($container[PSRContainer::class]);
+    return new WorkerFactory($container[PSRContainer::class]);
 };
 
 // Services
 $container[SQSService::class] = function(PimpleContainer $container) {
-    return (new SQSServiceFactory())($container[PSRContainer::class]);
+    return new SQSServiceFactory($container[PSRContainer::class]);
 };
 $container[CloudTasksService::class] = function(PimpleContainer $container) {
-    return (new CloudTasksServiceFactory())($container[PSRContainer::class]);
+    return new CloudTasksServiceFactory($container[PSRContainer::class]);
 };
 $container[PubSubService::class] = function(PimpleContainer $container) {
-    return (new PubSubServiceFactory())($container[PSRContainer::class]);
+    return new PubSubServiceFactory($container[PSRContainer::class]);
 };
 
 // Workers
-$container[DynamoDBTrackerWorker::class] = function(PimpleContainer $container) {
-    return (new DynamoDBTrackerWorkerFactory())($container[PSRContainer::class]);
+$container[BazWorker::class] = function(PimpleContainer $container) {
+    return new BazWorkerFactory($container[PSRContainer::class]);
 };
