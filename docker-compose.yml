@@ -1,6 +1,8 @@
 version: '3.9'
 services:
   php:
-    image: composer@sha256:9f7d376e4b3a0cd6c739838e7512a4499af1b6bc1d942d0412ab8102cf25fd82
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     volumes:
       - .:/app
