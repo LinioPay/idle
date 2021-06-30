@@ -35,7 +35,7 @@ jobs:
       - name: Cache PHP-CS-Fixer
         uses: actions/cache@v1
         with:
-          path: .php_cs.cache
+          path: .php-cs-fixer.php.cache
           key: ${{ runner.os }}-php-cs-fixer
       - name: Run code style check
         run: composer lint:check
