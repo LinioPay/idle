@@ -91,7 +91,7 @@
             "vendor/bin/infection --only-covered --min-msi=100 --min-covered-msi=100 --coverage=build --ansi"
         ],
         "test:mutation:ci": [
-            "@test:mutation --log-verbosity=none"
+            "vendor/bin/infection --only-covered --min-msi=60 --min-covered-msi=60 --coverage=build --ansi --log-verbosity=none"
         ],
         "static-analysis": [
             "vendor/bin/phpstan analyse --ansi"
