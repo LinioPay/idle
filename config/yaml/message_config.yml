@@ -1,0 +1,89 @@
+# Support for messages which will be used by Queue services (SQS, CloudTasks, etc)
+!php/const LinioPay\Idle\Message\Messages\Queue\Message::IDENTIFIER:
+
+  # Global defaults for all QueueMessages, across all services.
+  # Configurable:
+  # - queue (The action of queueing a message to the service).
+  # - dequeue (The action of dequeueing a message from the service).
+  # - delete (The action to delete a message from the service
+  # - parameters (General parameters, such as the service being used).
+  default:
+    parameters:
+      # Define a global service to be used for QueueMessages.
+      service: !php/const LinioPay\Idle\Message\Messages\Queue\Service\SQS\Service::IDENTIFIER
+
+  # Overrides for all QueueMessages belonging to a specific service.
+  service_default:
+    !php/const LinioPay\Idle\Message\Messages\Queue\Service\SQS\Service::IDENTIFIER:
+      # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_SendMessage.html
+      queue:
+        parameters:
+          # Override the `DelaySeconds` parameter to 5 for ALL SQS queues
+          DelaySeconds: 5
+      # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_ReceiveMessage.html
+      dequeue:
+        parameters:
+          MaxNumberOfMessages: 3 # AWS dequeueing parameter for all queues
+      # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_DeleteMessage.html
+      delete:
+        parameters: []
+
+  # Define support for individual queues and their specific overrides.
+  types:
+    # Define support for a queue with name of `my-queue`.
+    my-queue:
+        queue:
+          parameters:
+            # Override the `DelaySeconds` parameter for `my-queue` when performing a `queue` action.
+            DelaySeconds: 10
+        # Inherit SQS as its service from global default
+    # Define support for a queue with name of `my-task-queue`.
+    my-task-queue:
+      parameters:
+        service: !php/const LinioPay\Idle\Message\Messages\Queue\Service\Google\CloudTasks\Service::IDENTIFIER
+
+# Support for messages which will be used by Topic supporting services (PubSub, SNS, etc)
+!php/const LinioPay\Idle\Message\Messages\PublishSubscribe\TopicMessage::IDENTIFIER:
+
+  # Global defaults for all TopicMessages, across all services.
+  # Configurable:
+  # - publish (The action of publishing a message to the topic).
+  # - parameters (General parameters, such as the service being used).
+  default:
+    parameters:
+      service: !php/const LinioPay\Idle\Message\Messages\PublishSubscribe\Service\Google\PubSub\Service::IDENTIFIER
+
+  types:
+    # Define support for a topic with name of `my-topic`.
+    my-topic:
+      # Inherit PubSub as its service from default.
+      parameters: []
+
+# Support for messages which will be used by Subscription supporting services (PubSub, SNS, etc)
+!php/const LinioPay\Idle\Message\Messages\PublishSubscribe\SubscriptionMessage::IDENTIFIER:
+
+  # Global defaults for all SubscriptionMessages, across all services.
+  # Configurable:
+  # - pull (The action of retrieving a message from the subscription).
+  # - acknowledge (The action of acknowledging the message to the subscription).
+  # - parameters (General parameters, such as the service being used).
+  default:
+    parameters:
+      service: !php/const LinioPay\Idle\Message\Messages\PublishSubscribe\Service\Google\PubSub\Service::IDENTIFIER
+
+  service_default:
+    !php/const LinioPay\Idle\Message\Messages\PublishSubscribe\Service\Google\PubSub\Service::IDENTIFIER:
+      pull:
+        parameters:
+          # PubSub specific pull parameter for all its subscriptions
+          maxMessages: 3
+
+  types:
+    # Define support for a subscription with a name of `my-subscription`.
+    my-subscription:
+      parameters: []
+
+
+
+
+

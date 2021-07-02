@@ -1,0 +1,11 @@
+!php/const LinioPay\Idle\Job\Workers\FooWorker::IDENTIFIER:
+  class: LinioPay\Idle\Job\Workers\FooWorker
+
+!php/const LinioPay\Idle\Job\Workers\BazWorker::IDENTIFIER:
+  class: LinioPay\Idle\Job\Workers\BazWorker
+
+!php/const LinioPay\Idle\Job\Workers\Queue\DeleteMessageWorker::IDENTIFIER:
+  class: LinioPay\Idle\Job\Workers\Queue\DeleteMessageWorker
+
+!php/const LinioPay\Idle\Job\Workers\PublishSubscribe\AcknowledgeMessageWorker::IDENTIFIER:
+  class: LinioPay\Idle\Job\Workers\PublishSubscribe\AcknowledgeMessageWorker

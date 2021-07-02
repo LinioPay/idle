@@ -4,18 +4,16 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Job\Jobs\Factory;
 
+use LinioPay\Idle\Job\Job;
 use LinioPay\Idle\Job\Jobs\SimpleJob;
 use LinioPay\Idle\Job\WorkerFactory as WorkerFactoryInterface;
-use Psr\Container\ContainerInterface;
 
-class SimpleJobFactory
+class SimpleJobFactory extends DefaultJobFactory
 {
-    public function __invoke(ContainerInterface $container) : SimpleJob
+    public function createJob(string $jobIdentifier, array $parameters) : Job
     {
-        $jobConfig = $container->get('config')['idle']['job'] ?? [];
+        $workerFactory = $this->container->get(WorkerFactoryInterface::class);
 
-        $workerFactory = $container->get(WorkerFactoryInterface::class);
-
-        return new SimpleJob($jobConfig, $workerFactory);
+        return new SimpleJob($this->idleConfig, $workerFactory);
     }
 }

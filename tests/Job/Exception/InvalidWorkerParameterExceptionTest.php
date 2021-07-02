@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Job\Exception;
 
+use LinioPay\Idle\Job\Workers\Exception\InvalidWorkerParameterException;
 use LinioPay\Idle\Job\Workers\FooWorker;
 use LinioPay\Idle\TestCase;
 

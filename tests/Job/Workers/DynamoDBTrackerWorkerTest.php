@@ -6,8 +6,8 @@ namespace LinioPay\Idle\Job\Workers;
 
 use Aws\DynamoDb\DynamoDbClient;
 use Exception;
-use LinioPay\Idle\Job\Exception\InvalidWorkerParameterException;
 use LinioPay\Idle\Job\Job;
+use LinioPay\Idle\Job\Workers\Exception\InvalidWorkerParameterException;
 use LinioPay\Idle\TestCase;
 use Mockery as m;
 use Psr\Log\LoggerInterface;

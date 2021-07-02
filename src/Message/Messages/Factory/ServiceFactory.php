@@ -12,7 +12,7 @@ class ServiceFactory extends DefaultServiceFactory
 {
     public function createFromMessage(MessageInterface $message) : ServiceInterface
     {
-        $messageConfig = $this->getMessageConfig($message);
+        $messageConfig = $this->idleConfig->getMessageConfig($message);
 
         /** @var ServiceFactoryInterface $factory */
         $factory = $this->container->get($messageConfig['parameters']['service']['class']);

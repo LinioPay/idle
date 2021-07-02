@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Message\Messages\Factory;
 
-use LinioPay\Idle\Message\Exception\ConfigurationException;
+use LinioPay\Idle\Config\Exception\ConfigurationException;
+use LinioPay\Idle\Config\IdleConfig;
 use LinioPay\Idle\Message\Messages\Queue\Message as QueueMessage;
 use LinioPay\Idle\Message\Messages\Queue\Service\SQS\Service as SQSService;
 use LinioPay\Idle\TestCase;
@@ -16,65 +17,59 @@ class ServiceFactoryTest extends TestCase
 {
     protected $apiTestHandler;
 
-    protected $config;
+    /** @var IdleConfig */
+    protected $idleConfig;
 
     protected function setUp() : void
     {
         $this->apiTestHandler = new TestHandler();
-        $this->config = [
-            'idle' => [
-                'message' => [
-                    'types' => [
-                        QueueMessage::IDENTIFIER => [
-                            'default' => [
-                                'dequeue' => [
-                                    'parameters' => [ // Configure behavior for when retrieving messages
-                                        'MaxNumberOfMessages' => 1,
-                                    ],
-                                    'error' => [
-                                        'suppression' => true,
-                                    ],
-                                ],
-                                'queue' => [
-                                    'parameters' => [ // Configure behavior for when adding a new message
-                                        //'DelaySeconds' => 0, // The number of seconds (0 to 900 - 15 minutes) to delay a specific message. Messages with a positive DelaySeconds value become available for processing after the delay time is finished. If you don't specify a value, the default value for the queue applies.
-                                    ],
-                                    'error' => [
-                                        'suppression' => true,
-                                    ],
-                                ],
-                                'parameters' => [
-                                    'service' => SQSService::IDENTIFIER,
-                                ],
+        $this->idleConfig = new IdleConfig([
+            SQSService::IDENTIFIER => [
+                'class' => 'fooclass',
+                'client' => [
+                    'version' => 'latest',
+                    'region' => 'us-east-1',
+                ],
+            ],
+        ],
+            [
+                QueueMessage::IDENTIFIER => [
+                    'default' => [
+                        'dequeue' => [
+                            'parameters' => [ // Configure behavior for when retrieving messages
+                                'MaxNumberOfMessages' => 1,
                             ],
-                            'types' => [
-                                'my-queue' => [
-                                    'dequeue' => [
-                                        'parameters' => [
-                                            'MaxNumberOfMessages' => 2,
-                                        ],
-                                    ],
-                                    'parameters' => [
-                                        'red' => true,
-                                    ],
-                                ],
+                            'error' => [
+                                'suppression' => true,
                             ],
                         ],
+                        'queue' => [
+                            'parameters' => [ // Configure behavior for when adding a new message
+                                //'DelaySeconds' => 0, // The number of seconds (0 to 900 - 15 minutes) to delay a specific message. Messages with a positive DelaySeconds value become available for processing after the delay time is finished. If you don't specify a value, the default value for the queue applies.
+                            ],
+                            'error' => [
+                                'suppression' => true,
+                            ],
+                        ],
+                        'parameters' => [
+                            'service' => SQSService::IDENTIFIER,
+                        ],
                     ],
-                    'service' => [
-                        'types' => [
-                            SQSService::IDENTIFIER => [
-                                'class' => 'fooclass',
-                                'client' => [
-                                    'version' => 'latest',
-                                    'region' => 'us-east-1',
+                    'types' => [
+                        'my-queue' => [
+                            'dequeue' => [
+                                'parameters' => [
+                                    'MaxNumberOfMessages' => 2,
                                 ],
+                            ],
+                            'parameters' => [
+                                'red' => true,
                             ],
                         ],
                     ],
                 ],
-            ],
-        ];
+            ]
+        );
     }
 
     public function testItCreatesService()
@@ -90,11 +85,10 @@ class ServiceFactoryTest extends TestCase
             ->with('fooclass')
             ->andReturn($sqsFactory);
         $container->shouldReceive('get')
-            ->with('config')
-            ->andReturn($this->config);
+            ->with(IdleConfig::class)
+            ->andReturn($this->idleConfig);
 
-        $factory = new ServiceFactory();
-        $factory($container);
+        $factory = new ServiceFactory($container);
 
         $message = new QueueMessage\Message('my-queue', 'foobody');
         $service = $factory->createFromMessage($message);
@@ -104,16 +98,21 @@ class ServiceFactoryTest extends TestCase
 
     public function testItThrowsConfigurationExceptionForUnknownClass()
     {
-        $config = $this->config;
-        unset($config['idle']['message']['service']['types'][SQSService::IDENTIFIER]['class']);
+        $config = new IdleConfig([
+            SQSService::IDENTIFIER => [
+                'client' => [
+                    'version' => 'latest',
+                    'region' => 'us-east-1',
+                ],
+            ],
+        ], $this->idleConfig->getMessagesConfig());
 
         $container = m::mock(ContainerInterface::class);
         $container->shouldReceive('get')
-            ->with('config')
+            ->with(IdleConfig::class)
             ->andReturn($config);
 
-        $factory = new ServiceFactory();
-        $factory($container);
+        $factory = new ServiceFactory($container);
 
         $message = new QueueMessage\Message('unknown-queue', 'foobody');
 

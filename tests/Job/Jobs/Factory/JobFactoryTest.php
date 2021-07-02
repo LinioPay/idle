@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Job\Jobs\Factory;
 
-use Exception;
-use LinioPay\Idle\Job\Jobs\FailedJob;
+use LinioPay\Idle\Config\IdleConfig;
 use LinioPay\Idle\Job\Jobs\SimpleJob;
 use LinioPay\Idle\Job\Workers\FooWorker;
 use LinioPay\Idle\TestCase;
@@ -20,10 +19,8 @@ class JobFactoryTest extends TestCase
     {
         parent::setUp();
 
-        $this->config = [
-            'idle' => [
-                'job' => [
-                    'types' => [
+        $this->config = new IdleConfig([], [],
+                    [
                         SimpleJob::IDENTIFIER => [
                             'class' => SimpleJob::class,
                             'parameters' => [
@@ -41,10 +38,7 @@ class JobFactoryTest extends TestCase
                                 ],
                             ],
                         ],
-                    ],
-                ],
-            ],
-        ];
+                    ]);
     }
 
     public function testCreatesJobSuccessfully()
@@ -55,67 +49,28 @@ class JobFactoryTest extends TestCase
         $mockJob->shouldReceive('setParameters')
             ->once()
             ->with($parameters);
-        $mockJob->shouldReceive('validateConfig')
-            ->once();
         $mockJob->shouldReceive('validateParameters')
             ->once();
 
+        $mockJobFactory = m::mock(SimpleJobFactory::class);
+        $mockJobFactory->shouldReceive('createJob')
+            ->once()
+            ->withArgs([SimpleJob::IDENTIFIER, $parameters])
+            ->andReturn($mockJob);
+
         $container = m::mock(ContainerInterface::class);
         $container->shouldReceive('get')
             ->once()
-            ->with('config')
+            ->with(IdleConfig::class)
             ->andReturn($this->config);
         $container->shouldReceive('get')
             ->once()
             ->with(SimpleJob::class)
-            ->andReturn($mockJob);
+            ->andReturn($mockJobFactory);
 
-        $factory = new JobFactory();
-
-        $factory($container);
+        $factory = new JobFactory($container);
 
         $job = $factory->createJob(SimpleJob::IDENTIFIER, $parameters);
         $this->assertInstanceOf(SimpleJob::class, $job);
-    }
-
-    public function testFailsToCreateJob()
-    {
-        $mockJob = m::mock(SimpleJob::class);
-        $mockJob->shouldReceive('validateConfig')
-            ->once()
-            ->andThrow(new Exception('fooo'));
-
-        $container = m::mock(ContainerInterface::class);
-        $container->shouldReceive('get')
-            ->once()
-            ->with('config')
-            ->andReturn($this->config);
-        $container->shouldReceive('get')
-            ->once()
-            ->with(SimpleJob::class)
-            ->andReturn($mockJob);
-
-        $factory = new JobFactory();
-
-        $factory($container);
-
-        $job = $factory->createJob(SimpleJob::IDENTIFIER, []);
-        $this->assertInstanceOf(FailedJob::class, $job);
-    }
-
-    public function testFailsToFindJob()
-    {
-        $container = m::mock(ContainerInterface::class);
-        $container->shouldReceive('get')
-            ->once()
-            ->with('config')
-            ->andReturn($this->config);
-
-        $factory = new JobFactory();
-
-        $factory($container);
-
-        $job = $factory->createJob('fakeIdentifier', []);
-        $this->assertInstanceOf(FailedJob::class, $job);
     }
 }

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Job\Workers\Queue;
 
-use LinioPay\Idle\Job\Exception\InvalidWorkerParameterException;
 use LinioPay\Idle\Job\Job;
+use LinioPay\Idle\Job\Workers\Exception\InvalidWorkerParameterException;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\SubscriptionMessage as SubscriptionMessageInterface;
 use LinioPay\Idle\Message\Messages\Queue\Message as QueueMessageInterface;
 use LinioPay\Idle\TestCase;

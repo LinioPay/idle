@@ -1,0 +1,39 @@
+# Configure support for MessageJob, a job which runs in order to process a message.
+!php/const LinioPay\Idle\Job\Jobs\MessageJob::IDENTIFIER:
+  class: LinioPay\Idle\Job\Jobs\MessageJob
+  parameters:
+    # Configure support for Queue messages (originating from SQS, CloudTasks, etc)
+    !php/const LinioPay\Idle\Message\Messages\Queue\Message::IDENTIFIER:
+      my-queue:
+        parameters:
+          workers:
+            # Perform Foo work
+            - type: !php/const LinioPay\Idle\Job\Workers\FooWorker::IDENTIFIER
+              # Provide optional parameters
+              parameters:
+                foo: bar
+            # Delete the QueueMessage from the queue
+            - type: !php/const LinioPay\Idle\Job\Workers\Queue\DeleteMessageWorker::IDENTIFIER
+      my-task-queue:
+        parameters:
+          workers:
+            - type: !php/const LinioPay\Idle\Job\Workers\FooWorker::IDENTIFIER
+    # Configure support for Subscription messages (originating from PubSub, SNS, etc)
+    !php/const LinioPay\Idle\Message\Messages\PublishSubscribe\SubscriptionMessage::IDENTIFIER:
+      my-subscription:
+        parameters:
+          workers:
+            # Perform Foo work
+            - type: !php/const LinioPay\Idle\Job\Workers\FooWorker::IDENTIFIER
+            # Acknowledge subscription message
+            - type: !php/const LinioPay\Idle\Job\Workers\PublishSubscribe\AcknowledgeMessageWorker::IDENTIFIER
+
+# Configure support for SimpleJob, a generic job which can run some workers.
+!php/const LinioPay\Idle\Job\Jobs\SimpleJob::IDENTIFIER:
+  class: LinioPay\Idle\Job\Jobs\SimpleJob
+  parameters:
+    supported:
+      my-simple-job:
+        parameters:
+          workers:
+            - type: !php/const LinioPay\Idle\Job\Workers\FooWorker::IDENTIFIER

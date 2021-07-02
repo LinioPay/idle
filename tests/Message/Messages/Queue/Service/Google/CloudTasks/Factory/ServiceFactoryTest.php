@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Message\Messages\Queue\Service\Google\CloudTasks\Factory;
 
-use LinioPay\Idle\Message\Exception\ConfigurationException;
+use LinioPay\Idle\Config\Exception\ConfigurationException;
+use LinioPay\Idle\Config\IdleConfig;
 use LinioPay\Idle\Message\Messages\Queue\Message as QueueMessage;
 use LinioPay\Idle\Message\Messages\Queue\Service\Google\CloudTasks\Service as CloudTasksService;
 use LinioPay\Idle\TestCase;
@@ -26,51 +27,45 @@ class ServiceFactoryTest extends TestCase
     {
         $container = m::mock(ContainerInterface::class);
         $container->shouldReceive('get')
-            ->with('config')
-            ->andReturn([
-                'idle' => [
-                    'message' => [
-                        'types' => [
-                            QueueMessage::IDENTIFIER => [
-                                'default' => [
-                                    'parameters' => [
-                                        'service' => CloudTasksService::IDENTIFIER,
-                                    ],
-                                ],
-                                'types' => [
-                                    'my-queue' => [
-                                        'parameters' => [
-                                            'red' => true,
-                                        ],
-                                    ],
+            ->with(IdleConfig::class)
+            ->andReturn(
+                new IdleConfig(
+                    [
+                        CloudTasksService::IDENTIFIER => [
+                            'class' => CloudTasksService::class,
+                            'client' => [
+                                'credentialsConfig' => [
+                                    'keyFile' => __DIR__ . '/../../../../../Helper/Google/credentials.json',
                                 ],
                             ],
-                        ],
-                        'service' => [
-                            'types' => [
-                                CloudTasksService::IDENTIFIER => [
-                                    'class' => CloudTasksService::class,
-                                    'client' => [
-                                        'credentialsConfig' => [
-                                            'keyFile' => __DIR__ . '/../../../../../Helper/Google/credentials.json',
-                                        ],
-                                    ],
-                                    'projectId' => 'foo-project',
-                                    'location' => 'foo-location',
-                                ],
-                            ],
+                            'projectId' => 'foo-project',
+                            'location' => 'foo-location',
                         ],
                     ],
-                ],
-            ]);
+                    [
+                        QueueMessage::IDENTIFIER => [
+                            'default' => [
+                                'parameters' => [
+                                    'service' => CloudTasksService::IDENTIFIER,
+                                ],
+                            ],
+                            'types' => [
+                                'my-queue' => [
+                                    'parameters' => [
+                                        'red' => true,
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]
+                ));
 
         $container->shouldReceive('get')
             ->once()
             ->with(LoggerInterface::class)
             ->andReturn(new \Monolog\Logger('api', [$this->apiTestHandler]));
 
-        $factory = new ServiceFactory();
-        $factory($container);
+        $factory = new ServiceFactory($container);
 
         $message = new QueueMessage\Message('my-queue', 'foobody');
         $service = $factory->createFromMessage($message);
@@ -82,33 +77,28 @@ class ServiceFactoryTest extends TestCase
     {
         $container = m::mock(ContainerInterface::class);
         $container->shouldReceive('get')
-            ->with('config')
-            ->andReturn([
-                'idle' => [
-                    'message' => [
-                        'types' => [
-                            QueueMessage::IDENTIFIER => [
-                                'default' => [
-                                    'parameters' => [
-                                        'service' => CloudTasksService::IDENTIFIER,
-                                    ],
-                                ],
-                                'types' => [
-                                    'my-queue' => [],
-                                ],
-                            ],
-                        ],
-                        'service' => [
-                            'types' => [
-                                CloudTasksService::IDENTIFIER => [],
-                            ],
-                        ],
+            ->with(IdleConfig::class)
+            ->andReturn(
+                new IdleConfig(
+                    [
+                        CloudTasksService::IDENTIFIER => [],
                     ],
-                ],
-            ]);
+                    [
+                        QueueMessage::IDENTIFIER => [
+                            'default' => [
+                                'parameters' => [
+                                    'service' => CloudTasksService::IDENTIFIER,
+                                ],
+                            ],
+                            'types' => [
+                                'my-queue' => [],
+                            ],
+                        ],
+                    ]
+                )
+            );
 
-        $factory = new ServiceFactory();
-        $factory($container);
+        $factory = new ServiceFactory($container);
 
         $message = new QueueMessage\Message('my-queue', 'foobody');
         $this->expectException(ConfigurationException::class);

@@ -8,9 +8,9 @@ use Google\Cloud\Tasks\V2\CloudTasksClient;
 use Google\Cloud\Tasks\V2\HttpMethod;
 use Google\Cloud\Tasks\V2\HttpRequest;
 use Google\Cloud\Tasks\V2\Task;
+use LinioPay\Idle\Config\Exception\ConfigurationException;
 use LinioPay\Idle\Message\Exception\FailedReceivingMessageException;
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
-use LinioPay\Idle\Message\Exception\InvalidServiceConfigurationException;
 use LinioPay\Idle\Message\Exception\UnsupportedServiceOperationException;
 use LinioPay\Idle\Message\Message as MessageInterface;
 use LinioPay\Idle\Message\Messages\Queue\Message as QueueMessageInterface;
@@ -164,7 +164,7 @@ class Service extends DefaultService
     protected function validateServiceConfig(array $serviceConfig) : void
     {
         if (empty($serviceConfig['client']['projectId']) || empty($serviceConfig['client']['location'])) {
-            throw new InvalidServiceConfigurationException(static::IDENTIFIER, 'project|location');
+            throw new ConfigurationException(ConfigurationException::ENTITY_SERVICE, static::IDENTIFIER, 'projectId|location');
         }
     }
 

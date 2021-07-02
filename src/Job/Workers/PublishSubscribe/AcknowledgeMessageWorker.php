@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Job\Workers\PublishSubscribe;
 
-use LinioPay\Idle\Job\Exception\InvalidWorkerParameterException;
 use LinioPay\Idle\Job\Workers\DefaultWorker;
+use LinioPay\Idle\Job\Workers\Exception\InvalidWorkerParameterException;
 use LinioPay\Idle\Message\Messages\PublishSubscribe\SubscriptionMessage as SubscriptionMessageInterface;
 
 class AcknowledgeMessageWorker extends DefaultWorker

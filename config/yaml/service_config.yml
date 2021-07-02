@@ -1,0 +1,13 @@
+!php/const LinioPay\Idle\Message\Messages\Queue\Service\SQS\Service::IDENTIFIER:
+  class: LinioPay\Idle\Message\Messages\Queue\Service\SQS\Service
+  client:
+    # Provide client options, or leave empty to initialize directly from ENV
+    version: latest
+
+!php/const LinioPay\Idle\Message\Messages\Queue\Service\Google\CloudTasks\Service::IDENTIFIER:
+  class: LinioPay\Idle\Message\Messages\Queue\Service\Google\CloudTasks\Service
+  client: []
+
+!php/const LinioPay\Idle\Message\Messages\PublishSubscribe\Service\Google\PubSub\Service::IDENTIFIER:
+  class: LinioPay\Idle\Message\Messages\PublishSubscribe\Service\Google\PubSub\Service
+  client: []

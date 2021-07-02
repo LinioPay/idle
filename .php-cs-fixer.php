@@ -5,8 +5,8 @@ $finder = PhpCsFixer\Finder::create()
     ->in(__DIR__ . '/src')
     ->in(__DIR__ . '/tests');
 
-return PhpCsFixer\Config::create()
-    ->setRules([
+$config = new PhpCsFixer\Config();
+return $config->setRules([
         '@Symfony' => true,
         'array_syntax' => ['syntax' => 'short'],
         'combine_consecutive_unsets' => true,
@@ -14,7 +14,7 @@ return PhpCsFixer\Config::create()
         'return_type_declaration' => ['space_before' => 'one'],
         'no_unreachable_default_argument_value' => false,
         'yoda_style' => false,
-        'ordered_imports' => ['sortAlgorithm' => 'alpha'],
-        'pre_increment' => false,
+        'ordered_imports' => ['sort_algorithm' => 'alpha'],
+        'increment_style' => ['style' => 'pre'],
     ])
     ->setFinder($finder);

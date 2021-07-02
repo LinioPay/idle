@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace LinioPay\Idle\Job\Jobs;
 
 use DateTime;
-use LinioPay\Idle\Job\Exception\ConfigurationException;
+use LinioPay\Idle\Config\IdleConfig;
 use LinioPay\Idle\Job\Job;
 use LinioPay\Idle\Job\TrackableWorker;
 use LinioPay\Idle\Job\TrackingWorker;
@@ -30,8 +30,8 @@ abstract class DefaultJob implements Job
     /** @var float */
     protected $duration = 0.0;
 
-    /** @var array */
-    protected $config = [];
+    /** @var IdleConfig */
+    protected $idleConfig;
 
     /** @var array */
     protected $parameters;
@@ -149,7 +149,7 @@ abstract class DefaultJob implements Job
     public function getParameters() : array
     {
         return array_merge_recursive(
-            $this->getConfigParameters(),
+            $this->idleConfig->getJobParametersConfig(static::IDENTIFIER),
             $this->parameters ?? []
         );
     }
@@ -167,7 +167,7 @@ abstract class DefaultJob implements Job
     protected function buildWorkers() : void
     {
         $this->workers = [];
-        $workersConfig = $this->getWorkersConfig();
+        $workersConfig = $this->getJobWorkersConfig();
 
         array_map(function ($workerConfig) {
             $worker = $this->buildWorker($workerConfig['type'] ?? '', $workerConfig['parameters'] ?? []);
@@ -178,6 +178,11 @@ abstract class DefaultJob implements Job
                 $this->workers[] = $worker;
             }
         }, $workersConfig);
+    }
+
+    protected function getJobWorkersConfig() : array
+    {
+        return [];
     }
 
     protected function buildWorker(string $workerIdentifier, array $workerParameters) : WorkerInterface
@@ -200,7 +205,6 @@ abstract class DefaultJob implements Job
         $workers = $this->workers;
         $successful = true;
 
-        /** @var WorkerInterface $worker */
         while (!empty($workers) && ($worker = array_shift($workers))) {
             if (!$worker->work()) {
                 $successful = false;
@@ -209,11 +213,6 @@ abstract class DefaultJob implements Job
         }
 
         $this->successful = $successful;
-    }
-
-    protected function getWorkersConfig() : array
-    {
-        return $this->getConfigParameters()['workers'] ?? [];
     }
 
     public function setContext(array $data) : void
@@ -244,25 +243,6 @@ abstract class DefaultJob implements Job
     public function getOutput() : array
     {
         return $this->output;
-    }
-
-    public function getConfig() : array
-    {
-        return $this->config['types'][static::IDENTIFIER] ?? [];
-    }
-
-    public function getConfigParameters() : array
-    {
-        $config = $this->getConfig();
-
-        return $config['parameters'] ?? [];
-    }
-
-    public function validateConfig() : void
-    {
-        if (empty(static::IDENTIFIER) || empty($this->config['types'][static::IDENTIFIER]['class'])) {
-            throw new ConfigurationException(static::IDENTIFIER);
-        }
     }
 
     public function validateParameters() : void

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Message\Messages\Factory;
 
+use LinioPay\Idle\Config\IdleConfig;
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
 use LinioPay\Idle\Message\Message as MessageInterface;
 use LinioPay\Idle\Message\MessageFactory as MessageFactoryInterface;
@@ -17,20 +18,27 @@ use Psr\Container\ContainerInterface;
 
 class MessageFactory implements MessageFactoryInterface
 {
-    /** @var ContainerInterface */
-    protected $container;
-
     protected const TYPE_IDENTIFIER_MAP = [
         'topic_identifier' => TopicMessage::class,
         'subscription_identifier' => SubscriptionMessage::class,
         'queue_identifier' => QueueMessage::class,
     ];
 
-    public function __invoke(ContainerInterface $container) : self
+    /** @var ContainerInterface */
+    protected $container;
+
+    /** @var IdleConfig */
+    protected $idleConfig;
+
+    public function __construct(ContainerInterface $container)
     {
         $this->container = $container;
+        $this->loadIdleConfig();
+    }
 
-        return $this;
+    protected function loadIdleConfig() : void
+    {
+        $this->idleConfig = $this->container->get(IdleConfig::class);
     }
 
     public function createMessage(array $messageParameters) : MessageInterface
