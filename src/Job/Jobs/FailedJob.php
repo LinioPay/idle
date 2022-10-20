@@ -16,13 +16,13 @@ class FailedJob extends DefaultJob
         $this->successful = false;
     }
 
-    public function process() : void
-    {
-        // Nothing to do
-    }
-
     public function getErrors() : array
     {
         return $this->errors;
+    }
+
+    public function process() : void
+    {
+        // Nothing to do
     }
 }

@@ -12,14 +12,24 @@ abstract class DefaultWorker implements Worker
     public static $skipFactory = false;
 
     /** @var array */
-    protected $parameters = [];
+    protected $errors = [];
 
     /** @var array */
-    protected $errors = [];
+    protected $parameters = [];
+
+    public function getErrors() : array
+    {
+        return $this->errors;
+    }
 
     public function getParameters() : array
     {
         return $this->parameters;
+    }
+
+    public function getTrackerData() : array
+    {
+        return [];
     }
 
     public function setParameters(array $parameters) : void
@@ -27,23 +37,13 @@ abstract class DefaultWorker implements Worker
         $this->parameters = $parameters;
     }
 
-    public function getErrors() : array
-    {
-        return $this->errors;
-    }
-
-    protected function setErrors(array $errors) : void
-    {
-        $this->errors = $errors;
-    }
-
     public function validateParameters() : void
     {
         // Override with custom validation of worker parameters
     }
 
-    public function getTrackerData() : array
+    protected function setErrors(array $errors) : void
     {
-        return [];
+        $this->errors = $errors;
     }
 }

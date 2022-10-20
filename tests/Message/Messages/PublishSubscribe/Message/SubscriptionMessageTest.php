@@ -13,6 +13,25 @@ use Mockery as m;
 
 class SubscriptionMessageTest extends TestCase
 {
+    public function testAcknowledgeThrowsUndefinedServiceException()
+    {
+        $message = new SubscriptionMessage('foo_subscription', 'body', ['red' => true], 'foo123', ['redmeta' => true]);
+
+        $this->expectException(UndefinedServiceException::class);
+        $message->acknowledge();
+    }
+
+    public function testFromArrayThrowsInvalidMessageParameterExceptionWhenMissingRequiredParameters()
+    {
+        $this->expectException(InvalidMessageParameterException::class);
+        SubscriptionMessage::fromArray([
+           'body' => 'foobody',
+           'attributes' => [
+               'red' => true,
+           ],
+        ]);
+    }
+
     public function testGettersAndSetters()
     {
         $message = new SubscriptionMessage('foo_subscription', 'body', ['red' => true], 'foo123', ['meta' => true]);
@@ -43,34 +62,6 @@ class SubscriptionMessageTest extends TestCase
         $this->assertSame(SubscriptionMessage::IDENTIFIER, $message->getIdleIdentifier());
     }
 
-    public function testToArrayAndFromArray()
-    {
-        $message = new SubscriptionMessage('foo_subscription', 'body', ['red' => true], 'foo123', ['redmeta' => true]);
-
-        $asArray = $jsonOut = $message->toArray();
-        $this->assertSame($asArray, SubscriptionMessage::fromArray($message->toArray())->toArray());
-
-        $this->assertArrayHasKey('message_identifier', $asArray);
-        $this->assertArrayHasKey('subscription_identifier', $asArray);
-        $this->assertArrayHasKey('body', $asArray);
-        $this->assertArrayHasKey('attributes', $asArray);
-        $this->assertArrayHasKey('metadata', $asArray);
-
-        unset($jsonOut['metadata']);
-        $this->assertSame($jsonOut, json_decode(json_encode($message), true));
-    }
-
-    public function testFromArrayThrowsInvalidMessageParameterExceptionWhenMissingRequiredParameters()
-    {
-        $this->expectException(InvalidMessageParameterException::class);
-        SubscriptionMessage::fromArray([
-           'body' => 'foobody',
-           'attributes' => [
-               'red' => true,
-           ],
-        ]);
-    }
-
     public function testProxiesCallToAcknowledge()
     {
         $message = new SubscriptionMessage('foo_subscription', 'body', ['red' => true], 'foo123', ['redmeta' => true]);
@@ -85,14 +76,6 @@ class SubscriptionMessageTest extends TestCase
         $this->assertTrue($message->acknowledge(['foo' => 'bar']));
     }
 
-    public function testAcknowledgeThrowsUndefinedServiceException()
-    {
-        $message = new SubscriptionMessage('foo_subscription', 'body', ['red' => true], 'foo123', ['redmeta' => true]);
-
-        $this->expectException(UndefinedServiceException::class);
-        $message->acknowledge();
-    }
-
     public function testProxiesCallToPull()
     {
         $message = new SubscriptionMessage('foo_subscription');
@@ -105,14 +88,6 @@ class SubscriptionMessageTest extends TestCase
 
         $message->setService($service);
         $this->assertSame(['foo'], $message->receive(['foo' => 'bar']));
-    }
-
-    public function testPullThrowsUndefinedServiceException()
-    {
-        $message = new SubscriptionMessage('foo_subscription', 'body', ['red' => true], 'foo123', ['redmeta' => true]);
-
-        $this->expectException(UndefinedServiceException::class);
-        $message->pull();
     }
 
     public function testProxiesCallToPullOneOrFail()
@@ -137,5 +112,30 @@ class SubscriptionMessageTest extends TestCase
 
         $this->expectException(UndefinedServiceException::class);
         $message->pullOneOrFail();
+    }
+
+    public function testPullThrowsUndefinedServiceException()
+    {
+        $message = new SubscriptionMessage('foo_subscription', 'body', ['red' => true], 'foo123', ['redmeta' => true]);
+
+        $this->expectException(UndefinedServiceException::class);
+        $message->pull();
+    }
+
+    public function testToArrayAndFromArray()
+    {
+        $message = new SubscriptionMessage('foo_subscription', 'body', ['red' => true], 'foo123', ['redmeta' => true]);
+
+        $asArray = $jsonOut = $message->toArray();
+        $this->assertSame($asArray, SubscriptionMessage::fromArray($message->toArray())->toArray());
+
+        $this->assertArrayHasKey('message_identifier', $asArray);
+        $this->assertArrayHasKey('subscription_identifier', $asArray);
+        $this->assertArrayHasKey('body', $asArray);
+        $this->assertArrayHasKey('attributes', $asArray);
+        $this->assertArrayHasKey('metadata', $asArray);
+
+        unset($jsonOut['metadata']);
+        $this->assertSame($jsonOut, json_decode(json_encode($message), true));
     }
 }

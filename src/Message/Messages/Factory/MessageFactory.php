@@ -36,11 +36,6 @@ class MessageFactory implements MessageFactoryInterface
         $this->loadIdleConfig();
     }
 
-    protected function loadIdleConfig() : void
-    {
-        $this->idleConfig = $this->container->get(IdleConfig::class);
-    }
-
     public function createMessage(array $messageParameters) : MessageInterface
     {
         /** @var MessageInterface $message */
@@ -50,27 +45,6 @@ class MessageFactory implements MessageFactoryInterface
         $serviceFactory = $this->container->get(ServiceFactoryInterface::class);
 
         $message->setService($serviceFactory->createFromMessage($message));
-
-        return $message;
-    }
-
-    public function receiveMessageOrFail(array $messageParameters, array $receiveParameters = []) : MessageInterface
-    {
-        return $this->createReceivableMessage($messageParameters)->receiveOneOrFail($receiveParameters);
-    }
-
-    public function receiveMessages(array $messageParameters, array $receiveParameters = []) : array
-    {
-        return $this->createReceivableMessage($messageParameters)->receive($receiveParameters);
-    }
-
-    public function createSendableMessage(array $messageParameters) : SendableMessageInterface
-    {
-        $message = $this->createMessage($messageParameters);
-
-        if (!is_a($message, SendableMessageInterface::class)) {
-            throw new InvalidMessageParameterException('topic_identifier|queue_identifier');
-        }
 
         return $message;
     }
@@ -86,6 +60,27 @@ class MessageFactory implements MessageFactoryInterface
         return $message;
     }
 
+    public function createSendableMessage(array $messageParameters) : SendableMessageInterface
+    {
+        $message = $this->createMessage($messageParameters);
+
+        if (!is_a($message, SendableMessageInterface::class)) {
+            throw new InvalidMessageParameterException('topic_identifier|queue_identifier');
+        }
+
+        return $message;
+    }
+
+    public function receiveMessageOrFail(array $messageParameters, array $receiveParameters = []) : MessageInterface
+    {
+        return $this->createReceivableMessage($messageParameters)->receiveOneOrFail($receiveParameters);
+    }
+
+    public function receiveMessages(array $messageParameters, array $receiveParameters = []) : array
+    {
+        return $this->createReceivableMessage($messageParameters)->receive($receiveParameters);
+    }
+
     protected function getMessageClassFromParameters(array $parameters) : string
     {
         $foundKeys = array_intersect_key(self::TYPE_IDENTIFIER_MAP, $parameters);
@@ -95,5 +90,10 @@ class MessageFactory implements MessageFactoryInterface
         }
 
         return self::TYPE_IDENTIFIER_MAP[current(array_keys($foundKeys))];
+    }
+
+    protected function loadIdleConfig() : void
+    {
+        $this->idleConfig = $this->container->get(IdleConfig::class);
     }
 }

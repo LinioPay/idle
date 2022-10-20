@@ -46,13 +46,12 @@ class MessageJob extends DefaultJob
         }
     }
 
-    protected function getMessageJobSourceConfig() : array
+    protected function buildWorker(string $workerIdentifier, array $workerParameters) : WorkerInterface
     {
-        $messageJobParameters = $this->idleConfig->getJobParametersConfig(self::IDENTIFIER);
-        $messageTypeIdentifier = $this->message->getIdleIdentifier();
-        $messageSourceIdentifier = $this->message->getSourceName();
-
-        return $messageJobParameters[$messageTypeIdentifier][$messageSourceIdentifier] ?? [];
+        return $this->workerFactory->createWorker($workerIdentifier, array_merge(
+            $workerParameters,
+            ['job' => $this, 'message' => $this->message]
+        ));
     }
 
     /**
@@ -65,11 +64,12 @@ class MessageJob extends DefaultJob
         return $config['parameters']['workers'] ?? [];
     }
 
-    protected function buildWorker(string $workerIdentifier, array $workerParameters) : WorkerInterface
+    protected function getMessageJobSourceConfig() : array
     {
-        return $this->workerFactory->createWorker($workerIdentifier, array_merge(
-            $workerParameters,
-            ['job' => $this, 'message' => $this->message]
-        ));
+        $messageJobParameters = $this->idleConfig->getJobParametersConfig(self::IDENTIFIER);
+        $messageTypeIdentifier = $this->message->getIdleIdentifier();
+        $messageSourceIdentifier = $this->message->getSourceName();
+
+        return $messageJobParameters[$messageTypeIdentifier][$messageSourceIdentifier] ?? [];
     }
 }

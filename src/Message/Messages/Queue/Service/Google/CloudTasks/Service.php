@@ -22,10 +22,9 @@ use Throwable;
 
 class Service extends DefaultService
 {
-    const IDENTIFIER = 'cloud-tasks';
-
     /** @var string[] Arguments which we want to extract from message attributes into HttpRequest */
     const HTTP_REQUEST_ATTRIBUTES = ['oauth_token', 'oidc_token'];
+    const IDENTIFIER = 'cloud-tasks';
 
     /** @var CloudTasksClient */
     protected $client;
@@ -43,6 +42,71 @@ class Service extends DefaultService
     public function __destruct()
     {
         $this->client->close();
+    }
+
+    public function delete(QueueMessageInterface $message, array $parameters = []) : bool
+    {
+        $this->logger->info('Idle deleting message from queue.',
+            [
+                'service' => Service::IDENTIFIER,
+                'message' => $message->toArray(),
+            ]
+        );
+
+        try {
+            $messageId = $message->getMessageId();
+
+            if (empty($messageId)) {
+                throw new InvalidMessageParameterException('messageId');
+            }
+
+            $this->client->deleteTask($messageId, array_replace_recursive($this->getDeletingParameters(), $parameters));
+
+            $this->logger->info('Idle successfully deleted a message from queue.',
+                [
+                    'service' => Service::IDENTIFIER,
+                    'message' => $message->toArray(),
+                ]
+            );
+
+            return true;
+        } catch (Throwable $throwable) {
+            $this->logger->critical('Deleting encountered error', [
+                'service' => Service::IDENTIFIER,
+                'message' => $message->toArray(),
+                'error' => $this->throwableToArray($throwable),
+            ]);
+
+            if (!$this->isDeletingErrorSuppression()) {
+                throw $throwable;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Pulling from CloudTasks is currently not supported.
+     *
+     * @throws UnsupportedServiceOperationException
+     */
+    public function dequeue(string $queueIdentifier, array $parameters = []) : array
+    {
+        $this->logger->critical(
+            'Idle attempted to dequeue from CloudTask queue but operation is not supported.',
+            ['service' => Service::IDENTIFIER, 'queue' => $queueIdentifier]
+        );
+
+        if (!$this->isDequeueingErrorSuppression()) {
+            throw new UnsupportedServiceOperationException(Service::IDENTIFIER, 'dequeue');
+        }
+
+        return [];
+    }
+
+    public function dequeueOneOrFail(string $queueIdentifier, array $parameters = []) : MessageInterface
+    {
+        throw new FailedReceivingMessageException(self::IDENTIFIER, QueueMessageInterface::IDENTIFIER, $queueIdentifier, new UnsupportedServiceOperationException(Service::IDENTIFIER, 'dequeue'));
     }
 
     public function queue(QueueMessageInterface $message, array $parameters = []) : bool
@@ -87,71 +151,6 @@ class Service extends DefaultService
         return false;
     }
 
-    /**
-     * Pulling from CloudTasks is currently not supported.
-     *
-     * @throws UnsupportedServiceOperationException
-     */
-    public function dequeue(string $queueIdentifier, array $parameters = []) : array
-    {
-        $this->logger->critical(
-            'Idle attempted to dequeue from CloudTask queue but operation is not supported.',
-            ['service' => Service::IDENTIFIER, 'queue' => $queueIdentifier]
-        );
-
-        if (!$this->isDequeueingErrorSuppression()) {
-            throw new UnsupportedServiceOperationException(Service::IDENTIFIER, 'dequeue');
-        }
-
-        return [];
-    }
-
-    public function dequeueOneOrFail(string $queueIdentifier, array $parameters = []) : MessageInterface
-    {
-        throw new FailedReceivingMessageException(self::IDENTIFIER, QueueMessageInterface::IDENTIFIER, $queueIdentifier, new UnsupportedServiceOperationException(Service::IDENTIFIER, 'dequeue'));
-    }
-
-    public function delete(QueueMessageInterface $message, array $parameters = []) : bool
-    {
-        $this->logger->info('Idle deleting message from queue.',
-            [
-                'service' => Service::IDENTIFIER,
-                'message' => $message->toArray(),
-            ]
-        );
-
-        try {
-            $messageId = $message->getMessageId();
-
-            if (empty($messageId)) {
-                throw new InvalidMessageParameterException('messageId');
-            }
-
-            $this->client->deleteTask($messageId, array_replace_recursive($this->getDeletingParameters(), $parameters));
-
-            $this->logger->info('Idle successfully deleted a message from queue.',
-                [
-                    'service' => Service::IDENTIFIER,
-                    'message' => $message->toArray(),
-                ]
-            );
-
-            return true;
-        } catch (Throwable $throwable) {
-            $this->logger->critical('Deleting encountered error', [
-                'service' => Service::IDENTIFIER,
-                'message' => $message->toArray(),
-                'error' => $this->throwableToArray($throwable),
-            ]);
-
-            if (!$this->isDeletingErrorSuppression()) {
-                throw $throwable;
-            }
-        }
-
-        return false;
-    }
-
     protected function getGCPQueueName(QueueMessageInterface $message, array $parameters) : string
     {
         $serviceConfig = array_replace_recursive($this->getServiceConfig(), $parameters);
@@ -159,13 +158,6 @@ class Service extends DefaultService
         $this->validateServiceConfig($serviceConfig);
 
         return $this->client->queueName($serviceConfig['client']['projectId'], $serviceConfig['client']['location'], $message->getQueueIdentifier());
-    }
-
-    protected function validateServiceConfig(array $serviceConfig) : void
-    {
-        if (empty($serviceConfig['client']['projectId']) || empty($serviceConfig['client']['location'])) {
-            throw new ConfigurationException(ConfigurationException::ENTITY_SERVICE, static::IDENTIFIER, 'projectId|location');
-        }
     }
 
     protected function getRequestFromMessage(QueueMessageInterface $message) : RequestInterface
@@ -202,5 +194,12 @@ class Service extends DefaultService
                 )
             ),
         ]);
+    }
+
+    protected function validateServiceConfig(array $serviceConfig) : void
+    {
+        if (empty($serviceConfig['client']['projectId']) || empty($serviceConfig['client']['location'])) {
+            throw new ConfigurationException(ConfigurationException::ENTITY_SERVICE, static::IDENTIFIER, 'projectId|location');
+        }
     }
 }

@@ -70,24 +70,37 @@ class SimpleJobTest extends TestCase
         $this->workerFactory = null;
     }
 
-    public function testProcessesWorker()
+    public function testCanGetAndSetOutput()
     {
-        $worker = new FooWorker();
-
-        $this->workerFactory->shouldReceive('createWorker')
-            ->andReturn($worker);
-
         $job = new SimpleJob($this->idleConfig, $this->workerFactory);
-        $job->setParameters(['simple_identifier' => 'foo_job']);
 
-        $job->process();
-        $job->validateParameters();
+        $job->setOutput(['foo' => 'bar']);
+        $job->addOutput('baz', 'foo');
 
-        $this->assertTrue($job->isSuccessful());
-        $this->assertTrue($job->isFinished());
+        $output = $job->getOutput();
 
-        $parameters = $job->getParameters();
-        $this->assertArrayHasKey('simple_identifier', $parameters);
+        $this->assertIsArray($output);
+
+        $this->assertArrayHasKey('foo', $output);
+        $this->assertArrayHasKey('baz', $output);
+    }
+
+    public function testCanGetAndSetWorkerContext()
+    {
+        $job = new SimpleJob($this->idleConfig, $this->workerFactory);
+
+        $job->setContext(['foo' => 'bar']);
+        $this->assertSame('bar', $job->getContextEntry('foo'));
+
+        $job->addContext('baz', 'foo');
+        $this->assertSame('foo', $job->getContextEntry('baz'));
+    }
+
+    public function testCanGetIdentifier()
+    {
+        $job = new SimpleJob($this->idleConfig, $this->workerFactory);
+
+        $this->assertSame('simple', $job->getTypeIdentifier());
     }
 
     public function testGetsTrackerData()
@@ -123,30 +136,6 @@ class SimpleJobTest extends TestCase
         $this->assertSame(json_decode($data['parameters'], true), $job->getParameters());
 
         $this->assertSame('bar_worker', $data['foo_worker']);
-    }
-
-    public function testProcessAddsExceptionsToJobErrors()
-    {
-        $worker = m::mock(Worker::class);
-        $worker->shouldReceive('work')
-            ->andThrow(new ConfigurationException(ConfigurationException::ENTITY_WORKER, 'foo', 'class'));
-        $worker->shouldReceive('getErrors')
-            ->once()
-            ->andReturn([]);
-
-        $this->workerFactory->shouldReceive('createWorker')
-            ->andReturn($worker);
-
-        $job = new SimpleJob($this->idleConfig, $this->workerFactory);
-        $job->setParameters(['simple_identifier' => 'foo_job']);
-
-        try {
-            $job->process();
-        } catch (ConfigurationException $e) {
-            $errors = $job->getErrors();
-            $this->assertArrayHasKey(0, $errors);
-            $this->assertSame('Encountered an error: Worker foo is missing a proper class configuration.', $errors[0]);
-        }
     }
 
     public function testJobCanStillBeSuccessfulIfWorkerHasErrors()
@@ -192,37 +181,48 @@ class SimpleJobTest extends TestCase
         $this->assertFalse($job->isSuccessful());
     }
 
-    public function testCanGetIdentifier()
+    public function testProcessAddsExceptionsToJobErrors()
     {
-        $job = new SimpleJob($this->idleConfig, $this->workerFactory);
+        $worker = m::mock(Worker::class);
+        $worker->shouldReceive('work')
+            ->andThrow(new ConfigurationException(ConfigurationException::ENTITY_WORKER, 'foo', 'class'));
+        $worker->shouldReceive('getErrors')
+            ->once()
+            ->andReturn([]);
 
-        $this->assertSame('simple', $job->getTypeIdentifier());
+        $this->workerFactory->shouldReceive('createWorker')
+            ->andReturn($worker);
+
+        $job = new SimpleJob($this->idleConfig, $this->workerFactory);
+        $job->setParameters(['simple_identifier' => 'foo_job']);
+
+        try {
+            $job->process();
+        } catch (ConfigurationException $e) {
+            $errors = $job->getErrors();
+            $this->assertArrayHasKey(0, $errors);
+            $this->assertSame('Encountered an error: Worker foo is missing a proper class configuration.', $errors[0]);
+        }
     }
 
-    public function testCanGetAndSetWorkerContext()
+    public function testProcessesWorker()
     {
+        $worker = new FooWorker();
+
+        $this->workerFactory->shouldReceive('createWorker')
+            ->andReturn($worker);
+
         $job = new SimpleJob($this->idleConfig, $this->workerFactory);
+        $job->setParameters(['simple_identifier' => 'foo_job']);
 
-        $job->setContext(['foo' => 'bar']);
-        $this->assertSame('bar', $job->getContextEntry('foo'));
+        $job->process();
+        $job->validateParameters();
 
-        $job->addContext('baz', 'foo');
-        $this->assertSame('foo', $job->getContextEntry('baz'));
-    }
+        $this->assertTrue($job->isSuccessful());
+        $this->assertTrue($job->isFinished());
 
-    public function testCanGetAndSetOutput()
-    {
-        $job = new SimpleJob($this->idleConfig, $this->workerFactory);
-
-        $job->setOutput(['foo' => 'bar']);
-        $job->addOutput('baz', 'foo');
-
-        $output = $job->getOutput();
-
-        $this->assertIsArray($output);
-
-        $this->assertArrayHasKey('foo', $output);
-        $this->assertArrayHasKey('baz', $output);
+        $parameters = $job->getParameters();
+        $this->assertArrayHasKey('simple_identifier', $parameters);
     }
 
     public function testThrowsInvalidParameterExceptionWhenNoSimpleIdentifierProvided()

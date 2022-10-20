@@ -7,9 +7,9 @@ namespace LinioPay\Idle\Config\Exception;
 class ConfigurationException extends \Exception
 {
     const ENTITY_JOB = 'Job';
-    const ENTITY_WORKER = 'Worker';
     const ENTITY_MESSAGE = 'Message';
     const ENTITY_SERVICE = 'Service';
+    const ENTITY_WORKER = 'Worker';
 
     const MESSAGE = '%s %s is missing a proper %s configuration.';
 

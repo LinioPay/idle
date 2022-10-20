@@ -8,11 +8,10 @@ use LinioPay\Idle\Message\Message;
 
 class IdleConfig
 {
-    protected array $services = [];
+    protected array $jobs = [];
 
     protected array $messages = [];
-
-    protected array $jobs = [];
+    protected array $services = [];
 
     protected array $workers = [];
 
@@ -24,58 +23,42 @@ class IdleConfig
         $this->workers = $workerConfig;
     }
 
-    public function getServicesConfig() : array
+    public function getJobClass(string $identifier) : string
     {
-        return $this->services;
-    }
+        $this->validateJobConfig($identifier);
 
-    public function getServiceClass(string $identifier) : string
-    {
-        $this->validateServiceConfig($identifier);
-        $config = $this->getServiceConfig($identifier);
+        $config = $this->getJobConfig($identifier);
 
         return $config['class'];
     }
 
-    protected function validateServiceConfig(string $identifier) : void
+    public function getJobConfig(string $identifier) : array
     {
-        $servicesConfig = $this->getServicesConfig();
+        $this->validateJobConfig($identifier);
 
-        if (empty($servicesConfig[$identifier]['class'] ?? '')) {
-            throw new ConfigurationException(ConfigurationException::ENTITY_SERVICE, $identifier, 'class');
-        }
+        $jobsConfig = $this->getJobsConfig();
+
+        return $jobsConfig[$identifier] ?? [];
     }
 
-    public function getServiceConfig(string $identifier) : array
+    public function getJobParametersConfig(string $identifier) : array
     {
-        $this->validateServiceConfig($identifier);
+        $config = $this->getJobConfig($identifier);
 
-        $servicesConfig = $this->getServicesConfig();
-
-        return $servicesConfig[$identifier] ?? [];
+        return $config['parameters'] ?? [];
     }
 
-    public function getMessagesConfig() : array
+    public function getJobsConfig() : array
     {
-        return $this->messages;
+        return $this->jobs;
     }
 
-    public function getMessageTypeConfig(string $identifier) : array
+    public function getMergedWorkerConfig(string $identifier, array $parameters = []) : array
     {
-        $this->validateMessageTypeExists($identifier);
-
-        $messagesConfig = $this->getMessagesConfig();
-
-        return $messagesConfig[$identifier] ?? [];
-    }
-
-    protected function validateMessageTypeExists(string $identifier) : void
-    {
-        $messagesConfig = $this->getMessagesConfig();
-
-        if (!isset($messagesConfig[$identifier])) {
-            throw new ConfigurationException(ConfigurationException::ENTITY_MESSAGE, $identifier, 'type');
-        }
+        return ArrayUtils::merge(
+            $this->getWorkerConfig($identifier),
+            ['parameters' => $parameters]
+        );
     }
 
     public function getMessageConfig(Message $message) : array
@@ -106,57 +89,47 @@ class IdleConfig
         return $mergedConfig;
     }
 
-    protected function validateMessageTypeAndSourceExist(string $messageTypeIdentifier, string $messageSource) : void
+    public function getMessagesConfig() : array
     {
+        return $this->messages;
+    }
+
+    public function getMessageTypeConfig(string $identifier) : array
+    {
+        $this->validateMessageTypeExists($identifier);
+
         $messagesConfig = $this->getMessagesConfig();
 
-        if (!isset($messagesConfig[$messageTypeIdentifier]['types'][$messageSource])) {
-            throw new ConfigurationException(ConfigurationException::ENTITY_MESSAGE, $messageTypeIdentifier, $messageSource);
-        }
+        return $messagesConfig[$identifier] ?? [];
     }
 
-    public function getJobsConfig() : array
+    public function getServiceClass(string $identifier) : string
     {
-        return $this->jobs;
-    }
-
-    public function getJobClass(string $identifier) : string
-    {
-        $this->validateJobConfig($identifier);
-
-        $config = $this->getJobConfig($identifier);
+        $this->validateServiceConfig($identifier);
+        $config = $this->getServiceConfig($identifier);
 
         return $config['class'];
     }
 
-    protected function validateJobConfig(string $identifier)
+    public function getServiceConfig(string $identifier) : array
     {
-        $jobsConfig = $this->getJobsConfig();
+        $this->validateServiceConfig($identifier);
 
-        if (empty($jobsConfig[$identifier]['class'] ?? '')) {
-            throw new ConfigurationException(ConfigurationException::ENTITY_JOB, $identifier, 'class');
-        }
+        $servicesConfig = $this->getServicesConfig();
+
+        return $servicesConfig[$identifier] ?? [];
     }
 
-    public function getJobConfig(string $identifier) : array
+    public function getServicesConfig() : array
     {
-        $this->validateJobConfig($identifier);
-
-        $jobsConfig = $this->getJobsConfig();
-
-        return $jobsConfig[$identifier] ?? [];
+        return $this->services;
     }
 
-    public function getJobParametersConfig(string $identifier) : array
+    public function getWorkerClass(string $identifier) : string
     {
-        $config = $this->getJobConfig($identifier);
+        $workerConfig = $this->getWorkerConfig($identifier);
 
-        return $config['parameters'] ?? [];
-    }
-
-    public function getWorkersConfig() : array
-    {
-        return $this->workers;
+        return $workerConfig['class'];
     }
 
     public function getWorkerConfig(string $identifier) : array
@@ -168,19 +141,45 @@ class IdleConfig
         return $workersConfig[$identifier] ?? [];
     }
 
-    public function getMergedWorkerConfig(string $identifier, array $parameters = []) : array
+    public function getWorkersConfig() : array
     {
-        return ArrayUtils::merge(
-            $this->getWorkerConfig($identifier),
-            ['parameters' => $parameters]
-        );
+        return $this->workers;
     }
 
-    public function getWorkerClass(string $identifier) : string
+    protected function validateJobConfig(string $identifier)
     {
-        $workerConfig = $this->getWorkerConfig($identifier);
+        $jobsConfig = $this->getJobsConfig();
 
-        return $workerConfig['class'];
+        if (empty($jobsConfig[$identifier]['class'] ?? '')) {
+            throw new ConfigurationException(ConfigurationException::ENTITY_JOB, $identifier, 'class');
+        }
+    }
+
+    protected function validateMessageTypeAndSourceExist(string $messageTypeIdentifier, string $messageSource) : void
+    {
+        $messagesConfig = $this->getMessagesConfig();
+
+        if (!isset($messagesConfig[$messageTypeIdentifier]['types'][$messageSource])) {
+            throw new ConfigurationException(ConfigurationException::ENTITY_MESSAGE, $messageTypeIdentifier, $messageSource);
+        }
+    }
+
+    protected function validateMessageTypeExists(string $identifier) : void
+    {
+        $messagesConfig = $this->getMessagesConfig();
+
+        if (!isset($messagesConfig[$identifier])) {
+            throw new ConfigurationException(ConfigurationException::ENTITY_MESSAGE, $identifier, 'type');
+        }
+    }
+
+    protected function validateServiceConfig(string $identifier) : void
+    {
+        $servicesConfig = $this->getServicesConfig();
+
+        if (empty($servicesConfig[$identifier]['class'] ?? '')) {
+            throw new ConfigurationException(ConfigurationException::ENTITY_SERVICE, $identifier, 'class');
+        }
     }
 
     protected function validateWorkerConfig(string $identifier) : void

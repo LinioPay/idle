@@ -27,9 +27,91 @@ class Message extends DefaultMessage implements QueueMessageInterface, SendableM
         parent::__construct($body, $attributes, $messageIdentifier, $metadata);
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function delete(array $parameters = []) : bool
+    {
+        if (is_null($this->service)) {
+            throw new UndefinedServiceException($this);
+        }
+
+        return $this->service->delete($this, $parameters);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function dequeue(array $parameters = []) : array
+    {
+        if (is_null($this->service)) {
+            throw new UndefinedServiceException($this);
+        }
+
+        return $this->service->dequeue($this->getQueueIdentifier(), $parameters);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function dequeueOneOrFail(array $parameters = []) : MessageInterface
+    {
+        if (is_null($this->service)) {
+            throw new UndefinedServiceException($this);
+        }
+
+        return $this->service->dequeueOneOrFail($this->getQueueIdentifier(), $parameters);
+    }
+
+    public function getIdleIdentifier() : string
+    {
+        return QueueMessageInterface::IDENTIFIER;
+    }
+
     public function getQueueIdentifier() : string
     {
         return $this->queueIdentifier;
+    }
+
+    public function getSourceName() : string
+    {
+        return $this->getQueueIdentifier();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function queue(array $parameters = []) : bool
+    {
+        if (is_null($this->service)) {
+            throw new UndefinedServiceException($this);
+        }
+
+        return $this->service->queue($this, $parameters);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function receive(array $parameters = []) : array
+    {
+        return $this->dequeue($parameters);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function receiveOneOrFail(array $parameters = []) : MessageInterface
+    {
+        return $this->dequeueOneOrFail($parameters);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function send(array $parameters = []) : bool
+    {
+        return $this->queue($parameters);
     }
 
     public function toArray() : array
@@ -60,87 +142,5 @@ class Message extends DefaultMessage implements QueueMessageInterface, SendableM
             $parameters['message_identifier'] ?? '',
             $parameters['metadata'] ?? []
         );
-    }
-
-    public function getIdleIdentifier() : string
-    {
-        return QueueMessageInterface::IDENTIFIER;
-    }
-
-    public function getSourceName() : string
-    {
-        return $this->getQueueIdentifier();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function queue(array $parameters = []) : bool
-    {
-        if (is_null($this->service)) {
-            throw new UndefinedServiceException($this);
-        }
-
-        return $this->service->queue($this, $parameters);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function send(array $parameters = []) : bool
-    {
-        return $this->queue($parameters);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function dequeue(array $parameters = []) : array
-    {
-        if (is_null($this->service)) {
-            throw new UndefinedServiceException($this);
-        }
-
-        return $this->service->dequeue($this->getQueueIdentifier(), $parameters);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function receive(array $parameters = []) : array
-    {
-        return $this->dequeue($parameters);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function dequeueOneOrFail(array $parameters = []) : MessageInterface
-    {
-        if (is_null($this->service)) {
-            throw new UndefinedServiceException($this);
-        }
-
-        return $this->service->dequeueOneOrFail($this->getQueueIdentifier(), $parameters);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function receiveOneOrFail(array $parameters = []) : MessageInterface
-    {
-        return $this->dequeueOneOrFail($parameters);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function delete(array $parameters = []) : bool
-    {
-        if (is_null($this->service)) {
-            throw new UndefinedServiceException($this);
-        }
-
-        return $this->service->delete($this, $parameters);
     }
 }

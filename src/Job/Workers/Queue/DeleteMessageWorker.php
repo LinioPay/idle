@@ -17,13 +17,6 @@ class DeleteMessageWorker extends DefaultWorker
     /** @var QueueMessageInterface */
     protected $message;
 
-    public function work() : bool
-    {
-        $this->message->delete($this->getParameters());
-
-        return true;
-    }
-
     public function setParameters(array $parameters) : void
     {
         $this->message = $parameters['message'] ?? null;
@@ -38,5 +31,12 @@ class DeleteMessageWorker extends DefaultWorker
         if (is_null($this->message) || !is_a($this->message, QueueMessageInterface::class)) {
             throw new InvalidWorkerParameterException($this, 'message');
         }
+    }
+
+    public function work() : bool
+    {
+        $this->message->delete($this->getParameters());
+
+        return true;
     }
 }

@@ -39,17 +39,17 @@ class SimpleJob extends DefaultJob
         }
     }
 
-    protected function getSimpleJobConfig() : array
-    {
-        $jobConfigParameters = $this->idleConfig->getJobParametersConfig(self::IDENTIFIER);
-
-        return $jobConfigParameters['supported'][$this->simpleIdentifier] ?? [];
-    }
-
     protected function getJobWorkersConfig() : array
     {
         $config = $this->getSimpleJobConfig();
 
         return $config['parameters']['workers'] ?? [];
+    }
+
+    protected function getSimpleJobConfig() : array
+    {
+        $jobConfigParameters = $this->idleConfig->getJobParametersConfig(self::IDENTIFIER);
+
+        return $jobConfigParameters['supported'][$this->simpleIdentifier] ?? [];
     }
 }

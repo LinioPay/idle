@@ -11,12 +11,10 @@ interface Message extends MessageInterface
 {
     const IDENTIFIER = 'queue';
 
-    public function getQueueIdentifier() : string;
-
     /**
-     * Proxies a queue call to the service to queue the message.
+     * Proxies a delete call to the service.
      */
-    public function queue(array $parameters = []) : bool;
+    public function delete(array $parameters = []) : bool;
 
     /**
      * Proxies a dequeue call to the service to retreive message(s).
@@ -32,8 +30,10 @@ interface Message extends MessageInterface
      */
     public function dequeueOneOrFail(array $parameters = []) : MessageInterface;
 
+    public function getQueueIdentifier() : string;
+
     /**
-     * Proxies a delete call to the service.
+     * Proxies a queue call to the service to queue the message.
      */
-    public function delete(array $parameters = []) : bool;
+    public function queue(array $parameters = []) : bool;
 }

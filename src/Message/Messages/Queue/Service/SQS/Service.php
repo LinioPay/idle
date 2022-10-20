@@ -32,49 +32,41 @@ class Service extends DefaultService
         $this->logger = $logger;
     }
 
-    protected function getQueueUrl(string $queueIdentifier) : string
+    public function delete(QueueMessageInterface $message, array $parameters = []) : bool
     {
-        /** @var Result $result */
-        $result = $this->client->getQueueUrl([
-            'QueueName' => $queueIdentifier,
-        ]);
-
-        return (string) $result->get('QueueUrl');
-    }
-
-    public function queue(QueueMessageInterface $message, array $parameters = []) : bool
-    {
-        $this->logger->info('Idle queuing a message.', [
+        $this->logger->info('Idle deleting a message from queue', [
             'message' => $message->toArray(),
             'service' => Service::IDENTIFIER,
         ]);
 
         try {
-            $outParameters = array_replace_recursive($this->getQueueingParameters(), $parameters, [
-                'QueueUrl' => $this->getQueueUrl($message->getQueueIdentifier()),
-                'MessageBody' => $message->getBody(),
-                'MessageAttributes' => $message->getAttributes(),
-            ]);
+            $metadata = $message->getTemporaryMetadata();
 
-            /** @var Result $result */
-            $result = $this->client->sendMessage($outParameters);
+            if (empty($metadata['ReceiptHandle'])) {
+                throw new InvalidMessageParameterException('ReceiptHandle');
+            }
 
-            $message->setMessageId((string) $result->get('MessageId'));
+            $this->client->deleteMessage(array_replace_recursive(
+                $this->getDeletingParameters(), $parameters, [
+                    'QueueUrl' => $this->getQueueUrl($message->getQueueIdentifier()),
+                    'ReceiptHandle' => $metadata['ReceiptHandle'],
+                ]
+            ));
 
-            $this->logger->info('Idle successfully queued a message.', [
+            $this->logger->info('Idle successfully deleted a message from queue', [
                 'message' => $message->toArray(),
                 'service' => Service::IDENTIFIER,
             ]);
 
             return true;
         } catch (Throwable $throwable) {
-            $this->logger->critical('Idle queue encountered an error.', [
-                'service' => Service::IDENTIFIER,
+            $this->logger->critical('Idle delete encountered an error', [
                 'message' => $message->toArray(),
+                'service' => Service::IDENTIFIER,
                 'error' => $this->throwableToArray($throwable),
             ]);
 
-            if (!$this->isQueueingErrorSuppression()) {
+            if (!$this->isDeletingErrorSuppression()) {
                 throw $throwable;
             }
         }
@@ -133,41 +125,39 @@ class Service extends DefaultService
         return $messages[0];
     }
 
-    public function delete(QueueMessageInterface $message, array $parameters = []) : bool
+    public function queue(QueueMessageInterface $message, array $parameters = []) : bool
     {
-        $this->logger->info('Idle deleting a message from queue', [
+        $this->logger->info('Idle queuing a message.', [
             'message' => $message->toArray(),
             'service' => Service::IDENTIFIER,
         ]);
 
         try {
-            $metadata = $message->getTemporaryMetadata();
+            $outParameters = array_replace_recursive($this->getQueueingParameters(), $parameters, [
+                'QueueUrl' => $this->getQueueUrl($message->getQueueIdentifier()),
+                'MessageBody' => $message->getBody(),
+                'MessageAttributes' => $message->getAttributes(),
+            ]);
 
-            if (empty($metadata['ReceiptHandle'])) {
-                throw new InvalidMessageParameterException('ReceiptHandle');
-            }
+            /** @var Result $result */
+            $result = $this->client->sendMessage($outParameters);
 
-            $this->client->deleteMessage(array_replace_recursive(
-                $this->getDeletingParameters(), $parameters, [
-                    'QueueUrl' => $this->getQueueUrl($message->getQueueIdentifier()),
-                    'ReceiptHandle' => $metadata['ReceiptHandle'],
-                ]
-            ));
+            $message->setMessageId((string) $result->get('MessageId'));
 
-            $this->logger->info('Idle successfully deleted a message from queue', [
+            $this->logger->info('Idle successfully queued a message.', [
                 'message' => $message->toArray(),
                 'service' => Service::IDENTIFIER,
             ]);
 
             return true;
         } catch (Throwable $throwable) {
-            $this->logger->critical('Idle delete encountered an error', [
-                'message' => $message->toArray(),
+            $this->logger->critical('Idle queue encountered an error.', [
                 'service' => Service::IDENTIFIER,
+                'message' => $message->toArray(),
                 'error' => $this->throwableToArray($throwable),
             ]);
 
-            if (!$this->isDeletingErrorSuppression()) {
+            if (!$this->isQueueingErrorSuppression()) {
                 throw $throwable;
             }
         }
@@ -199,5 +189,15 @@ class Service extends DefaultService
         }
 
         return $out;
+    }
+
+    protected function getQueueUrl(string $queueIdentifier) : string
+    {
+        /** @var Result $result */
+        $result = $this->client->getQueueUrl([
+            'QueueName' => $queueIdentifier,
+        ]);
+
+        return (string) $result->get('QueueUrl');
     }
 }

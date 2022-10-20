@@ -23,10 +23,10 @@ abstract class DefaultWorkerFactory implements WorkerFactoryInterface
         $this->loadIdleConfig();
     }
 
+    abstract public function createWorker(string $workerIdentifier, array $parameters = []) : WorkerInterface;
+
     protected function loadIdleConfig() : void
     {
         $this->idleConfig = $this->container->get(IdleConfig::class);
     }
-
-    abstract public function createWorker(string $workerIdentifier, array $parameters = []) : WorkerInterface;
 }

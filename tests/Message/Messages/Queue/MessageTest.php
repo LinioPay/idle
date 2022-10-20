@@ -13,6 +13,15 @@ use Mockery as m;
 
 class MessageTest extends TestCase
 {
+    public function testCanGetFromArraySuccessfully()
+    {
+        /** @var Message $message */
+        $message = QueueMessage::fromArray(['body' => 'mbody', 'queue_identifier' => 'foo_queue']);
+
+        $this->assertSame('mbody', $message->getBody());
+        $this->assertSame('foo_queue', $message->getQueueIdentifier());
+    }
+
     public function testCanGetParameters()
     {
         $queueIdentifier = 'fooqueue';
@@ -33,15 +42,6 @@ class MessageTest extends TestCase
         $this->assertSame($temporaryMetadata, $message->getTemporaryMetadata());
     }
 
-    public function testCanGetFromArraySuccessfully()
-    {
-        /** @var Message $message */
-        $message = QueueMessage::fromArray(['body' => 'mbody', 'queue_identifier' => 'foo_queue']);
-
-        $this->assertSame('mbody', $message->getBody());
-        $this->assertSame('foo_queue', $message->getQueueIdentifier());
-    }
-
     public function testCanJsonSerialize()
     {
         $message = QueueMessage::fromArray(['body' => 'mbody', 'queue_identifier' => 'foo_queue']);
@@ -54,10 +54,84 @@ class MessageTest extends TestCase
         ], $message->jsonSerialize());
     }
 
+    public function testDeleteThrowsUndefinedServiceException()
+    {
+        /** @var QueueMessage $message */
+        $message = QueueMessage::fromArray(['body' => 'mbody', 'queue_identifier' => 'foo_queue']);
+
+        $this->expectException(UndefinedServiceException::class);
+        $message->delete();
+    }
+
+    public function testDequeueOneOrFailThrowsUndefinedServiceException()
+    {
+        /** @var QueueMessage $message */
+        $message = QueueMessage::fromArray(['queue_identifier' => 'foo_queue']);
+
+        $this->expectException(UndefinedServiceException::class);
+        $message->dequeueOneOrFail();
+    }
+
+    public function testDequeueThrowsUndefinedServiceException()
+    {
+        /** @var QueueMessage $message */
+        $message = QueueMessage::fromArray(['queue_identifier' => 'foo_queue']);
+
+        $this->expectException(UndefinedServiceException::class);
+        $message->dequeue();
+    }
+
     public function testFromArrayThrowsExceptionWhenMessageInvalid()
     {
         $this->expectException(InvalidMessageParameterException::class);
         QueueMessage::fromArray(['body' => 'mbody']);
+    }
+
+    public function testProxiesCallToDelete()
+    {
+        /** @var QueueMessage $message */
+        $message = QueueMessage::fromArray(['body' => 'mbody', 'queue_identifier' => 'foo_queue']);
+
+        $service = m::mock(QueueServiceInterface::class);
+        $service->shouldReceive('delete')
+            ->once()
+            ->with($message, ['foo' => 'bar'])
+            ->andReturn(true);
+
+        $message->setService($service);
+        $this->assertTrue($message->delete(['foo' => 'bar']));
+    }
+
+    public function testProxiesCallToDequeue()
+    {
+        /** @var QueueMessage $message */
+        $message = QueueMessage::fromArray(['queue_identifier' => 'foo_queue']);
+
+        $service = m::mock(QueueServiceInterface::class);
+        $service->shouldReceive('dequeue')
+            ->once()
+            ->with($message->getQueueIdentifier(), ['foo' => 'bar'])
+            ->andReturn(['foo']);
+
+        $message->setService($service);
+        $this->assertSame(['foo'], $message->receive(['foo' => 'bar']));
+    }
+
+    public function testProxiesCallToDequeueOneOrFail()
+    {
+        /** @var QueueMessage $message */
+        $message = QueueMessage::fromArray(['queue_identifier' => 'foo_queue']);
+
+        $receviedMessage = m::mock(QueueMessage::class);
+
+        $service = m::mock(QueueServiceInterface::class);
+        $service->shouldReceive('dequeueOneOrFail')
+            ->once()
+            ->with($message->getQueueIdentifier(), ['foo' => 'bar'])
+            ->andReturn($receviedMessage);
+
+        $message->setService($service);
+        $this->assertSame($receviedMessage, $message->receiveOneOrFail(['foo' => 'bar']));
     }
 
     public function testProxiesCallToQueue()
@@ -82,79 +156,5 @@ class MessageTest extends TestCase
 
         $this->expectException(UndefinedServiceException::class);
         $message->queue();
-    }
-
-    public function testProxiesCallToDelete()
-    {
-        /** @var QueueMessage $message */
-        $message = QueueMessage::fromArray(['body' => 'mbody', 'queue_identifier' => 'foo_queue']);
-
-        $service = m::mock(QueueServiceInterface::class);
-        $service->shouldReceive('delete')
-            ->once()
-            ->with($message, ['foo' => 'bar'])
-            ->andReturn(true);
-
-        $message->setService($service);
-        $this->assertTrue($message->delete(['foo' => 'bar']));
-    }
-
-    public function testDeleteThrowsUndefinedServiceException()
-    {
-        /** @var QueueMessage $message */
-        $message = QueueMessage::fromArray(['body' => 'mbody', 'queue_identifier' => 'foo_queue']);
-
-        $this->expectException(UndefinedServiceException::class);
-        $message->delete();
-    }
-
-    public function testProxiesCallToDequeue()
-    {
-        /** @var QueueMessage $message */
-        $message = QueueMessage::fromArray(['queue_identifier' => 'foo_queue']);
-
-        $service = m::mock(QueueServiceInterface::class);
-        $service->shouldReceive('dequeue')
-            ->once()
-            ->with($message->getQueueIdentifier(), ['foo' => 'bar'])
-            ->andReturn(['foo']);
-
-        $message->setService($service);
-        $this->assertSame(['foo'], $message->receive(['foo' => 'bar']));
-    }
-
-    public function testDequeueThrowsUndefinedServiceException()
-    {
-        /** @var QueueMessage $message */
-        $message = QueueMessage::fromArray(['queue_identifier' => 'foo_queue']);
-
-        $this->expectException(UndefinedServiceException::class);
-        $message->dequeue();
-    }
-
-    public function testProxiesCallToDequeueOneOrFail()
-    {
-        /** @var QueueMessage $message */
-        $message = QueueMessage::fromArray(['queue_identifier' => 'foo_queue']);
-
-        $receviedMessage = m::mock(QueueMessage::class);
-
-        $service = m::mock(QueueServiceInterface::class);
-        $service->shouldReceive('dequeueOneOrFail')
-            ->once()
-            ->with($message->getQueueIdentifier(), ['foo' => 'bar'])
-            ->andReturn($receviedMessage);
-
-        $message->setService($service);
-        $this->assertSame($receviedMessage, $message->receiveOneOrFail(['foo' => 'bar']));
-    }
-
-    public function testDequeueOneOrFailThrowsUndefinedServiceException()
-    {
-        /** @var QueueMessage $message */
-        $message = QueueMessage::fromArray(['queue_identifier' => 'foo_queue']);
-
-        $this->expectException(UndefinedServiceException::class);
-        $message->dequeueOneOrFail();
     }
 }

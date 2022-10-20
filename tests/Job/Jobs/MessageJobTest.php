@@ -22,14 +22,13 @@ use Mockery\Mock;
 
 class MessageJobTest extends TestCase
 {
-    /** @var Mock|WorkerFactory */
-    protected $workerFactory;
+    /** @var IdleConfig */
+    protected $idleConfig;
 
     /** @var Mock|MessageFactoryInterface */
     protected $messageFactory;
-
-    /** @var IdleConfig */
-    protected $idleConfig;
+    /** @var Mock|WorkerFactory */
+    protected $workerFactory;
 
     public function setUp() : void
     {

@@ -10,7 +10,7 @@ use LinioPay\Idle\Message\Service as ServiceInterface;
 
 interface Service extends ServiceInterface
 {
-    public function queue(Message $message, array $parameters = []) : bool;
+    public function delete(Message $message, array $parameters = []) : bool;
 
     /**
      * @return MessageInterface[]
@@ -22,5 +22,5 @@ interface Service extends ServiceInterface
      */
     public function dequeueOneOrFail(string $queueIdentifier, array $parameters = []) : MessageInterface;
 
-    public function delete(Message $message, array $parameters = []) : bool;
+    public function queue(Message $message, array $parameters = []) : bool;
 }

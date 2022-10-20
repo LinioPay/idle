@@ -24,10 +24,10 @@ abstract class DefaultServiceFactory implements ServiceFactoryInterface
         $this->loadIdleConfig();
     }
 
+    abstract public function createFromMessage(Message $message) : Service;
+
     protected function loadIdleConfig() : void
     {
         $this->idleConfig = $this->container->get(IdleConfig::class);
     }
-
-    abstract public function createFromMessage(Message $message) : Service;
 }

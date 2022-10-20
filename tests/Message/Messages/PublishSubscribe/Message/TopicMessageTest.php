@@ -12,6 +12,17 @@ use Mockery as m;
 
 class TopicMessageTest extends TestCase
 {
+    public function testFromArrayThrowsInvalidMessageParameterExceptionWhenMissingRequiredParameters()
+    {
+        $this->expectException(InvalidMessageParameterException::class);
+        TopicMessage::fromArray([
+           'body' => 'foobody',
+           'attributes' => [
+               'red' => true,
+           ],
+        ]);
+    }
+
     public function testGettersAndSetters()
     {
         $message = new TopicMessage('foo_topic', 'body', ['red' => true], 'foo123', ['meta' => true]);
@@ -42,34 +53,6 @@ class TopicMessageTest extends TestCase
         $this->assertSame(TopicMessage::IDENTIFIER, $message->getIdleIdentifier());
     }
 
-    public function testToArrayAndFromArray()
-    {
-        $message = new TopicMessage('foo_topic', 'body', ['red' => true], 'foo123', ['redmeta' => true]);
-
-        $asArray = $jsonOut = $message->toArray();
-        $this->assertSame($asArray, TopicMessage::fromArray($message->toArray())->toArray());
-
-        $this->assertArrayHasKey('message_identifier', $asArray);
-        $this->assertArrayHasKey('topic_identifier', $asArray);
-        $this->assertArrayHasKey('body', $asArray);
-        $this->assertArrayHasKey('attributes', $asArray);
-        $this->assertArrayHasKey('metadata', $asArray);
-
-        unset($jsonOut['metadata']);
-        $this->assertSame($jsonOut, json_decode(json_encode($message), true));
-    }
-
-    public function testFromArrayThrowsInvalidMessageParameterExceptionWhenMissingRequiredParameters()
-    {
-        $this->expectException(InvalidMessageParameterException::class);
-        TopicMessage::fromArray([
-           'body' => 'foobody',
-           'attributes' => [
-               'red' => true,
-           ],
-        ]);
-    }
-
     public function testProxiesCallToPublish()
     {
         $message = new TopicMessage('foo_topic', 'body', ['red' => true], 'foo123', ['redmeta' => true]);
@@ -90,5 +73,22 @@ class TopicMessageTest extends TestCase
 
         $this->expectException(UndefinedServiceException::class);
         $message->publish();
+    }
+
+    public function testToArrayAndFromArray()
+    {
+        $message = new TopicMessage('foo_topic', 'body', ['red' => true], 'foo123', ['redmeta' => true]);
+
+        $asArray = $jsonOut = $message->toArray();
+        $this->assertSame($asArray, TopicMessage::fromArray($message->toArray())->toArray());
+
+        $this->assertArrayHasKey('message_identifier', $asArray);
+        $this->assertArrayHasKey('topic_identifier', $asArray);
+        $this->assertArrayHasKey('body', $asArray);
+        $this->assertArrayHasKey('attributes', $asArray);
+        $this->assertArrayHasKey('metadata', $asArray);
+
+        unset($jsonOut['metadata']);
+        $this->assertSame($jsonOut, json_decode(json_encode($message), true));
     }
 }

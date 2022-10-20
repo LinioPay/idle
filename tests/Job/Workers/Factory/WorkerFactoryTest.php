@@ -14,6 +14,33 @@ use Psr\Container\ContainerInterface;
 
 class WorkerFactoryTest extends TestCase
 {
+    public function testCreateWorkerDoesNotForwardCallToAppropriateFactoryWhenSkipFactory()
+    {
+        $container = m::mock(ContainerInterface::class);
+        $container->shouldReceive('get')
+            ->with(IdleConfig::class)
+            ->andReturn(new IdleConfig([], [], [], [
+                FooWorker::IDENTIFIER => [
+                    'class' => FooWorker::class,
+                    'parameters' => [
+                        'red' => true,
+                    ],
+                ],
+            ]));
+
+        $factory = new WorkerFactory($container);
+
+        $this->assertInstanceOf(WorkerFactory::class, $factory);
+
+        $worker = $factory->createWorker(FooWorker::IDENTIFIER, ['blue' => true]);
+        $this->assertInstanceOf(FooWorker::class, $worker);
+
+        $parameters = $worker->getParameters();
+
+        $this->assertArrayHasKey('red', $parameters);
+        $this->assertArrayHasKey('blue', $parameters);
+    }
+
     public function testCreateWorkerForwardsCallToAppropriateFactory()
     {
         $container = m::mock(ContainerInterface::class);
@@ -37,33 +64,6 @@ class WorkerFactoryTest extends TestCase
 
         $worker = $factory->createWorker(BazWorker::IDENTIFIER, ['blue' => true]);
         $this->assertInstanceOf(BazWorker::class, $worker);
-
-        $parameters = $worker->getParameters();
-
-        $this->assertArrayHasKey('red', $parameters);
-        $this->assertArrayHasKey('blue', $parameters);
-    }
-
-    public function testCreateWorkerDoesNotForwardCallToAppropriateFactoryWhenSkipFactory()
-    {
-        $container = m::mock(ContainerInterface::class);
-        $container->shouldReceive('get')
-            ->with(IdleConfig::class)
-            ->andReturn(new IdleConfig([], [], [], [
-                FooWorker::IDENTIFIER => [
-                    'class' => FooWorker::class,
-                    'parameters' => [
-                        'red' => true,
-                    ],
-                ],
-            ]));
-
-        $factory = new WorkerFactory($container);
-
-        $this->assertInstanceOf(WorkerFactory::class, $factory);
-
-        $worker = $factory->createWorker(FooWorker::IDENTIFIER, ['blue' => true]);
-        $this->assertInstanceOf(FooWorker::class, $worker);
 
         $parameters = $worker->getParameters();
 

@@ -14,11 +14,10 @@ use LinioPay\Idle\Message\ReceivableMessage as ReceivableMessageInterface;
 
 class SubscriptionMessage extends DefaultMessage implements SubscriptionMessageInterface, ReceivableMessageInterface
 {
-    /** @var string */
-    protected $subscriptionIdentifier;
-
     /** @var PublishSubscribeServiceInterface */
     protected $service;
+    /** @var string */
+    protected $subscriptionIdentifier;
 
     public function __construct(string $subscriptionIdentifier, string $body = '', array $attributes = [], string $messageIdentifier = '', array $metadata = [])
     {
@@ -26,9 +25,68 @@ class SubscriptionMessage extends DefaultMessage implements SubscriptionMessageI
         parent::__construct($body, $attributes, $messageIdentifier, $metadata);
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function acknowledge(array $parameters = []) : bool
+    {
+        if (is_null($this->service)) {
+            throw new UndefinedServiceException($this);
+        }
+
+        return $this->service->acknowledge($this, $parameters);
+    }
+
+    public function getIdleIdentifier() : string
+    {
+        return SubscriptionMessageInterface::IDENTIFIER;
+    }
+
+    public function getSourceName() : string
+    {
+        return $this->getSubscriptionIdentifier();
+    }
+
     public function getSubscriptionIdentifier() : string
     {
         return $this->subscriptionIdentifier;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function pull(array $parameters = []) : array
+    {
+        if (is_null($this->service)) {
+            throw new UndefinedServiceException($this);
+        }
+
+        return $this->service->pull($this->getSubscriptionIdentifier(), $parameters);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function pullOneOrFail(array $parameters = []) : MessageInterface
+    {
+        if (is_null($this->service)) {
+            throw new UndefinedServiceException($this);
+        }
+
+        return $this->service->pullOneOrFail($this->getSubscriptionIdentifier(), $parameters);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function receive(array $parameters = []) : array
+    {
+        return $this->pull($parameters);
+    }
+
+    public function receiveOneOrFail(array $parameters = []) : MessageInterface
+    {
+        return $this->pullOneOrFail($parameters);
     }
 
     public function toArray() : array
@@ -59,64 +117,5 @@ class SubscriptionMessage extends DefaultMessage implements SubscriptionMessageI
             $parameters['message_identifier'] ?? '',
             $parameters['metadata'] ?? []
         );
-    }
-
-    public function getIdleIdentifier() : string
-    {
-        return SubscriptionMessageInterface::IDENTIFIER;
-    }
-
-    public function getSourceName() : string
-    {
-        return $this->getSubscriptionIdentifier();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function acknowledge(array $parameters = []) : bool
-    {
-        if (is_null($this->service)) {
-            throw new UndefinedServiceException($this);
-        }
-
-        return $this->service->acknowledge($this, $parameters);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function pull(array $parameters = []) : array
-    {
-        if (is_null($this->service)) {
-            throw new UndefinedServiceException($this);
-        }
-
-        return $this->service->pull($this->getSubscriptionIdentifier(), $parameters);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function receive(array $parameters = []) : array
-    {
-        return $this->pull($parameters);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function pullOneOrFail(array $parameters = []) : MessageInterface
-    {
-        if (is_null($this->service)) {
-            throw new UndefinedServiceException($this);
-        }
-
-        return $this->service->pullOneOrFail($this->getSubscriptionIdentifier(), $parameters);
-    }
-
-    public function receiveOneOrFail(array $parameters = []) : MessageInterface
-    {
-        return $this->pullOneOrFail($parameters);
     }
 }
