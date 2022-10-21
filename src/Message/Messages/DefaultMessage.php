@@ -9,14 +9,13 @@ use LinioPay\Idle\Message\Service;
 
 abstract class DefaultMessage implements MessageInterface
 {
-    /** @var string */
-    protected $messageId;
+    /** @var array */
+    protected $attributes;
 
     /** @var string */
     protected $body;
-
-    /** @var array */
-    protected $attributes;
+    /** @var string */
+    protected $messageId;
 
     /** @var array */
     protected $metadata;
@@ -32,14 +31,9 @@ abstract class DefaultMessage implements MessageInterface
         $this->metadata = $metadata;
     }
 
-    public function getMessageId() : string
+    public function getAttributes() : array
     {
-        return $this->messageId;
-    }
-
-    public function setMessageId(string $messageId) : void
-    {
-        $this->messageId = $messageId;
+        return $this->attributes;
     }
 
     public function getBody() : string
@@ -47,29 +41,19 @@ abstract class DefaultMessage implements MessageInterface
         return $this->body;
     }
 
-    public function setBody(string $body) : void
+    public function getMessageId() : string
     {
-        $this->body = $body;
+        return $this->messageId;
     }
 
-    public function getAttributes() : array
+    public function getService() : ?Service
     {
-        return $this->attributes;
-    }
-
-    public function setAttributes(array $attributes) : void
-    {
-        $this->attributes = $attributes;
+        return $this->service;
     }
 
     public function getTemporaryMetadata() : array
     {
         return $this->metadata;
-    }
-
-    public function setTemporaryMetadata(array $metadata) : void
-    {
-        $this->metadata = $metadata;
     }
 
     public function jsonSerialize()
@@ -81,14 +65,29 @@ abstract class DefaultMessage implements MessageInterface
         return $data;
     }
 
-    public function getService() : ?Service
+    public function setAttributes(array $attributes) : void
     {
-        return $this->service;
+        $this->attributes = $attributes;
+    }
+
+    public function setBody(string $body) : void
+    {
+        $this->body = $body;
+    }
+
+    public function setMessageId(string $messageId) : void
+    {
+        $this->messageId = $messageId;
     }
 
     public function setService(Service $service) : void
     {
         $this->service = $service;
+    }
+
+    public function setTemporaryMetadata(array $metadata) : void
+    {
+        $this->metadata = $metadata;
     }
 
     abstract public function toArray() : array;

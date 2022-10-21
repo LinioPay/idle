@@ -9,14 +9,9 @@ use JsonSerializable;
 interface Message extends JsonSerializable
 {
     /**
-     * Retrieve the id for the given message.
+     * Get message attributes.
      */
-    public function getMessageId() : string;
-
-    /**
-     * Set the id for the message.
-     */
-    public function setMessageId(string $messageIdentifier) : void;
+    public function getAttributes() : array;
 
     /**
      * Retrieve the message body.
@@ -24,14 +19,29 @@ interface Message extends JsonSerializable
     public function getBody() : string;
 
     /**
-     * Set the message body.
+     * Retrieve the message type identifier.
      */
-    public function setBody(string $body) : void;
+    public function getIdleIdentifier() : string;
 
     /**
-     * Get message attributes.
+     * Retrieve the id for the given message.
      */
-    public function getAttributes() : array;
+    public function getMessageId() : string;
+
+    /**
+     * Retrieve the service for which the message belongs.
+     */
+    public function getService() : ?Service;
+
+    /**
+     * Retrieve name of the source where the message resides.  Examples: topic name, queue name, etc.
+     */
+    public function getSourceName() : string;
+
+    /**
+     * Retrieve any temporary metadata such as receipt id, retrieval time, etc.
+     */
+    public function getTemporaryMetadata() : array;
 
     /**
      * Set message attributes.
@@ -39,9 +49,19 @@ interface Message extends JsonSerializable
     public function setAttributes(array $attributes) : void;
 
     /**
-     * Retrieve any temporary metadata such as receipt id, retrieval time, etc.
+     * Set the message body.
      */
-    public function getTemporaryMetadata() : array;
+    public function setBody(string $body) : void;
+
+    /**
+     * Set the id for the message.
+     */
+    public function setMessageId(string $messageIdentifier) : void;
+
+    /**
+     * Set the service for which the message belongs.
+     */
+    public function setService(Service $service) : void;
 
     /**
      * Set the temporary metadata such as receipt id, retrieval time, etc.
@@ -57,24 +77,4 @@ interface Message extends JsonSerializable
      * Create a message instance from array data.
      */
     public static function fromArray(array $parameters) : Message;
-
-    /**
-     * Retrieve the message type identifier.
-     */
-    public function getIdleIdentifier() : string;
-
-    /**
-     * Retrieve name of the source where the message resides.  Examples: topic name, queue name, etc.
-     */
-    public function getSourceName() : string;
-
-    /**
-     * Set the service for which the message belongs.
-     */
-    public function setService(Service $service) : void;
-
-    /**
-     * Retrieve the service for which the message belongs.
-     */
-    public function getService() : ?Service;
 }

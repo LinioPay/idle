@@ -33,19 +33,6 @@ class TestCase extends TestCaseBase
     }
 
     /**
-     * Injects a value into an inaccessible object property via reflection.
-     *
-     * @param mixed $classOrObject
-     * @param mixed $propertyValue
-     */
-    protected function inject($classOrObject, string $propertyNane, $propertyValue)
-    {
-        $property = new \ReflectionProperty($classOrObject, $propertyNane);
-        $property->setAccessible(true);
-        $property->setValue($classOrObject, $propertyValue);
-    }
-
-    /**
      * Creates a fake $className and injects any provided properties. This is a
      * quick way to create an instance of a class that requires constructor
      * arguments when they may not be relevant to what you are testing.
@@ -93,9 +80,22 @@ class TestCase extends TestCaseBase
     }
 
     /**
+     * Injects a value into an inaccessible object property via reflection.
+     *
+     * @param mixed $classOrObject
+     * @param mixed $propertyValue
+     */
+    protected function inject($classOrObject, string $propertyNane, $propertyValue)
+    {
+        $property = new \ReflectionProperty($classOrObject, $propertyNane);
+        $property->setAccessible(true);
+        $property->setValue($classOrObject, $propertyValue);
+    }
+
+    /**
      * Allows obtaining a method from the given class.
      *
-     * @param string $className  Name of the class being tested
+     * @param string $className Name of the class being tested
      * @param string $methodName Name of the method being tested
      *
      * @return ReflectionMethod

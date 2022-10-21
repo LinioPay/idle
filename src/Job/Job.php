@@ -9,19 +9,19 @@ use Ramsey\Uuid\UuidInterface;
 interface Job
 {
     /**
-     * Begin executing the job.
+     * Adds an entry to the context.  Useful to share data between workers.
      */
-    public function process() : void;
+    public function addContext(string $key, $value) : void;
 
     /**
-     * Retrieve an array of error messages which occurred while processing the job.
+     * Adds an entry to the output data.  Useful to specify data which the job will output.
      */
-    public function getErrors() : array;
+    public function addOutput(string $key, $value) : void;
 
     /**
-     * Whether the job completed successfully or not.
+     * Retrieve the value of specific key in the context. Useful to share data between workers.
      */
-    public function isSuccessful() : bool;
+    public function getContextEntry(string $key);
 
     /**
      * Overall duration of job execution.
@@ -29,24 +29,24 @@ interface Job
     public function getDuration() : float;
 
     /**
+     * Retrieve an array of error messages which occurred while processing the job.
+     */
+    public function getErrors() : array;
+
+    /**
+     * Retrieve the id for the job.
+     */
+    public function getJobId() : UuidInterface;
+
+    /**
+     * Retrieves the output data.
+     */
+    public function getOutput() : array;
+
+    /**
      * Retrieve all job parameters.
      */
     public function getParameters() : array;
-
-    /**
-     * Set job parameters.
-     */
-    public function setParameters(array $parameters = []) : void;
-
-    /**
-     * Verifies the parameters for the job are valid.
-     */
-    public function validateParameters() : void;
-
-    /**
-     * Whether the job finished executing or not.
-     */
-    public function isFinished() : bool;
 
     /**
      * Retrieve data which we may wish to persist.
@@ -59,9 +59,19 @@ interface Job
     public function getTypeIdentifier() : string;
 
     /**
-     * Retrieve the id for the job.
+     * Whether the job finished executing or not.
      */
-    public function getJobId() : UuidInterface;
+    public function isFinished() : bool;
+
+    /**
+     * Whether the job completed successfully or not.
+     */
+    public function isSuccessful() : bool;
+
+    /**
+     * Begin executing the job.
+     */
+    public function process() : void;
 
     /**
      * Sets and replaces the entire context.  Useful to share data between workers.
@@ -69,27 +79,17 @@ interface Job
     public function setContext(array $data) : void;
 
     /**
-     * Adds an entry to the context.  Useful to share data between workers.
-     */
-    public function addContext(string $key, $value) : void;
-
-    /**
-     * Retrieve the value of specific key in the context. Useful to share data between workers.
-     */
-    public function getContextEntry(string $key);
-
-    /**
      * Sets and replaces the entire output data.  Useful to specify data which the job will output.
      */
     public function setOutput(array $data) : void;
 
     /**
-     * Adds an entry to the output data.  Useful to specify data which the job will output.
+     * Set job parameters.
      */
-    public function addOutput(string $key, $value) : void;
+    public function setParameters(array $parameters = []) : void;
 
     /**
-     * Retrieves the output data.
+     * Verifies the parameters for the job are valid.
      */
-    public function getOutput() : array;
+    public function validateParameters() : void;
 }

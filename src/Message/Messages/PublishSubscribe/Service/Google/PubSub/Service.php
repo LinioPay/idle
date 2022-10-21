@@ -33,6 +33,48 @@ class Service extends DefaultService
         $this->logger = $logger;
     }
 
+    public function acknowledge(SubscriptionMessageInterface $message, array $parameters = []) : bool
+    {
+        $this->logger->info('Idle acknowledging a message.', [
+            'message' => $message->toArray(),
+            'service' => self::IDENTIFIER,
+        ]);
+
+        try {
+            $metadata = $message->getTemporaryMetadata();
+
+            if (empty($metadata['gcMessage']) || !is_a($metadata['gcMessage'], GoogleCloudMessage::class)) {
+                throw new InvalidMessageParameterException('gcMessage');
+            }
+
+            $subscription = $this->client->subscription($message->getSubscriptionIdentifier());
+
+            $subscription->acknowledge($metadata['gcMessage'], array_replace_recursive(
+                $this->getAcknowledgeParameterConfig(),
+                $parameters
+            ));
+
+            $this->logger->info('Idle successfully acknowledged a message.', [
+                'message' => $message->toArray(),
+                'service' => self::IDENTIFIER,
+            ]);
+
+            return true;
+        } catch (Throwable $throwable) {
+            $this->logger->critical('Idle acknowledge encountered an error.', [
+                'message' => $message->toArray(),
+                'service' => self::IDENTIFIER,
+                'error' => $this->throwableToArray($throwable),
+            ]);
+
+            if (!$this->isAcknowledgeErrorSuppressed()) {
+                throw $throwable;
+            }
+        }
+
+        return false;
+    }
+
     public function publish(TopicMessageInterface $message, array $parameters = []) : bool
     {
         $this->logger->info('Idle publishing a message.', [
@@ -139,48 +181,6 @@ class Service extends DefaultService
         }
 
         return $messages[0];
-    }
-
-    public function acknowledge(SubscriptionMessageInterface $message, array $parameters = []) : bool
-    {
-        $this->logger->info('Idle acknowledging a message.', [
-            'message' => $message->toArray(),
-            'service' => self::IDENTIFIER,
-        ]);
-
-        try {
-            $metadata = $message->getTemporaryMetadata();
-
-            if (empty($metadata['gcMessage']) || !is_a($metadata['gcMessage'], GoogleCloudMessage::class)) {
-                throw new InvalidMessageParameterException('gcMessage');
-            }
-
-            $subscription = $this->client->subscription($message->getSubscriptionIdentifier());
-
-            $subscription->acknowledge($metadata['gcMessage'], array_replace_recursive(
-                $this->getAcknowledgeParameterConfig(),
-                $parameters
-            ));
-
-            $this->logger->info('Idle successfully acknowledged a message.', [
-                'message' => $message->toArray(),
-                'service' => self::IDENTIFIER,
-            ]);
-
-            return true;
-        } catch (Throwable $throwable) {
-            $this->logger->critical('Idle acknowledge encountered an error.', [
-                'message' => $message->toArray(),
-                'service' => self::IDENTIFIER,
-                'error' => $this->throwableToArray($throwable),
-            ]);
-
-            if (!$this->isAcknowledgeErrorSuppressed()) {
-                throw $throwable;
-            }
-        }
-
-        return false;
     }
 
     /**

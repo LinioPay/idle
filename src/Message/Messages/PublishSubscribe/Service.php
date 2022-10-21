@@ -9,6 +9,8 @@ use LinioPay\Idle\Message\Service as ServiceInterface;
 
 interface Service extends ServiceInterface
 {
+    public function acknowledge(SubscriptionMessage $message, array $parameters = []) : bool;
+
     public function publish(TopicMessage $message, array $parameters = []) : bool;
 
     /**
@@ -17,6 +19,4 @@ interface Service extends ServiceInterface
     public function pull(string $subscriptionIdentifier, array $parameters = []) : array;
 
     public function pullOneOrFail(string $subscriptionIdentifier, array $parameters = []) : MessageInterface;
-
-    public function acknowledge(SubscriptionMessage $message, array $parameters = []) : bool;
 }

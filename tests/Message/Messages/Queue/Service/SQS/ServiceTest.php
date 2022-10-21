@@ -19,9 +19,9 @@ class ServiceTest extends TestCase
 {
     protected $apiTestHandler;
 
-    protected $logger;
-
     protected $config;
+
+    protected $logger;
 
     protected $queueIdentifier;
 
@@ -71,64 +71,140 @@ class ServiceTest extends TestCase
         ];
     }
 
-    public function testQueueingSuccessfully() : void
+    public function testDeletingException()
     {
-        $message = new Message($this->queueIdentifier, 'mbody');
-
-        $this->sqsClient->shouldReceive('getQueueUrl')
-            ->once()
-            ->with(['QueueName' => $this->queueIdentifier])
-            ->andReturn(new Result(['QueueUrl' => 'http://foo.bar']));
-
-        $this->sqsClient->shouldReceive('sendMessage')
-            ->once()
-            ->with([
-                'DelaySeconds' => 1,
-                'QueueUrl' => 'http://foo.bar',
-                'MessageBody' => $message->getBody(),
-                'MessageAttributes' => $message->getAttributes(),
-            ])
-            ->andReturn(new Result(['MessageId' => 'foo123']));
-
-        $service = new Service($this->sqsClient, $this->config, $this->logger);
-        $this->assertTrue($service->queue($message));
-        $this->assertSame($this->config, $service->getConfig());
-        $this->assertSame($this->config['parameters']['service'], $service->getServiceConfig());
-    }
-
-    public function testQueueingFailure()
-    {
-        $message = new Message($this->queueIdentifier, 'mbody');
-
-        $this->sqsClient->shouldReceive('getQueueUrl')
-            ->once()
-            ->with(['QueueName' => $this->queueIdentifier])
-            ->andThrow(new \Exception('boom'));
-
-        $service = new Service($this->sqsClient, $this->config, $this->logger);
-        $this->assertFalse($service->queue($message));
-    }
-
-    public function testQueueingException()
-    {
-        $message = new Message($this->queueIdentifier, 'mbody');
-
-        $this->sqsClient->shouldReceive('getQueueUrl')
-            ->once()
-            ->with(['QueueName' => $this->queueIdentifier])
-            ->andThrow(new \Exception('boom'));
+        $message = new Message($this->queueIdentifier, 'mbody', [], 'foo123');
 
         $config = ArrayUtils::merge($this->config, [
-            'queue' => [
+            'delete' => [
                 'error' => [
                     'suppression' => false,
                 ],
             ],
         ]);
 
-        $this->expectException(\Exception::class);
         $service = new Service($this->sqsClient, $config, $this->logger);
-        $service->queue($message);
+
+        $this->expectException(InvalidMessageParameterException::class);
+        $service->delete($message);
+    }
+
+    public function testDeletingFailureDueToMissingReceiptHandle()
+    {
+        $message = new Message($this->queueIdentifier, 'mbody', [], 'foo123');
+        $service = new Service($this->sqsClient, $this->config, $this->logger);
+        $this->assertFalse($service->delete($message));
+    }
+
+    public function testDeletingSuccessfully()
+    {
+        $message = new Message($this->queueIdentifier, 'mbody', [], 'foo123', ['ReceiptHandle' => 'handle123']);
+
+        $this->sqsClient->shouldReceive('getQueueUrl')
+            ->once()
+            ->with(['QueueName' => $this->queueIdentifier])
+            ->andReturn(new Result(['QueueUrl' => 'http://foo.bar']));
+
+        $this->sqsClient->shouldReceive('deleteMessage')
+            ->once()
+            ->with([
+                'QueueUrl' => 'http://foo.bar',
+                'ReceiptHandle' => 'handle123',
+            ])
+            ->andReturn(new Result(['MessageId' => 'foo123']));
+
+        $service = new Service($this->sqsClient, $this->config, $this->logger);
+        $this->assertTrue($service->delete($message));
+    }
+
+    public function testDequeueingException()
+    {
+        $this->sqsClient->shouldReceive('getQueueUrl')
+            ->once()
+            ->with(['QueueName' => $this->queueIdentifier])
+            ->andThrow(new \Exception('boom'));
+
+        $config = ArrayUtils::merge($this->config, [
+            'dequeue' => [
+                'error' => [
+                    'suppression' => false,
+                ],
+            ],
+        ]);
+
+        $service = new Service($this->sqsClient, $config, $this->logger);
+
+        $this->expectException(\Exception::class);
+        $service->dequeue($this->queueIdentifier);
+    }
+
+    public function testDequeueingFailure()
+    {
+        $this->sqsClient->shouldReceive('getQueueUrl')
+            ->once()
+            ->with(['QueueName' => $this->queueIdentifier])
+            ->andThrow(new \Exception('boom'));
+
+        $service = new Service($this->sqsClient, $this->config, $this->logger);
+
+        $this->assertEmpty($service->dequeue($this->queueIdentifier));
+    }
+
+    public function testDequeueingOneFails()
+    {
+        $this->sqsClient->shouldReceive('getQueueUrl')
+            ->once()
+            ->andThrow(new \Exception('kaboom!'));
+
+        $config = ArrayUtils::merge($this->config, [
+            'dequeue' => [
+                'error' => [
+                    'suppression' => false,
+                ],
+            ],
+        ]);
+
+        $service = new Service($this->sqsClient, $config, $this->logger);
+        $this->expectException(FailedReceivingMessageException::class);
+        $service->dequeueOneOrFail($this->queueIdentifier, ['VisibilityTimeout' => 5]);
+    }
+
+    public function testDequeueingOneSuccessfully()
+    {
+        $this->sqsClient->shouldReceive('getQueueUrl')
+            ->once()
+            ->with(['QueueName' => $this->queueIdentifier])
+            ->andReturn(new Result(['QueueUrl' => 'http://foo.bar']));
+
+        $this->sqsClient->shouldReceive('receiveMessage')
+            ->once()
+            ->with([
+                'MaxNumberOfMessages' => 1,
+                'VisibilityTimeout' => 5,
+                'QueueUrl' => 'http://foo.bar',
+            ])
+            ->andReturn(new Result([
+                'Messages' => [
+                    [
+                        'MessageId' => '123',
+                        'Body' => 'mbody',
+                        'MessageAttributes' => [
+                            [
+                                'Name' => 'myattr',
+                                'Value' => [
+                                    'StringValue' => 'myval',
+                                    'DataType' => 'String',
+                                ],
+                            ],
+                        ],
+                        'ReceiptHandle' => '123handle',
+                    ],
+                ],
+            ]));
+
+        $service = new Service($this->sqsClient, $this->config, $this->logger);
+        $message = $service->dequeueOneOrFail($this->queueIdentifier, ['VisibilityTimeout' => 5]);
+        $this->assertInstanceOf(QueueMessageInterface::class, $message);
     }
 
     public function testDequeueingSuccessfully()
@@ -181,139 +257,63 @@ class ServiceTest extends TestCase
         $this->assertSame('123handle', $message->getTemporaryMetadata()['ReceiptHandle']);
     }
 
-    public function testDequeueingFailure()
+    public function testQueueingException()
     {
-        $this->sqsClient->shouldReceive('getQueueUrl')
-            ->once()
-            ->with(['QueueName' => $this->queueIdentifier])
-            ->andThrow(new \Exception('boom'));
+        $message = new Message($this->queueIdentifier, 'mbody');
 
-        $service = new Service($this->sqsClient, $this->config, $this->logger);
-
-        $this->assertEmpty($service->dequeue($this->queueIdentifier));
-    }
-
-    public function testDequeueingException()
-    {
         $this->sqsClient->shouldReceive('getQueueUrl')
             ->once()
             ->with(['QueueName' => $this->queueIdentifier])
             ->andThrow(new \Exception('boom'));
 
         $config = ArrayUtils::merge($this->config, [
-            'dequeue' => [
+            'queue' => [
                 'error' => [
                     'suppression' => false,
                 ],
             ],
         ]);
-
-        $service = new Service($this->sqsClient, $config, $this->logger);
 
         $this->expectException(\Exception::class);
-        $service->dequeue($this->queueIdentifier);
+        $service = new Service($this->sqsClient, $config, $this->logger);
+        $service->queue($message);
     }
 
-    public function testDequeueingOneSuccessfully()
+    public function testQueueingFailure()
     {
+        $message = new Message($this->queueIdentifier, 'mbody');
+
         $this->sqsClient->shouldReceive('getQueueUrl')
             ->once()
             ->with(['QueueName' => $this->queueIdentifier])
-            ->andReturn(new Result(['QueueUrl' => 'http://foo.bar']));
-
-        $this->sqsClient->shouldReceive('receiveMessage')
-            ->once()
-            ->with([
-                'MaxNumberOfMessages' => 1,
-                'VisibilityTimeout' => 5,
-                'QueueUrl' => 'http://foo.bar',
-            ])
-            ->andReturn(new Result([
-                'Messages' => [
-                    [
-                        'MessageId' => '123',
-                        'Body' => 'mbody',
-                        'MessageAttributes' => [
-                            [
-                                'Name' => 'myattr',
-                                'Value' => [
-                                    'StringValue' => 'myval',
-                                    'DataType' => 'String',
-                                ],
-                            ],
-                        ],
-                        'ReceiptHandle' => '123handle',
-                    ],
-                ],
-            ]));
+            ->andThrow(new \Exception('boom'));
 
         $service = new Service($this->sqsClient, $this->config, $this->logger);
-        $message = $service->dequeueOneOrFail($this->queueIdentifier, ['VisibilityTimeout' => 5]);
-        $this->assertInstanceOf(QueueMessageInterface::class, $message);
+        $this->assertFalse($service->queue($message));
     }
 
-    public function testDequeueingOneFails()
+    public function testQueueingSuccessfully() : void
     {
-        $this->sqsClient->shouldReceive('getQueueUrl')
-            ->once()
-            ->andThrow(new \Exception('kaboom!'));
-
-        $config = ArrayUtils::merge($this->config, [
-            'dequeue' => [
-                'error' => [
-                    'suppression' => false,
-                ],
-            ],
-        ]);
-
-        $service = new Service($this->sqsClient, $config, $this->logger);
-        $this->expectException(FailedReceivingMessageException::class);
-        $service->dequeueOneOrFail($this->queueIdentifier, ['VisibilityTimeout' => 5]);
-    }
-
-    public function testDeletingSuccessfully()
-    {
-        $message = new Message($this->queueIdentifier, 'mbody', [], 'foo123', ['ReceiptHandle' => 'handle123']);
+        $message = new Message($this->queueIdentifier, 'mbody');
 
         $this->sqsClient->shouldReceive('getQueueUrl')
             ->once()
             ->with(['QueueName' => $this->queueIdentifier])
             ->andReturn(new Result(['QueueUrl' => 'http://foo.bar']));
 
-        $this->sqsClient->shouldReceive('deleteMessage')
+        $this->sqsClient->shouldReceive('sendMessage')
             ->once()
             ->with([
+                'DelaySeconds' => 1,
                 'QueueUrl' => 'http://foo.bar',
-                'ReceiptHandle' => 'handle123',
+                'MessageBody' => $message->getBody(),
+                'MessageAttributes' => $message->getAttributes(),
             ])
             ->andReturn(new Result(['MessageId' => 'foo123']));
 
         $service = new Service($this->sqsClient, $this->config, $this->logger);
-        $this->assertTrue($service->delete($message));
-    }
-
-    public function testDeletingFailureDueToMissingReceiptHandle()
-    {
-        $message = new Message($this->queueIdentifier, 'mbody', [], 'foo123');
-        $service = new Service($this->sqsClient, $this->config, $this->logger);
-        $this->assertFalse($service->delete($message));
-    }
-
-    public function testDeletingException()
-    {
-        $message = new Message($this->queueIdentifier, 'mbody', [], 'foo123');
-
-        $config = ArrayUtils::merge($this->config, [
-            'delete' => [
-                'error' => [
-                    'suppression' => false,
-                ],
-            ],
-        ]);
-
-        $service = new Service($this->sqsClient, $config, $this->logger);
-
-        $this->expectException(InvalidMessageParameterException::class);
-        $service->delete($message);
+        $this->assertTrue($service->queue($message));
+        $this->assertSame($this->config, $service->getConfig());
+        $this->assertSame($this->config['parameters']['service'], $service->getServiceConfig());
     }
 }

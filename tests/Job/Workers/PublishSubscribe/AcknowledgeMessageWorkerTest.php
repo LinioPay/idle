@@ -13,6 +13,17 @@ use Mockery as m;
 
 class AcknowledgeMessageWorkerTest extends TestCase
 {
+    public function testItFailsValidation()
+    {
+        $message = m::mock(QueueMessageInterface::class);
+
+        $worker = new AcknowledgeMessageWorker();
+        $worker->setParameters(['job' => m::mock(Job::class), 'message' => $message, 'foo' => 'bar']);
+
+        $this->expectException(InvalidWorkerParameterException::class);
+        $worker->validateParameters();
+    }
+
     public function testItWorks()
     {
         $message = m::mock(SubscriptionMessageInterface::class);
@@ -25,16 +36,5 @@ class AcknowledgeMessageWorkerTest extends TestCase
         $worker->validateParameters();
 
         $this->assertTrue($worker->work());
-    }
-
-    public function testItFailsValidation()
-    {
-        $message = m::mock(QueueMessageInterface::class);
-
-        $worker = new AcknowledgeMessageWorker();
-        $worker->setParameters(['job' => m::mock(Job::class), 'message' => $message, 'foo' => 'bar']);
-
-        $this->expectException(InvalidWorkerParameterException::class);
-        $worker->validateParameters();
     }
 }

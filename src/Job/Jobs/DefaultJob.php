@@ -18,8 +18,29 @@ abstract class DefaultJob implements Job
 {
     const IDENTIFIER = '';
 
+    /** @var array */
+    protected $context = [];
+
+    /** @var float */
+    protected $duration = 0.0;
+
+    /** @var array */
+    protected $errors = [];
+
+    /** @var bool */
+    protected $finished = false;
+
+    /** @var IdleConfig */
+    protected $idleConfig;
+
     /** @var UuidInterface */
     protected $jobId;
+
+    /** @var array */
+    protected $output = [];
+
+    /** @var array */
+    protected $parameters;
 
     /** @var DateTime */
     protected $startDate;
@@ -27,39 +48,28 @@ abstract class DefaultJob implements Job
     /** @var bool */
     protected $successful = false;
 
-    /** @var float */
-    protected $duration = 0.0;
-
-    /** @var IdleConfig */
-    protected $idleConfig;
-
-    /** @var array */
-    protected $parameters;
-
-    /** @var array */
-    protected $errors = [];
-
-    /** @var WorkerInterface[] */
-    protected $workers;
-
     /** @var TrackingWorker */
     protected $trackingWorker;
 
     /** @var WorkerFactoryInterface */
     protected $workerFactory;
 
-    /** @var array */
-    protected $context = [];
+    /** @var WorkerInterface[] */
+    protected $workers;
 
-    /** @var array */
-    protected $output = [];
-
-    /** @var bool */
-    protected $finished = false;
-
-    public function isSuccessful() : bool
+    public function addContext(string $key, $value) : void
     {
-        return $this->successful;
+        $this->context[$key] = $value;
+    }
+
+    public function addOutput(string $key, $value) : void
+    {
+        $this->output[$key] = $value;
+    }
+
+    public function getContextEntry(string $key)
+    {
+        return $this->context[$key] ?? null;
     }
 
     public function getDuration() : float
@@ -77,9 +87,50 @@ abstract class DefaultJob implements Job
         return $this->jobId;
     }
 
+    public function getOutput() : array
+    {
+        return $this->output;
+    }
+
+    public function getParameters() : array
+    {
+        return array_merge_recursive(
+            $this->idleConfig->getJobParametersConfig(static::IDENTIFIER),
+            $this->parameters ?? []
+        );
+    }
+
     public function getStartDate() : DateTime
     {
         return $this->startDate;
+    }
+
+    public function getTrackerData() : array
+    {
+        return array_merge([
+            'id' => $this->getJobId()->toString(),
+            'start' => $this->getStartDate()->format('Y-m-d H:i:s'),
+            'duration' => $this->getDuration(),
+            'successful' => $this->isSuccessful(),
+            'finished' => $this->isFinished(),
+            'errors' => json_encode($this->getErrors()),
+            'parameters' => json_encode($this->getParameters()),
+        ], $this->getWorkersTrackerData());
+    }
+
+    public function getTypeIdentifier() : string
+    {
+        return static::IDENTIFIER;
+    }
+
+    public function isFinished() : bool
+    {
+        return $this->finished;
+    }
+
+    public function isSuccessful() : bool
+    {
+        return $this->successful;
     }
 
     public function process() : void
@@ -108,50 +159,14 @@ abstract class DefaultJob implements Job
         }
     }
 
-    public function getTrackerData() : array
+    public function setContext(array $data) : void
     {
-        return array_merge([
-            'id' => $this->getJobId()->toString(),
-            'start' => $this->getStartDate()->format('Y-m-d H:i:s'),
-            'duration' => $this->getDuration(),
-            'successful' => $this->isSuccessful(),
-            'finished' => $this->isFinished(),
-            'errors' => json_encode($this->getErrors()),
-            'parameters' => json_encode($this->getParameters()),
-        ], $this->getWorkersTrackerData());
+        $this->context = $data;
     }
 
-    protected function getWorkersTrackerData() : array
+    public function setOutput(array $data) : void
     {
-        $data = [];
-
-        array_map(function (WorkerInterface $worker) use (&$data) {
-            if (is_a($worker, TrackableWorker::class)) {
-                /** @var TrackableWorker $worker */
-                $data = array_merge($data, $worker->getTrackerData());
-            }
-        }, $this->workers);
-
-        return $data;
-    }
-
-    protected function getWorkersErrors() : array
-    {
-        $errors = [];
-
-        array_map(function (WorkerInterface $worker) use (&$errors) {
-            $errors = array_merge($errors, $worker->getErrors());
-        }, $this->workers);
-
-        return $errors;
-    }
-
-    public function getParameters() : array
-    {
-        return array_merge_recursive(
-            $this->idleConfig->getJobParametersConfig(static::IDENTIFIER),
-            $this->parameters ?? []
-        );
+        $this->output = $data;
     }
 
     public function setParameters(array $parameters = []) : void
@@ -159,9 +174,17 @@ abstract class DefaultJob implements Job
         $this->parameters = $parameters;
     }
 
-    public function getTypeIdentifier() : string
+    public function validateParameters() : void
     {
-        return static::IDENTIFIER;
+        // Optional parameter validation
+    }
+
+    protected function buildWorker(string $workerIdentifier, array $workerParameters) : WorkerInterface
+    {
+        return $this->workerFactory->createWorker($workerIdentifier, array_merge(
+            $workerParameters,
+            ['job' => $this]
+        ));
     }
 
     protected function buildWorkers() : void
@@ -185,19 +208,29 @@ abstract class DefaultJob implements Job
         return [];
     }
 
-    protected function buildWorker(string $workerIdentifier, array $workerParameters) : WorkerInterface
+    protected function getWorkersErrors() : array
     {
-        return $this->workerFactory->createWorker($workerIdentifier, array_merge(
-            $workerParameters,
-            ['job' => $this]
-        ));
+        $errors = [];
+
+        array_map(function (WorkerInterface $worker) use (&$errors) {
+            $errors = array_merge($errors, $worker->getErrors());
+        }, $this->workers);
+
+        return $errors;
     }
 
-    protected function track() : void
+    protected function getWorkersTrackerData() : array
     {
-        if (!is_null($this->trackingWorker)) {
-            $this->trackingWorker->work();
-        }
+        $data = [];
+
+        array_map(function (WorkerInterface $worker) use (&$data) {
+            if (is_a($worker, TrackableWorker::class)) {
+                /** @var TrackableWorker $worker */
+                $data = array_merge($data, $worker->getTrackerData());
+            }
+        }, $this->workers);
+
+        return $data;
     }
 
     protected function performWork() : void
@@ -215,43 +248,10 @@ abstract class DefaultJob implements Job
         $this->successful = $successful;
     }
 
-    public function setContext(array $data) : void
+    protected function track() : void
     {
-        $this->context = $data;
-    }
-
-    public function addContext(string $key, $value) : void
-    {
-        $this->context[$key] = $value;
-    }
-
-    public function getContextEntry(string $key)
-    {
-        return $this->context[$key] ?? null;
-    }
-
-    public function addOutput(string $key, $value) : void
-    {
-        $this->output[$key] = $value;
-    }
-
-    public function setOutput(array $data) : void
-    {
-        $this->output = $data;
-    }
-
-    public function getOutput() : array
-    {
-        return $this->output;
-    }
-
-    public function validateParameters() : void
-    {
-        // Optional parameter validation
-    }
-
-    public function isFinished() : bool
-    {
-        return $this->finished;
+        if (!is_null($this->trackingWorker)) {
+            $this->trackingWorker->work();
+        }
     }
 }

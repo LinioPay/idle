@@ -23,10 +23,10 @@ abstract class DefaultJobFactory implements JobFactoryInterface
         $this->loadIdleConfig();
     }
 
+    abstract public function createJob(string $jobIdentifier, array $parameters) : Job;
+
     protected function loadIdleConfig() : void
     {
         $this->idleConfig = $this->container->get(IdleConfig::class);
     }
-
-    abstract public function createJob(string $jobIdentifier, array $parameters) : Job;
 }

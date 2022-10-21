@@ -24,11 +24,11 @@ class DynamoDBTrackerWorker extends DefaultWorker implements TrackingWorkerInter
     /** @var array */
     protected $config;
 
-    /** @var LoggerInterface */
-    protected $logger;
-
     /** @var Job */
     protected $job;
+
+    /** @var LoggerInterface */
+    protected $logger;
 
     /** @var string */
     protected $table;
@@ -38,6 +38,25 @@ class DynamoDBTrackerWorker extends DefaultWorker implements TrackingWorkerInter
         $this->client = $client;
         $this->config = $config;
         $this->logger = $logger;
+    }
+
+    public function setParameters(array $parameters) : void
+    {
+        parent::setParameters($parameters);
+
+        $this->job = $parameters['job'] ?? null;
+        $this->table = $parameters['table'] ?? '';
+    }
+
+    public function validateParameters() : void
+    {
+        if (!isset($this->parameters['job']) || !is_a($this->parameters['job'], Job::class)) {
+            throw new InvalidWorkerParameterException($this, 'job');
+        }
+
+        if (empty($this->parameters['table'])) {
+            throw new InvalidWorkerParameterException($this, 'table');
+        }
     }
 
     public function work() : bool
@@ -60,24 +79,5 @@ class DynamoDBTrackerWorker extends DefaultWorker implements TrackingWorkerInter
 
         // Tracking should not have impact on the job itself
         return true;
-    }
-
-    public function setParameters(array $parameters) : void
-    {
-        parent::setParameters($parameters);
-
-        $this->job = $parameters['job'] ?? null;
-        $this->table = $parameters['table'] ?? '';
-    }
-
-    public function validateParameters() : void
-    {
-        if (!isset($this->parameters['job']) || !is_a($this->parameters['job'], Job::class)) {
-            throw new InvalidWorkerParameterException($this, 'job');
-        }
-
-        if (empty($this->parameters['table'])) {
-            throw new InvalidWorkerParameterException($this, 'table');
-        }
     }
 }

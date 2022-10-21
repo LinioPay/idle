@@ -19,11 +19,11 @@ class ServiceTest extends TestCase
 {
     protected $apiTestHandler;
 
-    protected $logger;
+    protected $client;
 
     protected $config;
 
-    protected $client;
+    protected $logger;
 
     protected function setUp() : void
     {
@@ -64,6 +64,96 @@ class ServiceTest extends TestCase
         ];
 
         $this->client = m::mock(TestPubSubClient::class);
+    }
+
+    public function testAcknowledgeBubblesUpExceptions() : void
+    {
+        $subscriptionIdentifier = 'foo-subscription';
+        $message = new SubscriptionMessage($subscriptionIdentifier, 'mbody', ['green' => true], 'fooId', [
+            'gcMessage' => $this->fake(GoogleCloudMessage::class),
+        ]);
+
+        $this->client->shouldReceive('subscription')
+            ->once()
+            ->with($subscriptionIdentifier)
+            ->andThrow(new Exception('kaboom!'));
+
+        $this->config['acknowledge']['error']['suppression'] = false;
+        $service = new Service($this->client, $this->config, $this->logger);
+        $this->expectException(Exception::class);
+        $service->acknowledge($message, ['blue' => true]);
+
+        $records = $this->apiTestHandler->getRecords();
+        $this->assertCount(2, $records);
+        $this->assertArrayHasKey('message', $records[1]);
+        $this->assertSame('Idle acknowledge encountered an error.', $records[1]['message']);
+    }
+
+    public function testAcknowledgeDoesNotBubbleUpExceptions() : void
+    {
+        $subscriptionIdentifier = 'foo-subscription';
+        $message = new SubscriptionMessage($subscriptionIdentifier, 'mbody', ['green' => true], 'fooId', [
+            'gcMessage' => $this->fake(GoogleCloudMessage::class),
+        ]);
+
+        $this->client->shouldReceive('subscription')
+            ->once()
+            ->with($subscriptionIdentifier)
+            ->andThrow(new Exception('kaboom!'));
+
+        $this->config['acknowledge']['error']['suppression'] = true;
+        $service = new Service($this->client, $this->config, $this->logger);
+        $this->assertFalse($service->acknowledge($message, ['blue' => true]));
+
+        $records = $this->apiTestHandler->getRecords();
+        $this->assertCount(2, $records);
+        $this->assertArrayHasKey('message', $records[1]);
+        $this->assertSame('Idle acknowledge encountered an error.', $records[1]['message']);
+    }
+
+    public function testCanAcknowledgeSuccessfully() : void
+    {
+        $subscriptionIdentifier = 'foo-subscription';
+
+        $subscription = m::mock(TestSubscription::class);
+
+        $gcMessage = $this->fake(GoogleCloudMessage::class, [
+            'subscription' => $subscription,
+            'message' => [
+                'data' => 'mbody',
+                'attributes' => ['green' => true],
+                'messageId' => 'fooId',
+            ],
+        ]);
+        $message = new SubscriptionMessage($subscriptionIdentifier, 'mbody', ['green' => true], 'fooId', [
+            'gcMessage' => $gcMessage,
+        ]);
+
+        $subscription->shouldReceive('acknowledge')
+            ->once()
+            ->with($gcMessage, m::on(function ($options) {
+                $this->assertArrayHasKey('red', $options);
+                $this->assertArrayHasKey('blue', $options);
+
+                return true;
+            }));
+
+        $this->client->shouldReceive('subscription')
+            ->once()
+            ->with($subscriptionIdentifier)
+            ->andReturn($subscription);
+
+        $service = new Service($this->client, $this->config, $this->logger);
+        $this->assertTrue($service->acknowledge($message, ['blue' => true]));
+        $this->assertSame('fooId', $message->getMessageId());
+        $this->assertSame($this->config, $service->getConfig());
+
+        $records = $this->apiTestHandler->getRecords();
+        $this->assertCount(2, $records);
+        $this->assertArrayHasKey('message', $records[0]);
+        $this->assertSame('Idle acknowledging a message.', $records[0]['message']);
+        $this->assertArrayHasKey('message', $records[1]);
+        $this->assertSame('Idle successfully acknowledged a message.', $records[1]['message']);
     }
 
     public function testCanPublishSuccessfully() : void
@@ -109,47 +199,6 @@ class ServiceTest extends TestCase
         $this->assertSame('Idle publishing a message.', $records[0]['message']);
         $this->assertArrayHasKey('message', $records[1]);
         $this->assertSame('Idle successfully published a message.', $records[1]['message']);
-    }
-
-    public function testPublishBubblesUpExceptions() : void
-    {
-        $topicIdentifier = 'foo-topic';
-        $message = new TopicMessage($topicIdentifier, 'mbody', ['green' => true]);
-
-        $this->client->shouldReceive('topic')
-            ->once()
-            ->with($topicIdentifier)
-            ->andThrow(new Exception('kaboom!'));
-
-        $this->config['publish']['error']['suppression'] = false;
-        $service = new Service($this->client, $this->config, $this->logger);
-        $this->expectException(Exception::class);
-        $service->publish($message, ['blue' => true]);
-
-        $records = $this->apiTestHandler->getRecords();
-        $this->assertCount(2, $records);
-        $this->assertArrayHasKey('message', $records[1]);
-        $this->assertSame('Idle publish encountered an error.', $records[1]['message']);
-    }
-
-    public function testPublishDoesNotBubbleUpExceptions() : void
-    {
-        $topicIdentifier = 'foo-topic';
-        $message = new TopicMessage($topicIdentifier, 'mbody', ['green' => true]);
-
-        $this->client->shouldReceive('topic')
-            ->once()
-            ->with($topicIdentifier)
-            ->andThrow(new Exception('kaboom!'));
-
-        $this->config['publish']['error']['suppression'] = true;
-        $service = new Service($this->client, $this->config, $this->logger);
-        $this->assertFalse($service->publish($message, ['blue' => true]));
-
-        $records = $this->apiTestHandler->getRecords();
-        $this->assertCount(2, $records);
-        $this->assertArrayHasKey('message', $records[1]);
-        $this->assertSame('Idle publish encountered an error.', $records[1]['message']);
     }
 
     public function testCanPullSuccessfully() : void
@@ -209,60 +258,45 @@ class ServiceTest extends TestCase
         $this->assertSame('Idle pulled 1 message(s) from subscription.', $records[1]['message']);
     }
 
-    public function testPullOneSuccessfully()
+    public function testPublishBubblesUpExceptions() : void
     {
-        $subscriptionIdentifier = 'foo-subscription';
+        $topicIdentifier = 'foo-topic';
+        $message = new TopicMessage($topicIdentifier, 'mbody', ['green' => true]);
 
-        $subscription = m::mock(TestSubscription::class);
-
-        $gcMessage = $this->fake(GoogleCloudMessage::class, [
-            'subscription' => $subscription,
-            'message' => [
-                'data' => 'mbody',
-                'attributes' => ['green' => true],
-                'messageId' => 'fooId',
-            ],
-        ]);
-
-        $subscription->shouldReceive('name')
-            ->andReturn($subscriptionIdentifier);
-        $subscription->shouldReceive('pull')
+        $this->client->shouldReceive('topic')
             ->once()
-            ->andReturn([
-                $gcMessage,
-            ]);
-
-        $this->client->shouldReceive('subscription')
-            ->once()
-            ->with($subscriptionIdentifier)
-            ->andReturn($subscription);
-
-        $service = new Service($this->client, $this->config, $this->logger);
-        $message = $service->pullOneOrFail($subscriptionIdentifier, ['blue' => true]);
-        $this->assertInstanceOf(MessageInterface::class, $message);
-    }
-
-    public function testPullOneFails()
-    {
-        $subscriptionIdentifier = 'foo-subscription';
-
-        $subscription = m::mock(TestSubscription::class);
-
-        $subscription->shouldReceive('name')
-            ->andReturn($subscriptionIdentifier);
-        $subscription->shouldReceive('pull')
-            ->once()
+            ->with($topicIdentifier)
             ->andThrow(new Exception('kaboom!'));
 
-        $this->client->shouldReceive('subscription')
-            ->once()
-            ->with($subscriptionIdentifier)
-            ->andReturn($subscription);
-
-        $this->config['pull']['error']['suppression'] = false;
+        $this->config['publish']['error']['suppression'] = false;
         $service = new Service($this->client, $this->config, $this->logger);
-        $this->expectException(FailedReceivingMessageException::class);
-        $service->pullOneOrFail($subscriptionIdentifier, ['blue' => true]);
+        $this->expectException(Exception::class);
+        $service->publish($message, ['blue' => true]);
+
+        $records = $this->apiTestHandler->getRecords();
+        $this->assertCount(2, $records);
+        $this->assertArrayHasKey('message', $records[1]);
+        $this->assertSame('Idle publish encountered an error.', $records[1]['message']);
+    }
+
+    public function testPublishDoesNotBubbleUpExceptions() : void
+    {
+        $topicIdentifier = 'foo-topic';
+        $message = new TopicMessage($topicIdentifier, 'mbody', ['green' => true]);
+
+        $this->client->shouldReceive('topic')
+            ->once()
+            ->with($topicIdentifier)
+            ->andThrow(new Exception('kaboom!'));
+
+        $this->config['publish']['error']['suppression'] = true;
+        $service = new Service($this->client, $this->config, $this->logger);
+        $this->assertFalse($service->publish($message, ['blue' => true]));
+
+        $records = $this->apiTestHandler->getRecords();
+        $this->assertCount(2, $records);
+        $this->assertArrayHasKey('message', $records[1]);
+        $this->assertSame('Idle publish encountered an error.', $records[1]['message']);
     }
 
     public function testPullBubblesUpExceptions() : void
@@ -304,7 +338,30 @@ class ServiceTest extends TestCase
         $this->assertSame('Idle pull encountered an error.', $records[1]['message']);
     }
 
-    public function testCanAcknowledgeSuccessfully() : void
+    public function testPullOneFails()
+    {
+        $subscriptionIdentifier = 'foo-subscription';
+
+        $subscription = m::mock(TestSubscription::class);
+
+        $subscription->shouldReceive('name')
+            ->andReturn($subscriptionIdentifier);
+        $subscription->shouldReceive('pull')
+            ->once()
+            ->andThrow(new Exception('kaboom!'));
+
+        $this->client->shouldReceive('subscription')
+            ->once()
+            ->with($subscriptionIdentifier)
+            ->andReturn($subscription);
+
+        $this->config['pull']['error']['suppression'] = false;
+        $service = new Service($this->client, $this->config, $this->logger);
+        $this->expectException(FailedReceivingMessageException::class);
+        $service->pullOneOrFail($subscriptionIdentifier, ['blue' => true]);
+    }
+
+    public function testPullOneSuccessfully()
     {
         $subscriptionIdentifier = 'foo-subscription';
 
@@ -318,18 +375,14 @@ class ServiceTest extends TestCase
                 'messageId' => 'fooId',
             ],
         ]);
-        $message = new SubscriptionMessage($subscriptionIdentifier, 'mbody', ['green' => true], 'fooId', [
-            'gcMessage' => $gcMessage,
-        ]);
 
-        $subscription->shouldReceive('acknowledge')
+        $subscription->shouldReceive('name')
+            ->andReturn($subscriptionIdentifier);
+        $subscription->shouldReceive('pull')
             ->once()
-            ->with($gcMessage, m::on(function ($options) {
-                $this->assertArrayHasKey('red', $options);
-                $this->assertArrayHasKey('blue', $options);
-
-                return true;
-            }));
+            ->andReturn([
+                $gcMessage,
+            ]);
 
         $this->client->shouldReceive('subscription')
             ->once()
@@ -337,16 +390,8 @@ class ServiceTest extends TestCase
             ->andReturn($subscription);
 
         $service = new Service($this->client, $this->config, $this->logger);
-        $this->assertTrue($service->acknowledge($message, ['blue' => true]));
-        $this->assertSame('fooId', $message->getMessageId());
-        $this->assertSame($this->config, $service->getConfig());
-
-        $records = $this->apiTestHandler->getRecords();
-        $this->assertCount(2, $records);
-        $this->assertArrayHasKey('message', $records[0]);
-        $this->assertSame('Idle acknowledging a message.', $records[0]['message']);
-        $this->assertArrayHasKey('message', $records[1]);
-        $this->assertSame('Idle successfully acknowledged a message.', $records[1]['message']);
+        $message = $service->pullOneOrFail($subscriptionIdentifier, ['blue' => true]);
+        $this->assertInstanceOf(MessageInterface::class, $message);
     }
 
     public function testThrowsInvalidMessageParameterExceptionWhenMissingGCMessage() : void
@@ -358,50 +403,5 @@ class ServiceTest extends TestCase
         $service = new Service($this->client, $this->config, $this->logger);
         $this->expectException(InvalidMessageParameterException::class);
         $service->acknowledge($message, ['blue' => true]);
-    }
-
-    public function testAcknowledgeBubblesUpExceptions() : void
-    {
-        $subscriptionIdentifier = 'foo-subscription';
-        $message = new SubscriptionMessage($subscriptionIdentifier, 'mbody', ['green' => true], 'fooId', [
-            'gcMessage' => $this->fake(GoogleCloudMessage::class),
-        ]);
-
-        $this->client->shouldReceive('subscription')
-            ->once()
-            ->with($subscriptionIdentifier)
-            ->andThrow(new Exception('kaboom!'));
-
-        $this->config['acknowledge']['error']['suppression'] = false;
-        $service = new Service($this->client, $this->config, $this->logger);
-        $this->expectException(Exception::class);
-        $service->acknowledge($message, ['blue' => true]);
-
-        $records = $this->apiTestHandler->getRecords();
-        $this->assertCount(2, $records);
-        $this->assertArrayHasKey('message', $records[1]);
-        $this->assertSame('Idle acknowledge encountered an error.', $records[1]['message']);
-    }
-
-    public function testAcknowledgeDoesNotBubbleUpExceptions() : void
-    {
-        $subscriptionIdentifier = 'foo-subscription';
-        $message = new SubscriptionMessage($subscriptionIdentifier, 'mbody', ['green' => true], 'fooId', [
-            'gcMessage' => $this->fake(GoogleCloudMessage::class),
-        ]);
-
-        $this->client->shouldReceive('subscription')
-            ->once()
-            ->with($subscriptionIdentifier)
-            ->andThrow(new Exception('kaboom!'));
-
-        $this->config['acknowledge']['error']['suppression'] = true;
-        $service = new Service($this->client, $this->config, $this->logger);
-        $this->assertFalse($service->acknowledge($message, ['blue' => true]));
-
-        $records = $this->apiTestHandler->getRecords();
-        $this->assertCount(2, $records);
-        $this->assertArrayHasKey('message', $records[1]);
-        $this->assertSame('Idle acknowledge encountered an error.', $records[1]['message']);
     }
 }

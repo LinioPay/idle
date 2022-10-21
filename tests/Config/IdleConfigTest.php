@@ -18,11 +18,11 @@ class IdleConfigTest extends TestCase
     /** @var IdleConfig */
     protected $config;
 
-    protected $services;
+    protected $jobs;
 
     protected $messages;
 
-    protected $jobs;
+    protected $services;
 
     protected $workers;
 
@@ -95,14 +95,6 @@ class IdleConfigTest extends TestCase
         );
     }
 
-    public function testCanGetMainConfigs()
-    {
-        $this->assertSame($this->services, $this->config->getServicesConfig());
-        $this->assertSame($this->messages, $this->config->getMessagesConfig());
-        $this->assertSame($this->jobs, $this->config->getJobsConfig());
-        $this->assertSame($this->workers, $this->config->getWorkersConfig());
-    }
-
     public function testCanGetConfigsByIdentifier()
     {
         $this->assertSame($this->services[SQS::IDENTIFIER], $this->config->getServiceConfig(SQS::IDENTIFIER));
@@ -117,6 +109,14 @@ class IdleConfigTest extends TestCase
         $this->assertSame($this->workers[FooWorker::IDENTIFIER]['class'], $this->config->getWorkerClass(FooWorker::IDENTIFIER));
     }
 
+    public function testCanGetMainConfigs()
+    {
+        $this->assertSame($this->services, $this->config->getServicesConfig());
+        $this->assertSame($this->messages, $this->config->getMessagesConfig());
+        $this->assertSame($this->jobs, $this->config->getJobsConfig());
+        $this->assertSame($this->workers, $this->config->getWorkersConfig());
+    }
+
     public function testCanGetMergedWorkerConfig()
     {
         $this->assertSame([
@@ -128,6 +128,12 @@ class IdleConfigTest extends TestCase
         ], $this->config->getMergedWorkerConfig(FooWorker::IDENTIFIER, [
             'foo' => 'bar',
         ]));
+    }
+
+    public function testWillThrowExceptionWhenJobTypeDoesNotExist()
+    {
+        $this->expectException(ConfigurationException::class);
+        $this->config->getJobConfig('fail_type');
     }
 
     public function testWillThrowExceptionWhenMessageTypeDoesNotExist()
@@ -146,11 +152,5 @@ class IdleConfigTest extends TestCase
 
         $this->expectException(ConfigurationException::class);
         $this->config->getMessageConfig($message);
-    }
-
-    public function testWillThrowExceptionWhenJobTypeDoesNotExist()
-    {
-        $this->expectException(ConfigurationException::class);
-        $this->config->getJobConfig('fail_type');
     }
 }

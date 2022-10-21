@@ -26,9 +26,9 @@ class ServiceTest extends TestCase
 {
     protected $apiTestHandler;
 
-    protected $logger;
-
     protected $config;
+
+    protected $logger;
 
     protected $queueIdentifier;
 
@@ -68,6 +68,133 @@ class ServiceTest extends TestCase
                 ],
             ],
         ];
+    }
+
+    public function testDeletingExceptionWithSuppression()
+    {
+        $message = new Message($this->queueIdentifier);
+
+        $config = ArrayUtils::merge($this->config, [
+            'delete' => [
+                'error' => [
+                    'suppression' => true,
+                ],
+            ],
+        ]);
+
+        $service = new Service($this->tasksClient, $config, $this->logger);
+        $this->assertFalse($service->delete($message));
+    }
+
+    public function testDeletingFailureDueToMissingMessageId()
+    {
+        $message = new Message($this->queueIdentifier);
+        $service = new Service($this->tasksClient, $this->config, $this->logger);
+        $this->expectException(InvalidMessageParameterException::class);
+        $service->delete($message);
+    }
+
+    public function testDeletingSuccessfully()
+    {
+        $request = new Request(
+            'PUT',
+            'http://foobar.example.com',
+            [
+                'Content-Type' => 'application/json',
+            ],
+            'payload'
+        );
+
+        $message = new Message($this->queueIdentifier, '', [
+            'request' => $request,
+        ], 'foo-id');
+
+        $this->tasksClient->shouldReceive('deleteTask')
+            ->once()
+            ->with('foo-id', []);
+
+        $service = new Service($this->tasksClient, $this->config, $this->logger);
+        $this->assertTrue($service->delete($message));
+    }
+
+    public function testDequeueingOneFails()
+    {
+        $service = new Service($this->tasksClient, $this->config, $this->logger);
+        $this->expectException(FailedReceivingMessageException::class);
+        $service->dequeueOneOrFail($this->queueIdentifier, []);
+    }
+
+    public function testDequeueingWithErrorSuppression()
+    {
+        $config = ArrayUtils::merge($this->config, [
+            'dequeue' => [
+                'error' => [
+                    'suppression' => true,
+                ],
+            ],
+        ]);
+        $service = new Service($this->tasksClient, $config, $this->logger);
+        $this->assertEmpty($service->dequeue($this->queueIdentifier));
+    }
+
+    public function testDequeueingWithoutErrorSuppression()
+    {
+        $service = new Service($this->tasksClient, $this->config, $this->logger);
+        $this->expectException(UnsupportedServiceOperationException::class);
+        $service->dequeue($this->queueIdentifier);
+    }
+
+    public function testQueueingException()
+    {
+        $message = new Message($this->queueIdentifier);
+
+        $config = ArrayUtils::merge($this->config, [
+            'queue' => [
+                'error' => [
+                    'suppression' => true,
+                ],
+            ],
+        ]);
+
+        $service = new Service($this->tasksClient, $config, $this->logger);
+        $this->assertFalse($service->queue($message));
+    }
+
+    public function testQueueingFailureWhenInvalidServiceConfigProvided()
+    {
+        $request = new Request(
+            'PUT',
+            'http://foobar.example.com',
+            [
+                'Content-Type' => 'application/json',
+            ],
+            'payload'
+        );
+
+        $message = new Message($this->queueIdentifier, '', [
+            'request' => $request,
+        ]);
+
+        unset($this->config['parameters']['service']['client']['location']);
+
+        $service = new CloudTasksService($this->tasksClient, $this->config, $this->logger);
+        $this->expectException(ConfigurationException::class);
+        $service->queue($message);
+    }
+
+    public function testQueueingFailureWhenNoRequestProvided()
+    {
+        $message = new Message($this->queueIdentifier, '', []);
+
+        $this->tasksClient->shouldReceive('queueName')
+            ->once()
+            ->with('foo-project', 'foo-location', 'bar')
+            ->andReturn('foo/foo/bar');
+
+        $service = new CloudTasksService($this->tasksClient, $this->config, $this->logger);
+
+        $this->expectException(InvalidMessageRequestException::class);
+        $service->queue($message);
     }
 
     public function testQueueingSuccessfully() : void
@@ -121,132 +248,5 @@ class ServiceTest extends TestCase
         $this->assertTrue($service->queue($message));
         $this->assertSame($this->config, $service->getConfig());
         $this->assertSame($this->config['parameters']['service'], $service->getServiceConfig());
-    }
-
-    public function testQueueingFailureWhenNoRequestProvided()
-    {
-        $message = new Message($this->queueIdentifier, '', []);
-
-        $this->tasksClient->shouldReceive('queueName')
-            ->once()
-            ->with('foo-project', 'foo-location', 'bar')
-            ->andReturn('foo/foo/bar');
-
-        $service = new CloudTasksService($this->tasksClient, $this->config, $this->logger);
-
-        $this->expectException(InvalidMessageRequestException::class);
-        $service->queue($message);
-    }
-
-    public function testQueueingFailureWhenInvalidServiceConfigProvided()
-    {
-        $request = new Request(
-            'PUT',
-            'http://foobar.example.com',
-            [
-                'Content-Type' => 'application/json',
-            ],
-            'payload'
-        );
-
-        $message = new Message($this->queueIdentifier, '', [
-            'request' => $request,
-        ]);
-
-        unset($this->config['parameters']['service']['client']['location']);
-
-        $service = new CloudTasksService($this->tasksClient, $this->config, $this->logger);
-        $this->expectException(ConfigurationException::class);
-        $service->queue($message);
-    }
-
-    public function testQueueingException()
-    {
-        $message = new Message($this->queueIdentifier);
-
-        $config = ArrayUtils::merge($this->config, [
-            'queue' => [
-                'error' => [
-                    'suppression' => true,
-                ],
-            ],
-        ]);
-
-        $service = new Service($this->tasksClient, $config, $this->logger);
-        $this->assertFalse($service->queue($message));
-    }
-
-    public function testDequeueingWithoutErrorSuppression()
-    {
-        $service = new Service($this->tasksClient, $this->config, $this->logger);
-        $this->expectException(UnsupportedServiceOperationException::class);
-        $service->dequeue($this->queueIdentifier);
-    }
-
-    public function testDequeueingWithErrorSuppression()
-    {
-        $config = ArrayUtils::merge($this->config, [
-            'dequeue' => [
-                'error' => [
-                    'suppression' => true,
-                ],
-            ],
-        ]);
-        $service = new Service($this->tasksClient, $config, $this->logger);
-        $this->assertEmpty($service->dequeue($this->queueIdentifier));
-    }
-
-    public function testDequeueingOneFails()
-    {
-        $service = new Service($this->tasksClient, $this->config, $this->logger);
-        $this->expectException(FailedReceivingMessageException::class);
-        $service->dequeueOneOrFail($this->queueIdentifier, []);
-    }
-
-    public function testDeletingSuccessfully()
-    {
-        $request = new Request(
-            'PUT',
-            'http://foobar.example.com',
-            [
-                'Content-Type' => 'application/json',
-            ],
-            'payload'
-        );
-
-        $message = new Message($this->queueIdentifier, '', [
-            'request' => $request,
-        ], 'foo-id');
-
-        $this->tasksClient->shouldReceive('deleteTask')
-            ->once()
-            ->with('foo-id', []);
-
-        $service = new Service($this->tasksClient, $this->config, $this->logger);
-        $this->assertTrue($service->delete($message));
-    }
-
-    public function testDeletingFailureDueToMissingMessageId()
-    {
-        $message = new Message($this->queueIdentifier);
-        $service = new Service($this->tasksClient, $this->config, $this->logger);
-        $this->expectException(InvalidMessageParameterException::class);
-        $service->delete($message);
-    }
-
-    public function testDeletingExceptionWithSuppression()
-    {
-        $message = new Message($this->queueIdentifier);
-
-        $config = ArrayUtils::merge($this->config, [
-            'delete' => [
-                'error' => [
-                    'suppression' => true,
-                ],
-            ],
-        ]);
-
-        $service = new Service($this->tasksClient, $config, $this->logger);
-        $this->assertFalse($service->delete($message));
     }
 }

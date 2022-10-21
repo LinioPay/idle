@@ -24,21 +24,19 @@ abstract class DefaultService implements QueueServiceInterface
         return $this->config['parameters']['service'] ?? [];
     }
 
-    protected function getQueueingParameters() : array
+    protected function getDeletingErrorConfig() : array
     {
-        return $this->config['queue']['parameters'] ?? [];
+        return $this->config['delete']['error'] ?? [];
     }
 
-    protected function getQueueingErrorConfig() : array
+    protected function getDeletingParameters() : array
     {
-        return $this->config['queue']['error'] ?? [];
+        return $this->config['delete']['parameters'] ?? [];
     }
 
-    protected function isQueueingErrorSuppression() : bool
+    protected function getDequeueingErrorConfig() : array
     {
-        $errorConfig = $this->getQueueingErrorConfig();
-
-        return $errorConfig['suppression'] ?? false;
+        return $this->config['dequeue']['error'] ?? [];
     }
 
     protected function getDequeueingParameters() : array
@@ -46,9 +44,21 @@ abstract class DefaultService implements QueueServiceInterface
         return $this->config['dequeue']['parameters'] ?? [];
     }
 
-    protected function getDequeueingErrorConfig() : array
+    protected function getQueueingErrorConfig() : array
     {
-        return $this->config['dequeue']['error'] ?? [];
+        return $this->config['queue']['error'] ?? [];
+    }
+
+    protected function getQueueingParameters() : array
+    {
+        return $this->config['queue']['parameters'] ?? [];
+    }
+
+    protected function isDeletingErrorSuppression() : bool
+    {
+        $errorConfig = $this->getDeletingErrorConfig();
+
+        return $errorConfig['suppression'] ?? false;
     }
 
     protected function isDequeueingErrorSuppression() : bool
@@ -58,19 +68,9 @@ abstract class DefaultService implements QueueServiceInterface
         return $errorConfig['suppression'] ?? false;
     }
 
-    protected function getDeletingParameters() : array
+    protected function isQueueingErrorSuppression() : bool
     {
-        return $this->config['delete']['parameters'] ?? [];
-    }
-
-    protected function getDeletingErrorConfig() : array
-    {
-        return $this->config['delete']['error'] ?? [];
-    }
-
-    protected function isDeletingErrorSuppression() : bool
-    {
-        $errorConfig = $this->getDeletingErrorConfig();
+        $errorConfig = $this->getQueueingErrorConfig();
 
         return $errorConfig['suppression'] ?? false;
     }
