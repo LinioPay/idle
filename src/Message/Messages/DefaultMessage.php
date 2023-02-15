@@ -56,7 +56,7 @@ abstract class DefaultMessage implements MessageInterface
         return $this->metadata;
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize() : array
     {
         $data = $this->toArray();
 
