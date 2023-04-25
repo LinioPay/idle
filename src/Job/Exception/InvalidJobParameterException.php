@@ -9,7 +9,7 @@ use LinioPay\Idle\Job\Job;
 
 class InvalidJobParameterException extends Exception
 {
-    const MESSAGE = 'Job %s did not receive a valid %s parameter.';
+    public const MESSAGE = 'Job %s did not receive a valid %s parameter.';
 
     public function __construct(Job $job, string $parameter)
     {

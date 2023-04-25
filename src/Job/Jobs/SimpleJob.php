@@ -10,7 +10,7 @@ use LinioPay\Idle\Job\WorkerFactory as WorkerFactoryInterface;
 
 class SimpleJob extends DefaultJob
 {
-    const IDENTIFIER = 'simple';
+    public const IDENTIFIER = 'simple';
 
     /** @var string */
     protected $simpleIdentifier;

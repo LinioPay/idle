@@ -6,12 +6,12 @@
         ]
     },
     "logs": {
-        "text": "build/mutation-tests/infection.log",
-        "summary": "build/mutation-tests/summary.log",
-        "debug": "build/mutation-tests/debug.log",
-        "perMutator": "build/mutation-tests/per-mutator.md",
-        "badge": {
-            "branch": "master"
+        "text": "build/logs/mutation-tests/infection.log",
+        "summary": "build/logs/mutation-tests/summary.log",
+        "debug": "build/logs/mutation-tests/debug.log",
+        "perMutator": "build/logs/mutation-tests/per-mutator.md",
+        "stryker": {
+            "badge": "master"
         }
     }
 }

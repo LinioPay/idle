@@ -9,7 +9,7 @@ use LinioPay\Idle\Job\Workers\Factory\WorkerFactory as WorkerFactoryInterface;
 
 class FooJob extends DefaultJob
 {
-    const IDENTIFIER = 'foo_job';
+    public const IDENTIFIER = 'foo_job';
 
     public function __construct(IdleConfig $config, WorkerFactoryInterface $workerFactory)
     {

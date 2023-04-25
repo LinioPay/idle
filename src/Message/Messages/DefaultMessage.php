@@ -31,6 +31,10 @@ abstract class DefaultMessage implements MessageInterface
         $this->metadata = $metadata;
     }
 
+    abstract public function toArray() : array;
+
+    abstract public static function fromArray(array $parameters) : MessageInterface;
+
     public function getAttributes() : array
     {
         return $this->attributes;
@@ -89,8 +93,4 @@ abstract class DefaultMessage implements MessageInterface
     {
         $this->metadata = $metadata;
     }
-
-    abstract public function toArray() : array;
-
-    abstract public static function fromArray(array $parameters) : MessageInterface;
 }

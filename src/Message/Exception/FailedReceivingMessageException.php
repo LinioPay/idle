@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Message\Exception;
 
+use Exception;
 use Throwable;
 
-class FailedReceivingMessageException extends \Exception
+class FailedReceivingMessageException extends Exception
 {
-    const MESSAGE = 'Idle failed to receive a %s message from %s utilizing the %s service.';
+    public const MESSAGE = 'Idle failed to receive a %s message from %s utilizing the %s service.';
 
     public function __construct(string $serviceIdentifier, string $resourceType, string $resourceIdentifier, Throwable $previous = null)
     {

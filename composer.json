@@ -22,27 +22,27 @@
     "prefer-stable": true,
     "require": {
         "ext-json": "*",
-        "php": ">=7.4",
-        "laminas/laminas-stdlib": "^3.2",
-        "psr/container": "~1.0",
+        "php": "^8.1",
+        "laminas/laminas-stdlib": "^3.16",
+        "psr/container": "^2.0",
         "psr/http-message": "^1.0",
-        "psr/log": "~1.1",
-        "ramsey/uuid": "^3.0|^4.0"
+        "psr/log": "~2.0",
+        "ramsey/uuid": "^4.0"
     },
     "require-dev": {
         "aws/aws-sdk-php": "^3.140",
-        "friendsofphp/php-cs-fixer": "^2.16",
+        "friendsofphp/php-cs-fixer": "^v3.13",
         "google/cloud-pubsub": "^1.24",
         "google/cloud-tasks": "^1.6",
-        "infection/infection": "^0.23",
-        "laminas/laminas-hydrator": "^3.0",
+        "infection/infection": "^0.26",
+        "laminas/laminas-hydrator": "^4.11",
         "league/fractal": "^0.19",
         "michaelmoussa/php-coverage-checker": "^1.1",
         "mockery/mockery": "^1.4",
-        "monolog/monolog": "^2.1",
-        "phpstan/phpstan": "^0.12",
-        "phpstan/phpstan-mockery": "^0.12.1",
-        "phpunit/phpunit": "^8.5",
+        "monolog/monolog": "^3.1",
+        "phpstan/phpstan": "^1.9",
+        "phpstan/phpstan-mockery": "^1.1",
+        "phpunit/phpunit": "^9.5",
         "roave/security-advisories": "dev-master",
         "symfony/yaml": "^5.3"
     },
@@ -68,10 +68,13 @@
             "@lint --dry-run"
         ],
         "test:unit:base": [
-            "php -d pcov.enabled=1 vendor/bin/phpunit --color=always"
+            "php -d pcov.enabled=1 -d zend.enable_gc=0 vendor/bin/phpunit --color=always"
+        ],
+        "test:unit:filter": [
+            "@test:unit:base --filter"
         ],
         "test:unit": [
-            "@test:unit:base --log-junit build/phpunit.junit.xml --coverage-xml build/coverage-xml --coverage-clover build/coverage-clover.xml"
+            "@test:unit:base --log-junit build/junit.xml --coverage-xml build/coverage-xml --coverage-clover build/coverage-clover.xml"
         ],
         "test:unit:with-html-coverage": [
             "@test:unit:base --coverage-html build/coverage-html"
@@ -88,19 +91,17 @@
             "@test:unit:coverage-checker"
         ],
         "test:mutation": [
-            "vendor/bin/infection --only-covered --min-msi=100 --min-covered-msi=100 --coverage=build --ansi"
+            "infection --only-covered --min-msi=66 --min-covered-msi=66 --coverage=build --ansi --threads=$(nproc) --skip-initial-tests"
         ],
         "test:mutation:ci": [
-            "vendor/bin/infection --only-covered --min-msi=60 --min-covered-msi=60 --coverage=build --ansi --log-verbosity=none"
+            "@test:mutation --log-verbosity=none --no-progress --show-mutations"
         ],
         "static-analysis": [
             "vendor/bin/phpstan analyse --ansi"
         ],
-        "security-check" : [
-            "curl -L \"https://github.com/fabpot/local-php-security-checker/releases/download/v1.0.0/local-php-security-checker_1.0.0_linux_386\" --output \"security-checker\"",
-            "chmod +x security-checker",
-            "./security-checker security:check",
-            "rm security-checker"
+        "security-check": [
+            "curl -sS https://get.symfony.com/cli/installer | bash -s -- --install-dir=/usr/local/bin",
+            "symfony check:security"
         ]
     },
     "config": {

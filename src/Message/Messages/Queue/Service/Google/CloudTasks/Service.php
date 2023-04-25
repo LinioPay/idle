@@ -23,8 +23,8 @@ use Throwable;
 class Service extends DefaultService
 {
     /** @var string[] Arguments which we want to extract from message attributes into HttpRequest */
-    const HTTP_REQUEST_ATTRIBUTES = ['oauth_token', 'oidc_token'];
-    const IDENTIFIER = 'cloud-tasks';
+    public const HTTP_REQUEST_ATTRIBUTES = ['oauth_token', 'oidc_token'];
+    public const IDENTIFIER = 'cloud-tasks';
 
     /** @var CloudTasksClient */
     protected $client;

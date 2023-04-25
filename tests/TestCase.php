@@ -10,6 +10,7 @@ use Mockery\Instantiator;
 use PHPUnit\Framework\TestCase as TestCaseBase;
 use ReflectionClass;
 use ReflectionMethod;
+use ReflectionProperty;
 
 class TestCase extends TestCaseBase
 {
@@ -87,7 +88,7 @@ class TestCase extends TestCaseBase
      */
     protected function inject($classOrObject, string $propertyNane, $propertyValue)
     {
-        $property = new \ReflectionProperty($classOrObject, $propertyNane);
+        $property = new ReflectionProperty($classOrObject, $propertyNane);
         $property->setAccessible(true);
         $property->setValue($classOrObject, $propertyValue);
     }

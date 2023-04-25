@@ -18,7 +18,7 @@ use Throwable;
 
 class Service extends DefaultService
 {
-    const IDENTIFIER = 'google-pubsub';
+    public const IDENTIFIER = 'google-pubsub';
 
     /** @var TestPubSubClient */
     protected $client;
