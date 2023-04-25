@@ -8,7 +8,7 @@ use LinioPay\Idle\Message\Message as MessageInterface;
 
 interface SubscriptionMessage extends MessageInterface
 {
-    const IDENTIFIER = 'subscription';
+    public const IDENTIFIER = 'subscription';
 
     /**
      * Proxies call to acknowledge on the service.

@@ -8,7 +8,7 @@ use Exception;
 
 class InvalidJobsException extends Exception
 {
-    const MESSAGE = 'An invalid jobs array was provided.';
+    public const MESSAGE = 'An invalid jobs array was provided.';
 
     public function __construct()
     {

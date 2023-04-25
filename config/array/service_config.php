@@ -5,7 +5,7 @@ use LinioPay\Idle\Message\Messages\Queue\Service\Google\CloudTasks\Service as Go
 use LinioPay\Idle\Message\Messages\Queue\Service\SQS\Service as SQS;
 
 return [
-    SQS::IDENTIFIER  => [
+    SQS::IDENTIFIER => [
         'class' => SQS::class,
         'client' => [
             'version' => 'latest',
@@ -25,5 +25,5 @@ return [
             'projectId' => 'my-project',
             'location' => 'us-central1',
         ],
-    ]
+    ],
 ];

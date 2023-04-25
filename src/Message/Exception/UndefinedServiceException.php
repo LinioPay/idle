@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace LinioPay\Idle\Message\Exception;
 
+use Exception;
 use LinioPay\Idle\Message\Message as MessageInterface;
 
-class UndefinedServiceException extends \Exception
+class UndefinedServiceException extends Exception
 {
-    const MESSAGE = 'Message %s is missing a service.';
+    public const MESSAGE = 'Message %s is missing a service.';
 
     public function __construct(MessageInterface $message)
     {

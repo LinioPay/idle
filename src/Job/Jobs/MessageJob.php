@@ -13,7 +13,7 @@ use LinioPay\Idle\Message\MessageFactory as MessageFactoryInterface;
 
 class MessageJob extends DefaultJob
 {
-    const IDENTIFIER = 'message';
+    public const IDENTIFIER = 'message';
 
     /** @var MessageInterface */
     protected $message;

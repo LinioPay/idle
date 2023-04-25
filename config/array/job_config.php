@@ -20,11 +20,11 @@ return [
                                 'type' => FooWorker::IDENTIFIER,
                                 'parameters' => [
                                     'foo' => 'bar',
-                                ]
+                                ],
                             ],
                             [
                                 'type' => DeleteMessageWorker::IDENTIFIER,
-                            ]
+                            ],
                         ],
                     ],
                 ],
@@ -37,7 +37,7 @@ return [
                             ],
                         ],
                     ],
-                ]
+                ],
             ],
             SubscriptionMessage::IDENTIFIER => [
                 'my-subscription' => [
@@ -48,14 +48,14 @@ return [
                             ],
                             [
                                 'type' => AcknowledgeMessageWorker::IDENTIFIER,
-                            ]
+                            ],
                         ],
                     ],
-                ]
+                ],
             ],
         ],
     ],
-    SimpleJob::IDENTIFIER  => [
+    SimpleJob::IDENTIFIER => [
         'class' => SimpleJob::class,
         'parameters' => [
             'supported' => [
@@ -65,10 +65,10 @@ return [
                             [
                                 'type' => FooWorker::IDENTIFIER,
                             ],
-                        ]
-                    ]
+                        ],
+                    ],
                 ],
-            ]
-        ]
-    ]
+            ],
+        ],
+    ],
 ];

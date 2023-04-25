@@ -16,7 +16,7 @@ class DynamoDBTrackerWorker extends DefaultWorker implements TrackingWorkerInter
 {
     use TrackingWorker;
 
-    const IDENTIFIER = 'dynamodb_tracker_worker';
+    public const IDENTIFIER = 'dynamodb_tracker_worker';
 
     /** @var DynamoDbClient */
     protected $client;

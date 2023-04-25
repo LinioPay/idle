@@ -8,32 +8,32 @@ use LinioPay\Idle\Message\Messages\Queue\Service\Google\CloudTasks\Service as Go
 use LinioPay\Idle\Message\Messages\Queue\Service\SQS\Service as SQS;
 
 return [
-    QueueMessage::IDENTIFIER        => [
-        'default'         => [
+    QueueMessage::IDENTIFIER => [
+        'default' => [
             'parameters' => [
                 'service' => SQS::IDENTIFIER,
             ],
         ],
         'service_default' => [
             SQS::IDENTIFIER => [
-                'queue'      => [
+                'queue' => [
                     'parameters' => [
                         'DelaySeconds' => 5,
                     ],
                 ],
-                'dequeue'    => [
+                'dequeue' => [
                     'parameters' => [
-                        'MaxNumberOfMessages' => 3
+                        'MaxNumberOfMessages' => 3,
                     ],
                 ],
-                'delete'     => [
+                'delete' => [
                     'parameters' => [],
                 ],
             ],
         ],
-        'types'           => [
-            'my-queue'      => [
-                'queue'      => [
+        'types' => [
+            'my-queue' => [
+                'queue' => [
                     'parameters' => [
                         'DelaySeconds' => 10,
                     ],
@@ -46,13 +46,13 @@ return [
             ],
         ],
     ],
-    TopicMessage::IDENTIFIER        => [
+    TopicMessage::IDENTIFIER => [
         'default' => [
             'parameters' => [
                 'service' => GooglePubSub::IDENTIFIER,
             ],
         ],
-        'types'   => [
+        'types' => [
             'my-topic' => [
                 'parameters' => [
                     // Inherit GooglePubSub as its service
@@ -62,20 +62,20 @@ return [
     ],
     SubscriptionMessage::IDENTIFIER => [
         'default' => [
-            'parameters'  => [
+            'parameters' => [
                 'service' => GooglePubSub::IDENTIFIER,
             ],
         ],
         'service_default' => [
             GooglePubSub::IDENTIFIER => [
-                'pull'        => [
+                'pull' => [
                     'parameters' => [
                         'maxMessages' => 3,
                     ],
                 ],
-            ]
+            ],
         ],
-        'types'   => [
+        'types' => [
             'my-subscription' => [
                 'parameters' => [],
             ],

@@ -10,7 +10,7 @@ use LinioPay\Idle\Message\Messages\PublishSubscribe\SubscriptionMessage as Subsc
 
 class AcknowledgeMessageWorker extends DefaultWorker
 {
-    const IDENTIFIER = 'publishsubscribe_acknowledge_message_worker';
+    public const IDENTIFIER = 'publishsubscribe_acknowledge_message_worker';
 
     public static $skipFactory = true;
 

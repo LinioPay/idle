@@ -8,7 +8,7 @@ use LinioPay\Idle\Message\Message as MessageInterface;
 
 interface TopicMessage extends MessageInterface
 {
-    const IDENTIFIER = 'topic';
+    public const IDENTIFIER = 'topic';
 
     public function getTopicIdentifier() : string;
 
