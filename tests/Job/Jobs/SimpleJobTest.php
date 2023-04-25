@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LinioPay\Idle\Job\Jobs;
 
 use function json_decode;
+
 use LinioPay\Idle\Config\Exception\ConfigurationException;
 use LinioPay\Idle\Config\IdleConfig;
 use LinioPay\Idle\Job\Exception\InvalidJobParameterException;

@@ -10,7 +10,7 @@ class FooWorker extends DefaultWorker implements TrackableWorkerInterface
 {
     use TrackableWorker;
 
-    const IDENTIFIER = 'foo';
+    public const IDENTIFIER = 'foo';
 
     public static $skipFactory = true;
 

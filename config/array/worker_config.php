@@ -17,5 +17,5 @@ return [
     ],
     AcknowledgeMessageWorker::IDENTIFIER => [
         'class' => AcknowledgeMessageWorker::class,
-    ]
+    ],
 ];

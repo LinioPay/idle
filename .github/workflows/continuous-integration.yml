@@ -4,7 +4,7 @@ on:
     branches: [master]
   pull_request: ~
 env:
-  PHP_VERSION: 7.4
+  PHP_VERSION: 8.1
 jobs:
   code-style-lint:
     name: Code style lint

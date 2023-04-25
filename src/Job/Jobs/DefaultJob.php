@@ -13,10 +13,11 @@ use LinioPay\Idle\Job\Worker as WorkerInterface;
 use LinioPay\Idle\Job\WorkerFactory as WorkerFactoryInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use Throwable;
 
 abstract class DefaultJob implements Job
 {
-    const IDENTIFIER = '';
+    public const IDENTIFIER = '';
 
     /** @var array */
     protected $context = [];
@@ -146,7 +147,7 @@ abstract class DefaultJob implements Job
             $this->track();
 
             $this->performWork();
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             $this->errors[] = sprintf('Encountered an error: %s', $throwable->getMessage());
 
             throw $throwable;

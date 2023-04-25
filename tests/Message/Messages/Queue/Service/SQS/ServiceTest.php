@@ -6,6 +6,7 @@ namespace LinioPay\Idle\Message\Messages\Queue\Service\SQS;
 
 use Aws\Result;
 use Aws\Sqs\SqsClient;
+use Exception;
 use Laminas\Stdlib\ArrayUtils;
 use LinioPay\Idle\Message\Exception\FailedReceivingMessageException;
 use LinioPay\Idle\Message\Exception\InvalidMessageParameterException;
@@ -122,7 +123,7 @@ class ServiceTest extends TestCase
         $this->sqsClient->shouldReceive('getQueueUrl')
             ->once()
             ->with(['QueueName' => $this->queueIdentifier])
-            ->andThrow(new \Exception('boom'));
+            ->andThrow(new Exception('boom'));
 
         $config = ArrayUtils::merge($this->config, [
             'dequeue' => [
@@ -134,7 +135,7 @@ class ServiceTest extends TestCase
 
         $service = new Service($this->sqsClient, $config, $this->logger);
 
-        $this->expectException(\Exception::class);
+        $this->expectException(Exception::class);
         $service->dequeue($this->queueIdentifier);
     }
 
@@ -143,7 +144,7 @@ class ServiceTest extends TestCase
         $this->sqsClient->shouldReceive('getQueueUrl')
             ->once()
             ->with(['QueueName' => $this->queueIdentifier])
-            ->andThrow(new \Exception('boom'));
+            ->andThrow(new Exception('boom'));
 
         $service = new Service($this->sqsClient, $this->config, $this->logger);
 
@@ -154,7 +155,7 @@ class ServiceTest extends TestCase
     {
         $this->sqsClient->shouldReceive('getQueueUrl')
             ->once()
-            ->andThrow(new \Exception('kaboom!'));
+            ->andThrow(new Exception('kaboom!'));
 
         $config = ArrayUtils::merge($this->config, [
             'dequeue' => [
@@ -264,7 +265,7 @@ class ServiceTest extends TestCase
         $this->sqsClient->shouldReceive('getQueueUrl')
             ->once()
             ->with(['QueueName' => $this->queueIdentifier])
-            ->andThrow(new \Exception('boom'));
+            ->andThrow(new Exception('boom'));
 
         $config = ArrayUtils::merge($this->config, [
             'queue' => [
@@ -274,7 +275,7 @@ class ServiceTest extends TestCase
             ],
         ]);
 
-        $this->expectException(\Exception::class);
+        $this->expectException(Exception::class);
         $service = new Service($this->sqsClient, $config, $this->logger);
         $service->queue($message);
     }
@@ -286,7 +287,7 @@ class ServiceTest extends TestCase
         $this->sqsClient->shouldReceive('getQueueUrl')
             ->once()
             ->with(['QueueName' => $this->queueIdentifier])
-            ->andThrow(new \Exception('boom'));
+            ->andThrow(new Exception('boom'));
 
         $service = new Service($this->sqsClient, $this->config, $this->logger);
         $this->assertFalse($service->queue($message));

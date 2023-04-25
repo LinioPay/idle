@@ -20,25 +20,25 @@ class JobFactoryTest extends TestCase
         parent::setUp();
 
         $this->config = new IdleConfig([], [],
-                    [
-                        SimpleJob::IDENTIFIER => [
-                            'class' => SimpleJob::class,
-                            'parameters' => [
-                                'supported' => [
-                                    'my_simple_job' => [
-                                        'workers' => [
-                                            [
-                                                'class' => FooWorker::class,
-                                                'parameters' => [
-                                                    'size' => 'large',
-                                                ],
-                                            ],
+            [
+                SimpleJob::IDENTIFIER => [
+                    'class' => SimpleJob::class,
+                    'parameters' => [
+                        'supported' => [
+                            'my_simple_job' => [
+                                'workers' => [
+                                    [
+                                        'class' => FooWorker::class,
+                                        'parameters' => [
+                                            'size' => 'large',
                                         ],
                                     ],
                                 ],
                             ],
                         ],
-                    ]);
+                    ],
+                ],
+            ]);
     }
 
     public function testCreatesJobSuccessfully()

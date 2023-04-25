@@ -17,7 +17,7 @@ use Throwable;
 
 class Service extends DefaultService
 {
-    const IDENTIFIER = 'sqs';
+    public const IDENTIFIER = 'sqs';
 
     /** @var SqsClient */
     protected $client;

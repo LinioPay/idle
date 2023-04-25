@@ -10,7 +10,7 @@ class BazWorker extends DefaultWorker implements TrackableWorkerInterface
 {
     use TrackableWorker;
 
-    const IDENTIFIER = 'baz';
+    public const IDENTIFIER = 'baz';
 
     /** @var string */
     protected $bazDependency;

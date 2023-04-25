@@ -10,7 +10,7 @@ use LinioPay\Idle\Message\Messages\Queue\Message as QueueMessageInterface;
 
 class DeleteMessageWorker extends DefaultWorker
 {
-    const IDENTIFIER = 'queue_delete_message_worker';
+    public const IDENTIFIER = 'queue_delete_message_worker';
 
     public static $skipFactory = true;
 

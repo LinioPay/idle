@@ -9,7 +9,7 @@ use Throwable;
 
 abstract class DefaultService implements QueueServiceInterface
 {
-    const IDENTIFIER = '';
+    public const IDENTIFIER = '';
 
     /** @var array */
     protected $config;

@@ -9,7 +9,7 @@ use LinioPay\Idle\Message\Message as MessageInterface;
 
 interface Message extends MessageInterface
 {
-    const IDENTIFIER = 'queue';
+    public const IDENTIFIER = 'queue';
 
     /**
      * Proxies a delete call to the service.

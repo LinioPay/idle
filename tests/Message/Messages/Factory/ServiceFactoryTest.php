@@ -45,7 +45,7 @@ class ServiceFactoryTest extends TestCase
                         ],
                         'queue' => [
                             'parameters' => [ // Configure behavior for when adding a new message
-                                //'DelaySeconds' => 0, // The number of seconds (0 to 900 - 15 minutes) to delay a specific message. Messages with a positive DelaySeconds value become available for processing after the delay time is finished. If you don't specify a value, the default value for the queue applies.
+                                // 'DelaySeconds' => 0, // The number of seconds (0 to 900 - 15 minutes) to delay a specific message. Messages with a positive DelaySeconds value become available for processing after the delay time is finished. If you don't specify a value, the default value for the queue applies.
                             ],
                             'error' => [
                                 'suppression' => true,
