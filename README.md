@@ -1,5 +1,13 @@
 ![](https://github.com/LinioPay/idle/workflows/Continuous%20Integration/badge.svg)
 
+## Compatibility
+
+| PHP  | Tag | Branch |
+|------|-----|--------|
+| ^8.1 | 5.X | master |
+| ^7.2 | 4.X | 7.2    |
+
+
 # Idle
 
 Idle is a package for managing Job and Messaging systems.  The two aspects work in harmony to make message queueing and job processing breeze.
