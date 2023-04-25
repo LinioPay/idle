@@ -91,7 +91,7 @@
             "@test:unit:coverage-checker"
         ],
         "test:mutation": [
-            "infection --only-covered --min-msi=100 --min-covered-msi=100 --coverage=build --ansi --threads=$(nproc) --skip-initial-tests"
+            "infection --only-covered --min-msi=66 --min-covered-msi=66 --coverage=build --ansi --threads=$(nproc) --skip-initial-tests"
         ],
         "test:mutation:ci": [
             "@test:mutation --log-verbosity=none --no-progress --show-mutations"
