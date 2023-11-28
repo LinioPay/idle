@@ -27,13 +27,13 @@
         "psr/container": "^2.0",
         "psr/http-message": "^1.0",
         "psr/log": "^3.0",
-        "ramsey/uuid": "^4.0"
+        "ramsey/uuid": "^4.0",
+        "google/cloud-tasks": "^1.6"
     },
     "require-dev": {
         "aws/aws-sdk-php": "^3.140",
         "friendsofphp/php-cs-fixer": "^v3.13",
         "google/cloud-pubsub": "^1.24",
-        "google/cloud-tasks": "^1.6",
         "infection/infection": "^0.26",
         "laminas/laminas-hydrator": "^4.11",
         "league/fractal": "^0.19",
